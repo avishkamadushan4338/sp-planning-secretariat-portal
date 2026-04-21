@@ -1,0 +1,81 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─── Font feature tokens ─────────────────────────────────────────────────── */
+:root {
+  /* Variable font axes defaults */
+  --font-display:  'Cinzel', Georgia, serif;
+  --font-serif:    'Playfair Display', Georgia, serif;
+  --font-sans:     'Plus Jakarta Sans', Inter, system-ui, sans-serif;
+  --font-ui:       Inter, system-ui, sans-serif;
+  --font-mono:     'DM Mono', ui-monospace, monospace;
+
+  /* OpenType feature sets */
+  --features-display: "kern" 1, "liga" 1, "calt" 1;
+  --features-serif:   "kern" 1, "liga" 1, "onum" 1, "pnum" 1;
+  --features-sans:    "kern" 1, "liga" 1, "calt" 1, "ss01" 1;
+  --features-mono:    "kern" 0, "liga" 0, "tnum" 1, "zero" 1;
+}
+
+@layer base {
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+    /* Enable optical sizing for variable fonts */
+    text-size-adjust: 100%;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    font-optical-sizing: auto;
+    font-feature-settings: var(--features-sans);
+    font-variation-settings: "wght" 400;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    color: #171717;
+    background-color: #ffffff;
+  }
+
+  /* Display headings use Cinzel (variable weight 400–900) */
+  h1 {
+    font-family: var(--font-display);
+    font-feature-settings: var(--features-display);
+    font-variation-settings: "wght" 700;
+    letter-spacing: 0.04em;
+  }
+
+  h2, h3 {
+    font-family: var(--font-serif);
+    font-feature-settings: var(--features-serif);
+    font-optical-sizing: auto;
+    font-variation-settings: "wght" 600, "opsz" 24;
+  }
+
+  h4, h5, h6 {
+    font-family: var(--font-sans);
+    font-feature-settings: var(--features-sans);
+    font-variation-settings: "wght" 600;
+  }
+
+  /* Numeric data — tabular figures, slashed zero */
+  table, code, pre, kbd, samp, [data-numeric] {
+    font-family: var(--font-mono);
+    font-feature-settings: var(--features-mono);
+  }
+}
+
+@layer utilities {
+  .nav-underline {
+    @apply absolute bottom-0 left-0 right-0 h-[3px] bg-gold origin-center transition-all duration-200;
+  }
+}
