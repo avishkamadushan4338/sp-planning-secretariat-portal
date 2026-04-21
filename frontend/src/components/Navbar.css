@@ -1,0 +1,34 @@
+/* ── Emblem hover glow ──────────────────────────────────────────────────── */
+.navbar-emblem {
+  transition: box-shadow 0.25s ease;
+}
+
+.group:hover .navbar-emblem {
+  box-shadow: 0 0 0 4px rgba(199, 154, 43, 0.18);
+}
+
+/* ── Dropdown slide-in ──────────────────────────────────────────────────── */
+[role="menu"] {
+  animation: dropIn 0.15s ease forwards;
+}
+
+@keyframes dropIn {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ── Prevent layout shift from scrollbar ───────────────────────────────── */
+html {
+  scrollbar-gutter: stable;
+}
+
+/* ── Mobile menu border ─────────────────────────────────────────────────── */
+#mobile-menu {
+  border-bottom: 2px solid #E7E1DC;
+}
