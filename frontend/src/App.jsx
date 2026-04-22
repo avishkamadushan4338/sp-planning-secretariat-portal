@@ -1,5 +1,6 @@
 import { Routes, Route } from 'react-router-dom'
 import MainLayout from './layouts/MainLayout'
+import LandingPage from './pages/Landing/LandingPage'
 import Home from './pages/Home/Home'
 import About from './pages/About/About'
 import Departments from './pages/Departments/Departments'
@@ -15,8 +16,12 @@ import NotFound from './pages/NotFound'
 export default function App() {
   return (
     <Routes>
+      {/* Language-selection gateway – standalone, no Navbar/Footer */}
+      <Route path="/" element={<LandingPage />} />
+
+      {/* Main site – wrapped in Navbar + Footer layout */}
       <Route element={<MainLayout />}>
-        <Route index element={<Home />} />
+        <Route path="home" element={<Home />} />
         <Route path="about" element={<About />} />
         <Route path="departments" element={<Departments />} />
         <Route path="documents" element={<Documents />} />
