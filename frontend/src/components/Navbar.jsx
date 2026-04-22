@@ -1,34 +1,72 @@
 import { useState, useEffect, useRef } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import {
-  FaPhone,
-  FaEnvelope,
-  FaSitemap,
   FaBars,
   FaTimes,
   FaChevronDown,
 } from 'react-icons/fa'
 import './Navbar.css'
 
-// ─── Data ────────────────────────────────────────────────────────────────────
+const SITE_LOGO_PATH = '/branding/logo.png'
 
-const NAV_ITEMS = [
-  { label: 'HOME',         path: '/' },
-  { label: 'ABOUT US',     path: '/about' },
-  { label: 'DIVISIONS',    path: '/departments' },
-  { label: 'SERVICES',     path: '/services' },
-  { label: 'MEDIA CENTER', path: '/news' },
-  { label: 'DOWNLOADS',    path: '/documents' },
-  {
-    label: 'CONTACT US',
-    path: '/contact',
-    dropdown: [
-      { label: 'Contact Information', path: '/contact' },
-      { label: 'Complaint & Feedback', path: '/contact/feedback' },
-      { label: 'Find Our Office',      path: '/contact/location' },
-    ],
-  },
-]
+// ─── Translations ────────────────────────────────────────────────────────────
+
+const NAV_TRANSLATIONS = {
+  en: [
+    { id: 'home',    label: 'HOME',         path: '/home' },
+    { id: 'about',   label: 'ABOUT US',     path: '/about' },
+    { id: 'divs',    label: 'DIVISIONS',    path: '/departments' },
+    { id: 'svcs',    label: 'SERVICES',     path: '/services' },
+    { id: 'media',   label: 'MEDIA CENTER', path: '/news' },
+    { id: 'docs',    label: 'DOWNLOADS',    path: '/documents' },
+    {
+      id: 'contact', label: 'CONTACT US',   path: '/contact',
+      dropdown: [
+        { label: 'Contact Information',   path: '/contact' },
+        { label: 'Complaint & Feedback',  path: '/contact/feedback' },
+        { label: 'Find Our Office',       path: '/contact/location' },
+      ],
+    },
+  ],
+  si: [
+    { id: 'home',    label: 'මුල් පිටුව',            path: '/home' },
+    { id: 'about',   label: 'අප ගැන',                path: '/about' },
+    { id: 'divs',    label: 'අංශ',                    path: '/departments' },
+    { id: 'svcs',    label: 'සේවාවන්',               path: '/services' },
+    { id: 'media',   label: 'මාධ්‍ය මධ්‍යස්ථානය',  path: '/news' },
+    { id: 'docs',    label: 'බාගත කිරීම්',            path: '/documents' },
+    {
+      id: 'contact', label: 'අප අමතන්න',              path: '/contact',
+      dropdown: [
+        { label: 'සම්බන්ධතා තොරතුරු',        path: '/contact' },
+        { label: 'පැමිණිලි සහ ප්‍රතිපෝෂණ',  path: '/contact/feedback' },
+        { label: 'කාර්යාලය සොයා ගන්න',       path: '/contact/location' },
+      ],
+    },
+  ],
+  ta: [
+    { id: 'home',    label: 'முகப்பு',                    path: '/home' },
+    { id: 'about',   label: 'எங்களைப் பற்றி',            path: '/about' },
+    { id: 'divs',    label: 'பிரிவுகள்',                 path: '/departments' },
+    { id: 'svcs',    label: 'சேவைகள்',                   path: '/services' },
+    { id: 'media',   label: 'ஊடக மையம்',                path: '/news' },
+    { id: 'docs',    label: 'பதிவிறக்கங்கள்',            path: '/documents' },
+    {
+      id: 'contact', label: 'தொடர்பு கொள்ளுங்கள்',      path: '/contact',
+      dropdown: [
+        { label: 'தொடர்பு தகவல்',                         path: '/contact' },
+        { label: 'புகார் & கருத்து',                      path: '/contact/feedback' },
+        { label: 'எங்கள் அலுவலகத்தைக் கண்டறியுங்கள்',   path: '/contact/location' },
+      ],
+    },
+  ],
+}
+
+const LANG_FONT = {
+  en: 'inherit',
+  si: "'Noto Sans Sinhala', sans-serif",
+  ta: "'Noto Sans Tamil', sans-serif",
+}
 
 const LANGUAGES = [
   { code: 'si', label: 'සිංහල' },
@@ -44,7 +82,6 @@ function GovernmentEmblem() {
       <div className="absolute inset-[5px] rounded-full border border-gold opacity-30 pointer-events-none" />
       <div className="absolute inset-[10px] rounded-full border border-maroon opacity-20 pointer-events-none" />
       <div className="relative z-10 flex flex-col items-center justify-center text-center gap-[2px]">
-        {/* Cinzel for the Latin crest label */}
         <span className="font-display text-[6px] font-bold text-maroon uppercase tracking-[0.18em] leading-none">
           ශ්‍රී ලංකා
         </span>
@@ -57,16 +94,34 @@ function GovernmentEmblem() {
   )
 }
 
+function SiteLogo() {
+  const [imageError, setImageError] = useState(false)
+
+  if (!imageError) {
+    return (
+      <img
+        src={SITE_LOGO_PATH}
+        alt="Southern Province Planning Secretariat logo"
+        className="navbar-logo-image"
+        onError={() => setImageError(true)}
+      />
+    )
+  }
+
+  return <GovernmentEmblem />
+}
+
 // ─── Desktop Nav Item ────────────────────────────────────────────────────────
 
-function DesktopNavItem({ item, isActive, activeDropdown, onEnter, onLeave }) {
-  const active  = isActive(item.path)
-  const dropOpen = activeDropdown === item.label
+function DesktopNavItem({ item, lang, isActive, activeDropdown, onEnter, onLeave }) {
+  const active   = isActive(item.path)
+  const dropOpen = activeDropdown === item.id
+  const fontFamily = LANG_FONT[lang]
 
   return (
     <li
       className="relative h-full flex items-stretch"
-      onMouseEnter={() => item.dropdown && onEnter(item.label)}
+      onMouseEnter={() => item.dropdown && onEnter(item.id)}
       onMouseLeave={() => item.dropdown && onLeave()}
       role="none"
     >
@@ -76,11 +131,12 @@ function DesktopNavItem({ item, isActive, activeDropdown, onEnter, onLeave }) {
         aria-haspopup={!!item.dropdown}
         aria-expanded={dropOpen}
         className={`
-          relative flex items-center gap-1.5 px-3 xl:px-[18px]
-          font-ui text-[10.5px] font-semibold tracking-[0.14em] uppercase
+          nav-item-bold relative flex items-center gap-1.5 px-3 xl:px-[18px]
+          font-sans text-[12px] font-extrabold tracking-[0.08em] uppercase
           transition-colors duration-200 group whitespace-nowrap
           ${active ? 'text-maroon' : 'text-prem-black hover:text-maroon'}
         `}
+        style={{ fontFamily }}
       >
         <span>{item.label}</span>
 
@@ -107,21 +163,22 @@ function DesktopNavItem({ item, isActive, activeDropdown, onEnter, onLeave }) {
         <div
           className="absolute top-full left-0 min-w-[240px] bg-white shadow-dropdown border-t-[3px] border-gold z-50"
           role="menu"
-          onMouseEnter={() => onEnter(item.label)}
+          onMouseEnter={() => onEnter(item.id)}
           onMouseLeave={onLeave}
         >
           {item.dropdown.map((sub) => (
             <Link
-              key={sub.label}
+              key={sub.path}
               to={sub.path}
               role="menuitem"
               className="
                 flex items-center gap-3 px-5 py-[12px]
-                font-sans text-[12px] font-medium tracking-wide text-prem-black
+                font-sans text-[11px] font-bold tracking-[0.06em] uppercase text-prem-black
                 hover:text-maroon hover:bg-ivory hover:pl-6
                 border-b border-warm-neutral last:border-0
                 transition-all duration-150
               "
+              style={{ fontFamily }}
             >
               <span className="w-1 h-1 rounded-full bg-gold flex-shrink-0 opacity-70" />
               {sub.label}
@@ -135,9 +192,10 @@ function DesktopNavItem({ item, isActive, activeDropdown, onEnter, onLeave }) {
 
 // ─── Mobile Nav Item ─────────────────────────────────────────────────────────
 
-function MobileNavItem({ item, isActive }) {
+function MobileNavItem({ item, lang, isActive }) {
   const [open, setOpen] = useState(false)
   const active = isActive(item.path)
+  const fontFamily = LANG_FONT[lang]
 
   return (
     <li className="border-b border-warm-neutral last:border-0">
@@ -146,9 +204,10 @@ function MobileNavItem({ item, isActive }) {
           to={item.path}
           className={`
             flex-1 px-5 py-4
-            font-ui text-[11px] font-semibold tracking-[0.13em] uppercase
+            font-sans text-[12.5px] font-extrabold tracking-[0.08em] uppercase
             ${active ? 'text-maroon' : 'text-prem-black'}
           `}
+          style={{ fontFamily }}
         >
           {item.label}
         </Link>
@@ -157,7 +216,7 @@ function MobileNavItem({ item, isActive }) {
           <button
             onClick={() => setOpen((v) => !v)}
             className="px-5 py-4 text-pro-gray hover:text-maroon transition-colors"
-            aria-label={`Toggle ${item.label} submenu`}
+            aria-label={`Toggle ${item.id} submenu`}
           >
             <FaChevronDown
               className={`text-[10px] transition-transform duration-200 ${open ? 'rotate-180 text-maroon' : ''}`}
@@ -170,7 +229,7 @@ function MobileNavItem({ item, isActive }) {
         <div className="bg-ivory border-t border-warm-neutral">
           {item.dropdown.map((sub) => (
             <Link
-              key={sub.label}
+              key={sub.path}
               to={sub.path}
               className="
                 flex items-center gap-3 px-8 py-3
@@ -179,6 +238,7 @@ function MobileNavItem({ item, isActive }) {
                 border-b border-warm-neutral last:border-0
                 transition-colors duration-150
               "
+              style={{ fontFamily }}
             >
               <span className="w-1.5 h-1.5 rounded-full bg-gold flex-shrink-0" />
               {sub.label}
@@ -196,11 +256,15 @@ export default function Navbar() {
   const [mobileOpen, setMobileOpen]         = useState(false)
   const [activeDropdown, setActiveDropdown] = useState(null)
   const [scrolled, setScrolled]             = useState(false)
-  const [activeLang, setActiveLang]         = useState('en')
+  const [activeLang, setActiveLang]         = useState(
+    () => localStorage.getItem('lang') || 'en'
+  )
 
   const location     = useLocation()
   const headerRef    = useRef(null)
   const dropTimerRef = useRef(null)
+
+  const navItems = NAV_TRANSLATIONS[activeLang] || NAV_TRANSLATIONS.en
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8)
@@ -229,12 +293,17 @@ export default function Navbar() {
     return () => { document.body.style.overflow = '' }
   }, [mobileOpen])
 
+  const handleLangChange = (code) => {
+    localStorage.setItem('lang', code)
+    setActiveLang(code)
+  }
+
   const isActive = (path) =>
     path === '/' ? location.pathname === '/' : location.pathname.startsWith(path)
 
-  const handleDropEnter = (label) => {
+  const handleDropEnter = (id) => {
     clearTimeout(dropTimerRef.current)
-    setActiveDropdown(label)
+    setActiveDropdown(id)
   }
   const handleDropLeave = () => {
     dropTimerRef.current = setTimeout(() => setActiveDropdown(null), 180)
@@ -248,109 +317,59 @@ export default function Navbar() {
       }`}
     >
       {/* ══════════════════════════════════════════════════════════════════════
-          TOP UTILITY BAR  —  font-ui (Inter)
-      ══════════════════════════════════════════════════════════════════════ */}
-      <div className="bg-maroon text-white select-none">
-        <div className="max-w-[1400px] mx-auto px-4 lg:px-8 h-[38px] flex items-center justify-between">
-
-          {/* Left — contact links */}
-          <div className="hidden sm:flex items-center gap-0">
-            <a
-              href="tel:+94912234503"
-              className="flex items-center gap-1.5 px-3 py-1 opacity-85 hover:opacity-100 hover:text-gold transition-colors duration-200 group"
-            >
-              <FaPhone className="text-gold text-[9px] group-hover:scale-110 transition-transform flex-shrink-0" />
-              {/* DM Mono for the phone number — tabular figures */}
-              <span className="font-mono text-[10.5px] tracking-wide">+94 91 223 4503</span>
-            </a>
-
-            <span className="text-gold opacity-30 select-none">│</span>
-
-            <a
-              href="mailto:info@splanning.gov.lk"
-              className="flex items-center gap-1.5 px-3 py-1 opacity-85 hover:opacity-100 hover:text-gold transition-colors duration-200 group"
-            >
-              <FaEnvelope className="text-gold text-[9px] group-hover:scale-110 transition-transform flex-shrink-0" />
-              <span className="font-ui text-[10.5px] tracking-wide">info@splanning.gov.lk</span>
-            </a>
-
-            <span className="text-gold opacity-30 select-none">│</span>
-
-            <Link
-              to="/sitemap"
-              className="flex items-center gap-1.5 px-3 py-1 opacity-85 hover:opacity-100 hover:text-gold transition-colors duration-200 group"
-            >
-              <FaSitemap className="text-gold text-[9px] group-hover:scale-110 transition-transform flex-shrink-0" />
-              <span className="font-ui text-[10.5px] tracking-wide">Site Map</span>
-            </Link>
-          </div>
-
-          {/* Right — language switcher */}
-          <div className="flex items-center ml-auto sm:ml-0">
-            {LANGUAGES.map((lang, idx) => (
-              <span key={lang.code} className="flex items-center">
-                <button
-                  onClick={() => setActiveLang(lang.code)}
-                  className={`
-                    px-2.5 py-1 font-ui text-[10.5px] font-medium tracking-wide
-                    transition-all duration-200 rounded-sm
-                    ${activeLang === lang.code
-                      ? 'text-gold font-semibold'
-                      : 'text-white/75 hover:text-gold'}
-                  `}
-                >
-                  {lang.label}
-                </button>
-                {idx < LANGUAGES.length - 1 && (
-                  <span className="text-gold opacity-25 text-[10px] select-none">│</span>
-                )}
-              </span>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* ══════════════════════════════════════════════════════════════════════
           MAIN NAVIGATION BAR
       ══════════════════════════════════════════════════════════════════════ */}
-      <div className="bg-white border-b border-warm-neutral">
-        <div className="max-w-[1400px] mx-auto px-4 lg:px-8">
-          <div className="flex items-center justify-between h-[80px]">
+      <div className="bg-white border-b border-warm-neutral relative">
+        {/* Language ribbon — top-right corner, desktop only */}
+        <div
+          className="hidden lg:flex absolute top-0 right-0 z-10 bg-maroon items-center px-3 py-[5px] select-none"
+          style={{ borderBottomLeftRadius: '10px' }}
+        >
+          {LANGUAGES.map((lang, idx) => (
+            <span key={lang.code} className="flex items-center">
+              <button
+                onClick={() => handleLangChange(lang.code)}
+                className={`
+                  px-2 py-0.5 text-[10px] font-medium tracking-wide
+                  transition-all duration-200
+                  ${activeLang === lang.code ? 'text-gold font-semibold' : 'text-white/75 hover:text-gold'}
+                `}
+                style={{
+                  fontFamily: LANG_FONT[lang.code],
+                }}
+              >
+                {lang.label}
+              </button>
+              {idx < LANGUAGES.length - 1 && (
+                <span className="text-gold opacity-30 text-[9px] select-none">│</span>
+              )}
+            </span>
+          ))}
+        </div>
 
-            {/* ── Logo & Institution Name ── */}
+        <div className="w-full pl-6 pr-4 lg:pr-8">
+          <div className="flex items-center justify-between h-[76px]">
+
+            {/* ── Logo — flush left corner ── */}
             <Link
               to="/"
-              className="flex items-center gap-4 flex-shrink-0 group outline-none focus-visible:ring-2 focus-visible:ring-gold rounded"
+              className="flex items-center flex-shrink-0 group outline-none focus-visible:ring-2 focus-visible:ring-gold rounded-none"
               aria-label="Southern Province Planning Secretariat — Home"
             >
-              <GovernmentEmblem />
-
-              <div className="flex flex-col justify-center leading-none gap-[3px]">
-                {/* Native script labels — system fonts render these best */}
-                <span className="text-[10px] text-maroon font-medium tracking-wide leading-snug">
-                  දකුණු පළාත් සැලසුම් ලේකම් කාර්යාලය
-                </span>
-                <span className="text-[9.5px] text-pro-gray tracking-wide leading-snug">
-                  தென் மாகாண திட்டமிடல் செயலகம்
-                </span>
-
-                {/* Cinzel for the authoritative English title */}
-                <span className="font-display text-[11px] font-bold text-maroon tracking-[0.12em] uppercase leading-snug">
-                  Southern Province Planning Secretariat
-                </span>
-              </div>
+              <SiteLogo />
             </Link>
 
-            {/* ── Desktop Navigation — font-ui (Inter) ── */}
+            {/* ── Desktop Navigation ── */}
             <nav
-              className="hidden lg:flex items-stretch self-stretch ml-6"
+              className="hidden lg:flex items-stretch self-stretch ml-32 mr-auto"
               aria-label="Main navigation"
             >
               <ul className="flex items-stretch h-full" role="menubar">
-                {NAV_ITEMS.map((item) => (
+                {navItems.map((item) => (
                   <DesktopNavItem
-                    key={item.label}
+                    key={item.id}
                     item={item}
+                    lang={activeLang}
                     isActive={isActive}
                     activeDropdown={activeDropdown}
                     onEnter={handleDropEnter}
@@ -394,43 +413,31 @@ export default function Navbar() {
       >
         <nav aria-label="Mobile navigation" className="border-t border-warm-neutral">
           <ul role="menubar">
-            {NAV_ITEMS.map((item) => (
-              <MobileNavItem key={item.label} item={item} isActive={isActive} />
+            {navItems.map((item) => (
+              <MobileNavItem
+                key={item.id}
+                item={item}
+                lang={activeLang}
+                isActive={isActive}
+              />
             ))}
           </ul>
         </nav>
 
-        {/* Contact + language strip */}
-        <div className="bg-ivory border-t-2 border-warm-neutral px-5 py-4 space-y-3">
-          <div className="flex flex-col gap-2">
-            <a
-              href="tel:+94912234503"
-              className="flex items-center gap-2.5 hover:text-maroon transition-colors"
-            >
-              <FaPhone className="text-gold text-[11px] flex-shrink-0" />
-              {/* DM Mono for phone — tabular figures */}
-              <span className="font-mono text-[12px] text-pro-gray tracking-wide">+94 91 223 4503</span>
-            </a>
-            <a
-              href="mailto:info@splanning.gov.lk"
-              className="flex items-center gap-2.5 hover:text-maroon transition-colors"
-            >
-              <FaEnvelope className="text-gold text-[11px] flex-shrink-0" />
-              <span className="font-ui text-[12px] text-pro-gray tracking-wide">info@splanning.gov.lk</span>
-            </a>
-          </div>
-
-          <div className="flex items-center gap-2 pt-1">
+        {/* Language strip — mobile */}
+        <div className="bg-ivory border-t-2 border-warm-neutral px-5 py-3">
+          <div className="flex items-center gap-2">
             {LANGUAGES.map((lang) => (
               <button
                 key={lang.code}
-                onClick={() => setActiveLang(lang.code)}
+                onClick={() => handleLangChange(lang.code)}
                 className={`
-                  font-ui text-[11px] px-3 py-1.5 rounded transition-all duration-200
+                  text-[11px] px-3 py-1.5 rounded transition-all duration-200
                   ${activeLang === lang.code
                     ? 'bg-maroon text-white font-semibold'
                     : 'text-pro-gray border border-warm-neutral hover:border-maroon hover:text-maroon'}
                 `}
+                style={{ fontFamily: LANG_FONT[lang.code] }}
               >
                 {lang.label}
               </button>
