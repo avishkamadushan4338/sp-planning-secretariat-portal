@@ -296,6 +296,7 @@ export default function Navbar() {
   const handleLangChange = (code) => {
     localStorage.setItem('lang', code)
     setActiveLang(code)
+    window.dispatchEvent(new CustomEvent('langChange', { detail: code }))
   }
 
   const isActive = (path) =>
