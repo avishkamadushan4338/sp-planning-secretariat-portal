@@ -1,6 +1,6 @@
 import { motion, AnimatePresence } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Helmet } from 'react-helmet-async'
 import { FiArrowRight, FiShield, FiUsers, FiStar } from 'react-icons/fi'
 
@@ -82,6 +82,24 @@ export default function LandingPage() {
   const navigate = useNavigate()
   const [entering, setEntering] = useState(null)
 
+  useEffect(() => {
+    const style = document.createElement('style')
+    style.id = 'landing-no-scrollbar'
+    style.textContent = `
+      html, body {
+        overflow: hidden !important;
+        scrollbar-width: none !important;
+      }
+      html::-webkit-scrollbar,
+      body::-webkit-scrollbar {
+        display: none !important;
+        width: 0 !important;
+      }
+    `
+    document.head.appendChild(style)
+    return () => document.getElementById('landing-no-scrollbar')?.remove()
+  }, [])
+
   const handleSelect = (langId) => {
     if (entering) return
     setEntering(langId)
@@ -97,7 +115,7 @@ export default function LandingPage() {
       </Helmet>
 
       <motion.div
-        className="min-h-screen flex flex-col relative overflow-hidden"
+        className="h-screen flex flex-col relative overflow-hidden"
         style={{ background: PAGE_BG }}
         variants={pageIn}
         initial="hidden"
@@ -114,19 +132,19 @@ export default function LandingPage() {
 
         {/* ── MAIN ──────────────────────────────────────────────────────────── */}
         <motion.main
-          className="relative z-10 flex-1 flex flex-col items-center justify-center
-                     px-4 sm:px-6 py-6 sm:py-8 md:py-10"
+          className="relative z-10 flex-1 min-h-0 flex flex-col items-center justify-center
+                     px-4 sm:px-6 pt-3 sm:pt-4 pb-10 sm:pb-16"
           variants={stagger}
           initial="hidden"
           animate="visible"
         >
           {/* Logo / Emblem */}
-          <motion.div variants={fadeUp} className="mb-3 sm:mb-5 flex justify-center w-full">
+          <motion.div variants={fadeUp} className="mb-1 sm:mb-2 flex justify-center w-full">
             <EmblemBadge />
           </motion.div>
 
           {/* Tri-language welcome heading */}
-          <motion.div variants={fadeUp} className="text-center px-2 mb-1 sm:mb-2">
+          <motion.div variants={fadeUp} className="text-center px-2 mb-0.5">
             {/* Mobile: stack across two lines; sm+: single line */}
             <h1
               className="font-bold leading-snug"
@@ -145,19 +163,19 @@ export default function LandingPage() {
           </motion.div>
 
           {/* Gold ornamental flourish */}
-          <motion.div variants={fadeUp} className="my-2 sm:my-3 flex justify-center">
+          <motion.div variants={fadeUp} className="my-1 flex justify-center">
             <OrnamentDivider />
           </motion.div>
 
           {/* Trilingual subtitle — each language on its own line */}
           <motion.div
             variants={fadeUp}
-            className="text-center w-full max-w-xl mb-4 sm:mb-6 px-3"
+            className="text-center w-full max-w-xl mb-2 sm:mb-3 px-3"
           >
             <p style={SUBTITLE_STYLE} className="mb-0.5">
               දකුණු පළාත් සැලසුම් ලේකම් කාර්යාලයේ නිල වෙබ් අඩවියට පිළිගනිමු.
             </p>
-            <p style={SUBTITLE_STYLE} className="mb-0.5">
+            <p style={{ ...SUBTITLE_STYLE, whiteSpace: 'nowrap', fontSize: 'clamp(0.58rem, 1.5vw, 0.78rem)' }} className="mb-0.5">
               தென் மாகாண திட்டமிடல் செயலகத்தின் அதிகாரப்பூர்வ இணையத்தளத்திற்கு வருக.
             </p>
             <p style={{ ...SUBTITLE_STYLE, fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
@@ -197,12 +215,12 @@ export default function LandingPage() {
             <path d="M0,36 Q720,0,1440,36 L1440,36 L0,36 Z" fill="#4A0918" />
           </svg>
 
-          <div className="py-2 sm:py-3 px-4 sm:px-6" style={{ background: '#4A0918' }}>
+          <div className="py-3 sm:py-4 px-4 sm:px-6" style={{ background: '#4A0918' }}>
             {/* Footer items: wrap into 1 or 2 col on very small screens */}
             <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 sm:gap-x-8 sm:gap-y-0">
               {FOOTER_ITEMS.map(({ Icon, text }, i) => (
                 <div key={i} className="flex items-center gap-1.5">
-                  <Icon size={12} style={{ color: '#C79A2B', flexShrink: 0 }} />
+                  <Icon size={15} style={{ color: '#C79A2B', flexShrink: 0 }} />
                   <span style={FOOTER_TEXT}>{text}</span>
                 </div>
               ))}
@@ -367,8 +385,9 @@ function EmblemBadge() {
         alt="Southern Province Planning Secretariat"
         onError={() => setImageError(true)}
         style={{
-          width: 'clamp(200px, 80vw, 860px)',
+          width: 'clamp(200px, 60vw, 780px)',
           maxWidth: '100%',
+          maxHeight: '28vh',
           height: 'auto',
           objectFit: 'contain',
           display: 'block',
@@ -527,13 +546,13 @@ const SUBTITLE_STYLE = {
 
 const FOOTER_TEXT = {
   fontFamily: "'Noto Sans Sinhala', 'Noto Sans Tamil', Plus Jakarta Sans, sans-serif",
-  fontSize: 'clamp(0.58rem, 1.4vw, 0.72rem)',
+  fontSize: 'clamp(0.72rem, 1.6vw, 0.9rem)',
   color: 'rgba(252,251,250,0.8)',
 }
 
 const FOOTER_COPYRIGHT = {
   fontFamily: 'Inter, sans-serif',
-  fontSize: '0.54rem',
+  fontSize: '0.65rem',
   letterSpacing: '0.05em',
   color: 'rgba(199,154,43,0.5)',
 }
