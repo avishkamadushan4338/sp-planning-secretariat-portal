@@ -1,3 +1,2 @@
-export default function Notices() {
-  return <div className="page-container container"></div>
-}
+import ComingSoon from '../../components/ComingSoon'
+export default function Notices() { return <ComingSoon pageKey="notices" /> }
