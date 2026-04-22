@@ -1,3 +1,2 @@
-export default function Tenders() {
-  return <div className="page-container container"></div>
-}
+import ComingSoon from '../../components/ComingSoon'
+export default function Tenders() { return <ComingSoon pageKey="tenders" /> }

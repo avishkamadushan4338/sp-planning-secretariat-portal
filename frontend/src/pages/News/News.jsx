@@ -1,3 +1,2 @@
-export default function News() {
-  return <div className="page-container container"></div>
-}
+import ComingSoon from '../../components/ComingSoon'
+export default function News() { return <ComingSoon pageKey="news" /> }
