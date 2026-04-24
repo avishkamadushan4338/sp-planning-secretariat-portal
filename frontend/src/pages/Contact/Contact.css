@@ -1,0 +1,133 @@
+/* ── Contact page ─────────────────────────────────────────────────────── */
+
+.contact-chips {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 1.5rem;
+}
+
+.contact-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 16px;
+  border-radius: 50px;
+  background: rgba(252, 251, 250, 0.1);
+  border: 1px solid rgba(199, 154, 43, 0.35);
+  color: rgba(252, 251, 250, 0.85);
+  font-size: 0.82rem;
+  text-decoration: none;
+  backdrop-filter: blur(8px);
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.contact-chip:hover {
+  background: rgba(199, 154, 43, 0.15);
+  border-color: rgba(199, 154, 43, 0.6);
+  color: #fff;
+}
+
+/* ── Shared section layout ─────────────────────────────────────────────── */
+.section-container {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 clamp(1rem, 4vw, 2.5rem);
+}
+
+/* ── Map grid ──────────────────────────────────────────────────────────── */
+.map-grid {
+  display: grid;
+  grid-template-columns: 560px 1fr;
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 8px 40px rgba(74, 9, 24, 0.12);
+  border: 1px solid rgba(199, 154, 43, 0.2);
+  min-height: 440px;
+}
+
+.map-info-panel {
+  padding: clamp(1.5rem, 3vw, 2rem);
+  display: flex;
+  flex-direction: column;
+}
+
+.map-embed-wrap {
+  position: relative;
+  overflow: hidden;
+}
+
+.map-embed-wrap iframe {
+  display: block;
+}
+
+/* ── Directory table ───────────────────────────────────────────────────── */
+.dir-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+}
+
+.dir-table thead th {
+  padding: 13px 18px;
+  text-align: left;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  white-space: nowrap;
+}
+
+.dir-table tbody td {
+  padding: 13px 18px;
+  border-bottom: 1px solid rgba(199, 154, 43, 0.1);
+  vertical-align: middle;
+}
+
+.dir-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.dir-table tbody tr:hover {
+  background: rgba(199, 154, 43, 0.05) !important;
+}
+
+/* ── Form rows ─────────────────────────────────────────────────────────── */
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+/* ── Responsive ────────────────────────────────────────────────────────── */
+@media (max-width: 860px) {
+  .map-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .map-embed-wrap {
+    height: 320px;
+  }
+
+  .map-embed-wrap iframe {
+    min-height: 320px !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .contact-chips {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .dir-table thead th,
+  .dir-table tbody td {
+    padding: 10px 12px;
+    font-size: 0.8rem;
+  }
+}
