@@ -1,7 +1,9 @@
+import { useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { Link } from 'react-router-dom'
 import { FiHome, FiArrowLeft } from 'react-icons/fi'
 import { useNavigate } from 'react-router-dom'
+import { useFooter } from '../contexts/FooterContext'
 
 const MAROON = '#4A0918'
 const GOLD   = '#C79A2B'
@@ -23,10 +25,21 @@ export default function ComingSoon({ pageKey }) {
   const navigate = useNavigate()
   const lang = localStorage.getItem('lang') || 'en'
   const t    = LABELS[lang] || LABELS.en
+  const { setHidden } = useFooter()
+  useEffect(() => { setHidden(true); return () => setHidden(false) }, [])
 
   const PAGE_NAMES = {
     en: {
       about:       'About Us',
+      aboutMinistryOverview: 'Ministry Overview',
+      aboutMinister: 'Hon. Minister',
+      aboutDeputyMinisterEducation: 'Hon. Deputy Minister (Education & Higher Education)',
+      aboutDeputyMinisterVocational: 'Hon. Deputy Minister (Vocational Education)',
+      aboutOrganizationStructure: 'Organization Structure',
+      aboutFunctionsDuties: 'Functions & Duties',
+      aboutHistory: 'History',
+      aboutAffiliatedInstitutions: 'Affiliated Institutions',
+      aboutSecretary: 'About Secretary',
       contact:     'Contact Us',
       departments: 'Divisions',
       documents:   'Downloads',
@@ -38,6 +51,15 @@ export default function ComingSoon({ pageKey }) {
     },
     si: {
       about:       'අප ගැන',
+      aboutMinistryOverview: 'අමාත්‍යාංශය පිළිබඳ සාරාංශය',
+      aboutMinister: 'ගරු අමාත්‍යතුමා',
+      aboutDeputyMinisterEducation: 'ගරු නියෝජ්‍ය අමාත්‍ය (අධ්‍යාපන සහ උසස් අධ්‍යාපන)',
+      aboutDeputyMinisterVocational: 'ගරු නියෝජ්‍ය අමාත්‍ය (වෘත්තීය අධ්‍යාපන)',
+      aboutOrganizationStructure: 'සංවිධාන ව්‍යුහය',
+      aboutFunctionsDuties: 'කාර්යයන් හා වගකීම්',
+      aboutHistory: 'ඉතිහාසය',
+      aboutAffiliatedInstitutions: 'අනුබද්ධ ආයතන',
+      aboutSecretary: 'ලේකම් පිළිබඳව',
       contact:     'අප අමතන්න',
       departments: 'අංශ',
       documents:   'බාගත කිරීම්',
@@ -49,6 +71,15 @@ export default function ComingSoon({ pageKey }) {
     },
     ta: {
       about:       'எங்களைப் பற்றி',
+      aboutMinistryOverview: 'அமைச்சக அறிமுகம்',
+      aboutMinister: 'மாண்புமிகு அமைச்சர்',
+      aboutDeputyMinisterEducation: 'மாண்புமிகு துணை அமைச்சர் (கல்வி மற்றும் உயர் கல்வி)',
+      aboutDeputyMinisterVocational: 'மாண்புமிகு துணை அமைச்சர் (தொழில்வாழ்க்கை கல்வி)',
+      aboutOrganizationStructure: 'அமைப்பு வடிவமைப்பு',
+      aboutFunctionsDuties: 'செயல்பாடுகள் மற்றும் கடமைகள்',
+      aboutHistory: 'வரலாறு',
+      aboutAffiliatedInstitutions: 'இணைப்பு நிறுவனங்கள்',
+      aboutSecretary: 'செயலாளர் பற்றி',
       contact:     'தொடர்பு கொள்ளுங்கள்',
       departments: 'பிரிவுகள்',
       documents:   'பதிவிறக்கங்கள்',
@@ -92,18 +123,15 @@ export default function ComingSoon({ pageKey }) {
 
       <div style={{ position: 'relative', zIndex: 1, textAlign: 'center', maxWidth: 580 }}>
 
-        {/* Icon circle */}
+        {/* Logo */}
         <motion.div variants={floatUp(0)} initial="hidden" animate="visible"
           style={{ display: 'flex', justifyContent: 'center', marginBottom: '1.75rem' }}>
-          <div style={{
-            width: 90, height: 90, borderRadius: '50%',
-            background: `linear-gradient(135deg, rgba(74,9,24,0.08) 0%, rgba(199,154,43,0.12) 100%)`,
-            border: `2px solid rgba(199,154,43,0.3)`,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            boxShadow: '0 8px 32px rgba(199,154,43,0.15)',
-          }}>
-            <GearIcon />
-          </div>
+          <img
+            src="/branding/logo.svg"
+            alt="Planning Secretariat"
+            onError={(e) => { e.currentTarget.src = '/branding/logo.png' }}
+            style={{ width: 520, height: 'auto', objectFit: 'contain' }}
+          />
         </motion.div>
 
         {/* Page name chip */}
@@ -211,20 +239,6 @@ export default function ComingSoon({ pageKey }) {
   )
 }
 
-function GearIcon() {
-  return (
-    <svg width="38" height="38" viewBox="0 0 38 38" fill="none">
-      <circle cx="19" cy="19" r="6" stroke={GOLD} strokeWidth="2" fill="none" opacity="0.9" />
-      {Array.from({ length: 8 }, (_, i) => {
-        const a = (i * 45 * Math.PI) / 180
-        const x1 = 19 + 9  * Math.cos(a), y1 = 19 + 9  * Math.sin(a)
-        const x2 = 19 + 14 * Math.cos(a), y2 = 19 + 14 * Math.sin(a)
-        return <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke={GOLD} strokeWidth="2.5" strokeLinecap="round" opacity="0.75" />
-      })}
-      <circle cx="19" cy="19" r="14" stroke={MAROON} strokeWidth="1.5" fill="none" strokeDasharray="4 3" opacity="0.3" />
-    </svg>
-  )
-}
 
 function OrnamentLine() {
   return (
