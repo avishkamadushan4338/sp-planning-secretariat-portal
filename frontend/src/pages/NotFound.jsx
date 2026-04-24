@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { FiArrowLeft, FiHome, FiCompass } from 'react-icons/fi'
+import { useFooter } from '../contexts/FooterContext'
 
 const MAROON = '#4A0918'
 const GOLD   = '#C79A2B'
@@ -17,8 +18,11 @@ export default function NotFound() {
   const navigate   = useNavigate()
   const [lang]     = useState(() => localStorage.getItem('lang') || 'en')
   const [count, setCount] = useState(10)
+  const { setHidden } = useFooter()
 
   const t = LABELS[lang] || LABELS.en
+
+  useEffect(() => { setHidden(true); return () => setHidden(false) }, [])
 
   useEffect(() => {
     if (count <= 0) { navigate('/home'); return }
@@ -29,7 +33,8 @@ export default function NotFound() {
   return (
     <div
       style={{
-        minHeight: '100vh',
+        height: 'calc(100vh - 76px)',
+        maxHeight: 'calc(100vh - 76px)',
         background: CREAM,
         display: 'flex',
         flexDirection: 'column',
@@ -55,14 +60,14 @@ export default function NotFound() {
       }} />
 
       {/* ── Content ── */}
-      <div style={{ position: 'relative', zIndex: 1, textAlign: 'center', padding: '2rem 1.5rem', maxWidth: 620 }}>
+      <div style={{ position: 'relative', zIndex: 1, textAlign: 'center', padding: '1rem 1.5rem', maxWidth: 620 }}>
 
         {/* 404 large number */}
         <motion.div variants={floatUp(0)} initial="hidden" animate="visible">
-          <div style={{ position: 'relative', display: 'inline-block', marginBottom: '0.5rem' }}>
+          <div style={{ position: 'relative', display: 'inline-block', marginBottom: '0.25rem' }}>
             <span style={{
               fontFamily: "'Playfair Display', Georgia, serif",
-              fontSize: 'clamp(7rem, 20vw, 13rem)',
+              fontSize: 'clamp(5rem, 13vw, 8.5rem)',
               fontWeight: 900,
               lineHeight: 1,
               color: 'transparent',
@@ -75,7 +80,7 @@ export default function NotFound() {
             </span>
             <span style={{
               fontFamily: "'Playfair Display', Georgia, serif",
-              fontSize: 'clamp(7rem, 20vw, 13rem)',
+              fontSize: 'clamp(5rem, 13vw, 8.5rem)',
               fontWeight: 900,
               lineHeight: 1,
               color: 'transparent',
@@ -97,7 +102,7 @@ export default function NotFound() {
 
         {/* Ornament divider */}
         <motion.div variants={floatUp(0.12)} initial="hidden" animate="visible"
-          style={{ display: 'flex', justifyContent: 'center', marginBottom: '1.5rem' }}>
+          style={{ display: 'flex', justifyContent: 'center', marginBottom: '0.75rem' }}>
           <OrnamentDivider />
         </motion.div>
 
@@ -105,10 +110,10 @@ export default function NotFound() {
         <motion.h1 variants={floatUp(0.2)} initial="hidden" animate="visible"
           style={{
             fontFamily: "'Playfair Display', serif",
-            fontSize: 'clamp(1.4rem, 3vw, 2rem)',
+            fontSize: 'clamp(1.2rem, 2.5vw, 1.65rem)',
             fontWeight: 700,
             color: MAROON,
-            marginBottom: '0.75rem',
+            marginBottom: '0.5rem',
             lineHeight: 1.2,
           }}>
           {t.heading}
@@ -118,13 +123,12 @@ export default function NotFound() {
         <motion.p variants={floatUp(0.28)} initial="hidden" animate="visible"
           style={{
             fontFamily: t.font,
-            fontSize: 'clamp(0.87rem, 1.5vw, 1rem)',
+            fontSize: 'clamp(0.82rem, 1.3vw, 0.92rem)',
             color: '#5A2030',
             opacity: 0.8,
-            lineHeight: 1.8,
-            marginBottom: '2rem',
+            lineHeight: 1.65,
             maxWidth: 480,
-            margin: '0 auto 2rem',
+            margin: '0 auto 1rem',
           }}>
           {t.body}
         </motion.p>
@@ -136,8 +140,8 @@ export default function NotFound() {
             background: 'rgba(74,9,24,0.06)',
             border: '1px solid rgba(74,9,24,0.1)',
             borderRadius: 100,
-            padding: '8px 20px',
-            marginBottom: '2rem',
+            padding: '6px 18px',
+            marginBottom: '1rem',
           }}>
           <FiCompass size={14} style={{ color: GOLD }} />
           <span style={{ fontSize: '0.8rem', color: MAROON, opacity: 0.75 }}>
