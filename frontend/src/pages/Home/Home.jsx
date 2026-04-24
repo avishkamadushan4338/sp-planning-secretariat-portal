@@ -1,6 +1,7 @@
 import { motion, AnimatePresence } from 'framer-motion'
 import { useState, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'
+import './Home.css'
 import { FiArrowRight, FiUsers, FiFileText, FiTrendingUp } from 'react-icons/fi'
 import { HiOutlineOfficeBuilding } from 'react-icons/hi'
 import CountUp from 'react-countup'
@@ -21,7 +22,7 @@ const SLIDES = {
       line2:  'Sustainable Development',
       line3:  '& A Brighter Tomorrow',
       body:   'The Planning Secretariat – Southern Province is committed to effective planning, coordination, and implementation to ensure sustainable development and improved quality of life for all.',
-      btn1: { label: 'Our Mission',      path: '/about'       },
+      btn1: { label: 'Our Divisions',    path: '/departments' },
       btn2: { label: 'Explore Services', path: '/services'    },
     },
     {
@@ -32,7 +33,7 @@ const SLIDES = {
       line3:  'Across 12+ Divisions',
       body:   'Twelve specialised divisions work in harmony to drive economic progress, infrastructure development, and social welfare throughout the Southern Province.',
       btn1: { label: 'Our Divisions',  path: '/departments' },
-      btn2: { label: 'Learn More',     path: '/about'       },
+      btn2: { label: 'Learn More',     path: '/documents'   },
     },
     {
       img:    '/branding/hero3.jpeg',
@@ -53,7 +54,7 @@ const SLIDES = {
       line2:  'තිරසාර සංවර්ධනය',
       line3:  'හා දීප්තිමත් හෙටක් සඳහා',
       body:   'දකුණු පළාත් සැලසුම් ලේකම් කාර්යාලය, සියලු දෙනාට තිරසාර සංවර්ධනය හා ජීවන තත්ත්වය ඉහළ නැංවීම සඳහා ඵලදායී සැලසුම් කිරීම, සම්බන්ධීකරණය හා ක්‍රියාත්මක කිරීමට කැපවී සිටී.',
-      btn1: { label: 'අපගේ මෙහෙවර',   path: '/about'    },
+      btn1: { label: 'අපගේ අංශ',       path: '/departments' },
       btn2: { label: 'සේවාවන් බලන්න', path: '/services' },
     },
     {
@@ -64,7 +65,7 @@ const SLIDES = {
       line3:  'අංශ 12+ හරහා',
       body:   'දකුණු පළාතේ ආර්ථික සංවර්ධනය, යටිතල පහසුකම් සංවර්ධනය සහ සමාජ සුබසාධනය ඉදිරිරොු ගෙනයාමට විශේෂිත අංශ 12 ක් එකිනෙකා සමඟ කාර්යක්ෂමව ක්‍රියා කරයි.',
       btn1: { label: 'අපගේ අංශ',     path: '/departments' },
-      btn2: { label: 'තවදුරටත් දැනගන්න', path: '/about'    },
+      btn2: { label: 'ලේඛන බලන්න',      path: '/documents' },
     },
     {
       img:    '/branding/hero3.jpeg',
@@ -85,7 +86,7 @@ const SLIDES = {
       line2:  'நிலையான வளர்ச்சி',
       line3:  'ஒரு பிரகாசமான நாளை நோக்கி',
       body:   'தென் மாகாண திட்டமிடல் செயலகம், அனைவருக்கும் நிலையான வளர்ச்சியையும் மேம்பட்ட வாழ்க்கைத் தரத்தையும் உறுதிப்படுத்த அர்ப்பணிக்கப்பட்டுள்ளது.',
-      btn1: { label: 'எங்கள் நோக்கம்',   path: '/about'    },
+      btn1: { label: 'எங்கள் பிரிவுகள்', path: '/departments' },
       btn2: { label: 'சேவைகளை காண்க',  path: '/services' },
     },
     {
@@ -96,7 +97,7 @@ const SLIDES = {
       line3:  '12+ பிரிவுகள் வழியாக',
       body:   'பன்னிரண்டு சிறப்பு பிரிவுகள் இணைந்து தென் மாகாணத்தின் பொருளாதார முன்னேற்றம், உள்கட்டமைப்பு மேம்பாடு மற்றும் சமூக நலனை இயக்குகின்றன.',
       btn1: { label: 'எங்கள் பிரிவுகள்', path: '/departments' },
-      btn2: { label: 'மேலும் அறிக',     path: '/about'       },
+      btn2: { label: 'மேலும் பார்க்க',   path: '/documents'   },
     },
     {
       img:    '/branding/hero3.jpeg',
@@ -127,21 +128,19 @@ const STAT_DATA  = [
 
 /* ── Animation variants ──────────────────────────────────────────────────── */
 const textEnter = {
-  hidden:  { opacity: 0, x: 30, filter: 'blur(6px)' },
-  visible: { opacity: 1, x: 0,  filter: 'blur(0px)', transition: { duration: 0.55, ease: [0.16, 1, 0.3, 1] } },
-  exit:    { opacity: 0, x: -20, filter: 'blur(4px)', transition: { duration: 0.25, ease: [0.4, 0, 1, 1] } },
+  hidden:  { opacity: 0, x: 30 },
+  visible: { opacity: 1, x: 0,  transition: { duration: 0.55, ease: [0.16, 1, 0.3, 1] } },
+  exit:    { opacity: 0, x: -20, transition: { duration: 0.25, ease: [0.4, 0, 1, 1] } },
 }
 
-const lineEnter = (delay = 0) => ({
-  hidden:  { opacity: 0, y: 20, filter: 'blur(4px)' },
-  visible: { opacity: 1, y: 0,  filter: 'blur(0px)', transition: { duration: 0.55, delay, ease: [0.16, 1, 0.3, 1] } },
+const mkLine = (delay) => ({
+  hidden:  { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0,  transition: { duration: 0.55, delay, ease: [0.16, 1, 0.3, 1] } },
 })
+const LINE_ENTER = [mkLine(0.04), mkLine(0.13), mkLine(0.22), mkLine(0.35), mkLine(0.46)]
 
-const imgEnter = {
-  hidden:  { opacity: 0, scale: 1.04 },
-  visible: { opacity: 1, scale: 1,   transition: { duration: 1.0, ease: [0.16, 1, 0.3, 1] } },
-  exit:    { opacity: 0, scale: 0.98, transition: { duration: 0.55, ease: [0.4, 0, 1, 1] } },
-}
+const countUpEasing = (t, b, c, d) => c * (1 - Math.pow(2, -10 * t / d)) + b
+
 
 /* ── Home ────────────────────────────────────────────────────────────────── */
 export default function Home() {
@@ -165,8 +164,7 @@ export default function Home() {
 
 /* ── Hero section ────────────────────────────────────────────────────────── */
 function HeroSection({ slides, meta }) {
-  const [idx,    setIdx]    = useState(0)
-  const [progress, setProgress] = useState(0)
+  const [idx, setIdx] = useState(0)
 
   const total = slides.length
   const slide = slides[idx]
@@ -174,62 +172,66 @@ function HeroSection({ slides, meta }) {
 
   const goTo = useCallback((n) => {
     setIdx((n + total) % total)
-    setProgress(0)
   }, [total])
 
-  /* Auto-advance + progress ticker */
+  /* Pre-decode all slide images so they're compositor-ready before first transition */
   useEffect(() => {
-    const step   = 100
-    const frames = SLIDE_INTERVAL / step
-    let frame    = progress * frames / 100
+    slides.forEach(s => {
+      const img = new Image()
+      img.src = s.img
+      img.decode().catch(() => {})
+    })
+  }, [slides])
 
-    const id = setInterval(() => {
-      frame++
-      const pct = (frame / frames) * 100
-      if (pct >= 100) { goTo(idx + 1); return }
-      setProgress(pct)
-    }, step)
-    return () => clearInterval(id)
-  }, [idx, goTo]) // eslint-disable-line react-hooks/exhaustive-deps
+  /* Auto-advance — single timeout, no repeated state updates */
+  useEffect(() => {
+    const id = setTimeout(() => goTo(idx + 1), SLIDE_INTERVAL)
+    return () => clearTimeout(id)
+  }, [idx, goTo])
 
   return (
     <section
-      className="relative overflow-hidden"
+      className="hero-section relative overflow-hidden"
       style={{ height: 'calc(100vh - 76px)', minHeight: '600px', background: CREAM }}
     >
 
       {/* ── Slide progress bar — top edge ── */}
       <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, zIndex: 10, background: 'rgba(199,154,43,0.15)' }}>
         <motion.div
-          style={{ height: '100%', background: `linear-gradient(90deg, ${GOLD}, #E8C55A)`, width: `${progress}%` }}
-          transition={{ ease: 'linear' }}
+          key={idx}
+          initial={{ scaleX: 0 }}
+          animate={{ scaleX: 1 }}
+          transition={{ duration: SLIDE_INTERVAL / 1000, ease: 'linear' }}
+          style={{ height: '100%', background: `linear-gradient(90deg, ${GOLD}, #E8C55A)`, transformOrigin: 'left', width: '100%' }}
         />
       </div>
 
-      {/* ── Image panel with crossfade ── */}
-      <AnimatePresence mode="sync">
-        <motion.div
-          key={`img-${idx}`}
-          variants={imgEnter}
-          initial="hidden"
-          animate="visible"
-          exit="exit"
-          style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: '32%', zIndex: 0 }}
+      {/* ── Image panels — all kept in DOM, pure CSS opacity crossfade ── */}
+      {slides.map((s, i) => (
+        <div
+          key={s.img}
+          className="hero-image-panel"
+          aria-hidden="true"
+          style={{
+            position: 'absolute', top: 0, right: 0, bottom: 0, left: '32%', zIndex: 0,
+            opacity: i === idx ? 1 : 0,
+            transition: 'opacity 0.85s ease',
+            willChange: 'opacity',
+          }}
         >
           <img
-            src={slide.img}
+            src={s.img}
             alt=""
             aria-hidden="true"
             onError={(e) => { e.currentTarget.style.opacity = '0' }}
             style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 25%', display: 'block' }}
           />
-          {/* Left cream fade */}
-          <div style={{
+          <div className="hero-image-overlay" style={{
             position: 'absolute', inset: 0,
             background: `linear-gradient(to right, ${CREAM} 0%, ${CREAM}CC 12%, ${CREAM}66 28%, transparent 52%)`,
           }} />
-        </motion.div>
-      </AnimatePresence>
+        </div>
+      ))}
 
       {/* ── Honeycomb left-edge ── */}
       <div className="hidden lg:block" style={{ position: 'absolute', left: 0, top: 0, opacity: 0.1, zIndex: 1, pointerEvents: 'none' }}>
@@ -240,6 +242,7 @@ function HeroSection({ slides, meta }) {
       <AnimatePresence mode="sync">
         <motion.div
           key={`text-${idx}`}
+          className="hero-text-content"
           variants={textEnter}
           initial="hidden"
           animate="visible"
@@ -247,6 +250,7 @@ function HeroSection({ slides, meta }) {
           style={{
             position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
             zIndex: 2,
+            willChange: 'transform, opacity',
             display: 'flex', flexDirection: 'column', justifyContent: 'center',
             paddingLeft: 'clamp(0.75rem, 2vw, 2rem)',
             paddingRight: '2rem',
@@ -257,7 +261,7 @@ function HeroSection({ slides, meta }) {
           {/* Slide counter */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: '1rem' }}>
             <DiamondIcon />
-            <span style={{
+            <span className="hero-accent" style={{
               fontFamily: isNonLatin ? meta.font : "'Cinzel', serif",
               fontSize: 'clamp(0.65rem, 1.2vw, 0.8rem)',
               color: GOLD, fontWeight: 600, letterSpacing: isNonLatin ? 0 : '0.06em',
@@ -267,20 +271,20 @@ function HeroSection({ slides, meta }) {
           </div>
 
           {/* Heading */}
-          <h1 style={{
+          <h1 className="hero-heading" style={{
             fontFamily: meta.headFont,
             fontSize: isNonLatin ? 'clamp(1.35rem, 2.5vw, 2.3rem)' : 'clamp(1.6rem, 3vw, 2.75rem)',
             lineHeight: isNonLatin ? 1.45 : 1.18,
             color: MAROON, fontWeight: 800,
             marginBottom: '0.5rem', overflow: 'hidden',
           }}>
-            <motion.span style={{ display: 'block', whiteSpace: 'nowrap' }} variants={lineEnter(0.04)} initial="hidden" animate="visible">
+            <motion.span className="hero-heading-line" style={{ display: 'block', whiteSpace: 'nowrap' }} variants={LINE_ENTER[0]} initial="hidden" animate="visible">
               {slide.line1}
             </motion.span>
-            <motion.span style={{ display: 'block', whiteSpace: 'nowrap', color: GOLD }} variants={lineEnter(0.13)} initial="hidden" animate="visible">
+            <motion.span className="hero-heading-line hero-heading-line--gold" style={{ display: 'block', whiteSpace: 'nowrap', color: GOLD }} variants={LINE_ENTER[1]} initial="hidden" animate="visible">
               {slide.line2}
             </motion.span>
-            <motion.span style={{ display: 'block', whiteSpace: 'nowrap' }} variants={lineEnter(0.22)} initial="hidden" animate="visible">
+            <motion.span className="hero-heading-line" style={{ display: 'block', whiteSpace: 'nowrap' }} variants={LINE_ENTER[2]} initial="hidden" animate="visible">
               {slide.line3}
             </motion.span>
           </h1>
@@ -294,14 +298,15 @@ function HeroSection({ slides, meta }) {
 
           {/* Body */}
           <motion.p
-            variants={lineEnter(0.35)} initial="hidden" animate="visible"
+            className="hero-body"
+            variants={LINE_ENTER[3]} initial="hidden" animate="visible"
             style={{ fontFamily: meta.font, fontSize: 'clamp(0.85rem, 1.3vw, 0.98rem)', color: '#5A2030', lineHeight: 1.85, maxWidth: 480, marginBottom: '1.2rem', opacity: 0.87 }}
           >
             {slide.body}
           </motion.p>
 
           {/* Buttons */}
-          <motion.div className="flex flex-wrap gap-4" variants={lineEnter(0.46)} initial="hidden" animate="visible">
+          <motion.div className="hero-buttons flex flex-wrap gap-4" variants={LINE_ENTER[4]} initial="hidden" animate="visible">
             <HeroButton to={slide.btn1.path} icon={<FiUsers size={15} />}    variant="primary" font={meta.font}>{slide.btn1.label}</HeroButton>
             <HeroButton to={slide.btn2.path} icon={<FiFileText size={15} />} variant="gold"    font={meta.font}>{slide.btn2.label}</HeroButton>
           </motion.div>
@@ -321,10 +326,10 @@ function StatsBar({ labels, font }) {
   const { ref, inView } = useInView({ threshold: 0.4, triggerOnce: true })
 
   return (
-    <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 3 }}>
+    <div className="stats-bar-outer" style={{ position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 3 }}>
 
-      <div style={{ position: 'relative', zIndex: 2, padding: '0 40px', marginBottom: '32px' }}>
-        <div ref={ref} style={{
+      <div className="stats-bar-wrap" style={{ position: 'relative', zIndex: 2, padding: '0 40px', marginBottom: '32px' }}>
+        <div ref={ref} className="stats-grid" style={{
           maxWidth: 920, margin: '0 auto',
           background: 'rgba(74,9,24,0.82)',
           backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
@@ -335,7 +340,7 @@ function StatsBar({ labels, font }) {
           {STAT_DATA.map(({ end, suffix, decimals }, i) => {
             const Icon = STAT_ICONS[i]
             return (
-              <div key={i} style={{
+              <div key={i} className="stat-item" style={{
                 display: 'flex', alignItems: 'center', gap: 14,
                 borderRight: i < 3 ? '1px solid rgba(199,154,43,0.18)' : 'none',
                 paddingRight: i < 3 ? 24 : 0, paddingLeft: i > 0 ? 24 : 0,
@@ -351,7 +356,7 @@ function StatsBar({ labels, font }) {
                 <div>
                   <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 'clamp(1.1rem,1.9vw,1.45rem)', fontWeight: 700, color: GOLD, lineHeight: 1.1 }}>
                     {inView
-                      ? <CountUp start={0} end={end} duration={2.2} delay={i * 0.15} decimals={decimals} suffix={suffix} useEasing easingFn={(t,b,c,d) => c*(1-Math.pow(2,-10*t/d))+b} />
+                      ? <CountUp start={0} end={end} duration={2.2} delay={i * 0.15} decimals={decimals} suffix={suffix} useEasing easingFn={countUpEasing} />
                       : <span>0{suffix}</span>
                     }
                   </p>

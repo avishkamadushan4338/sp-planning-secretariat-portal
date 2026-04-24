@@ -1,0 +1,265 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   HOME – Premium device-responsive Hero & Stats
+   Mobile pattern: full-bleed cinematic image + floating glass content card
+   Brand: maroon #4A0918 · gold #C79A2B · cream #FCFBFA
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Tablet (768–1023px): tighten the split ──────────────────────────────── */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .hero-image-panel {
+    left: 40% !important;
+  }
+
+  .hero-image-overlay {
+    background: linear-gradient(
+      to right,
+      rgba(252, 251, 250, 1)    0%,
+      rgba(252, 251, 250, 0.96) 16%,
+      rgba(252, 251, 250, 0.68) 42%,
+      transparent               66%
+    ) !important;
+  }
+
+  .hero-text-content {
+    max-width: 560px !important;
+    padding-left: 2.25rem !important;
+    padding-right: 1.5rem !important;
+  }
+
+  .stats-bar-wrap {
+    padding: 0 20px !important;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   MOBILE (< 768px)
+   Layout: full-screen hero image  →  floating frosted glass content card
+                                   →  2 × 2 stats bar at bottom
+   ══════════════════════════════════════════════════════════════════════════ */
+@media (max-width: 767px) {
+
+  /* ── 1. Section: true viewport height ── */
+  .hero-section {
+    height: auto !important;
+    min-height: 100vh !important;
+    min-height: 100svh !important;
+    padding-top: 18px !important;
+    padding-bottom: 18px !important;
+  }
+
+  /* ── 2. Image: full-bleed (not cropped to right 68%) ── */
+  .hero-image-panel {
+    left: 0 !important;
+  }
+
+  /* ── 3. Overlay: cinematic dark-to-maroon gradient.
+          No cream gradient – the glass card provides its own background. ── */
+  .hero-image-overlay {
+    background:
+      /* Top-left soft dark */
+      linear-gradient(
+        150deg,
+        rgba(8, 2, 4, 0.38)   0%,
+        rgba(8, 2, 4, 0.12)   32%,
+        transparent            55%
+      ),
+      /* Bottom maroon vignette — blends into stats bar */
+      linear-gradient(
+        to top,
+        rgba(74, 9, 24, 0.82)  0%,
+        rgba(74, 9, 24, 0.38)  22%,
+        transparent             44%
+      ) !important;
+  }
+
+  /* ── 4. Content card: frosted glass floating above stats ── */
+  .hero-text-content {
+    /* Move text box to top area on mobile */
+    position:   relative !important;
+    top:        auto !important;
+    left:       auto !important;
+    right:      auto !important;
+    bottom:     auto !important;
+    margin:     28px 14px 0 !important;
+    width:      auto !important;
+    max-width:  none !important;
+    max-height: none !important;
+
+    /* Override inline paddings */
+    padding-left:   20px !important;
+    padding-right:  20px !important;
+    padding-top:    18px !important;
+    padding-bottom: 18px !important;
+
+    justify-content: flex-start !important;
+
+    /* Glass-morphism premium card */
+    background:          rgba(252, 251, 250, 0.30) !important;
+    backdrop-filter:     blur(22px) saturate(190%) !important;
+    -webkit-backdrop-filter: blur(22px) saturate(190%) !important;
+    border:        1px solid rgba(199, 154, 43, 0.30) !important;
+    border-radius: 20px !important;
+    box-shadow:
+      0 24px 64px rgba(74,  9, 24, 0.28),
+      0  8px 24px rgba(0,   0,  0, 0.20),
+      inset 0  1px 0 rgba(255, 255, 255, 0.92),
+      inset 0 -1px 0 rgba(199, 154, 43, 0.12) !important;
+
+    /* Allow internal scroll on tiny phones without showing scrollbar */
+    overflow-y:       auto !important;
+    scrollbar-width:  none !important;
+  }
+
+  .hero-text-content::-webkit-scrollbar {
+    display: none !important;
+  }
+
+  /* ── 5. Accent label: readable on mobile ── */
+  .hero-accent {
+    font-size: clamp(0.68rem, 2.2vw, 0.78rem) !important;
+  }
+
+  /* ── 6. Heading: wrap allowed, scaled for card width ── */
+  .hero-heading {
+    font-size:     clamp(1.42rem, 5.2vw, 1.88rem) !important;
+    margin-bottom: 0.35rem !important;
+    overflow:      visible !important;
+  }
+
+  .hero-heading-line {
+    white-space: normal !important;
+    word-break:  break-word !important;
+    line-height: 1.22 !important;
+  }
+
+  /* ── 7. Body copy: full card width, readable ── */
+  .hero-body {
+    font-size:     clamp(0.82rem, 2.4vw, 0.92rem) !important;
+    max-width:     100% !important;
+    line-height:   1.74 !important;
+    margin-bottom: 0.9rem !important;
+    opacity:       0.90 !important;
+  }
+
+  /* ── 8. Buttons: wrap naturally on narrow phones ── */
+  .hero-buttons {
+    gap:       9px !important;
+    flex-wrap: wrap !important;
+  }
+
+  /* ── 9. Stats bar: place below text card, tighter 2 × 2 ── */
+  .stats-bar-outer {
+    position: relative !important;
+    bottom: auto !important;
+    left: auto !important;
+    right: auto !important;
+    z-index: 5 !important;
+    margin-top: 32px !important;
+  }
+
+  .stats-bar-wrap {
+    padding:       0 14px !important;
+    margin-bottom: 0 !important;
+  }
+
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    padding:       13px 14px !important;
+    border-radius: 16px !important;
+    gap:           0 !important;
+  }
+
+  /* Reset desktop inline-style side-padding */
+  .stat-item {
+    border-right:   none !important;
+    padding-left:   10px !important;
+    padding-right:  10px !important;
+    padding-top:    11px !important;
+    padding-bottom: 11px !important;
+    gap:            9px !important;
+  }
+
+  /* Inner grid dividers */
+  .stat-item:nth-child(1),
+  .stat-item:nth-child(2) {
+    border-bottom: 1px solid rgba(199, 154, 43, 0.22) !important;
+  }
+  .stat-item:nth-child(odd) {
+    border-right:  1px solid rgba(199, 154, 43, 0.22) !important;
+  }
+
+  /* Icon circle: slightly smaller */
+  .stat-item > div:first-child {
+    width:  38px !important;
+    height: 38px !important;
+    flex-shrink: 0 !important;
+  }
+
+  /* Stat number */
+  .stat-item > div:last-child p:first-child {
+    font-size: clamp(1.05rem, 3.8vw, 1.22rem) !important;
+  }
+
+  /* Stat label */
+  .stat-item > div:last-child p:last-child {
+    font-size:   clamp(0.60rem, 1.8vw, 0.68rem) !important;
+    line-height: 1.25 !important;
+  }
+}
+
+/* ── Small mobile (< 480px): tighten further ─────────────────────────────── */
+@media (max-width: 479px) {
+
+  .hero-section {
+    min-height: 580px !important;
+  }
+
+  .hero-text-content {
+    margin: 22px 10px 0 !important;
+    padding-left:   16px !important;
+    padding-right:  16px !important;
+    padding-top:    14px !important;
+    padding-bottom: 14px !important;
+  }
+
+  .hero-heading {
+    font-size: clamp(1.28rem, 4.8vw, 1.55rem) !important;
+  }
+
+  .hero-body {
+    font-size:   0.82rem !important;
+    /* Limit to 3 lines on tiny phones to prevent card overflow */
+    display:              -webkit-box !important;
+    -webkit-line-clamp:   3 !important;
+    line-clamp:           3 !important;
+    -webkit-box-orient:   vertical !important;
+    overflow:             hidden !important;
+  }
+
+  .stats-bar-wrap {
+    padding: 0 10px !important;
+    margin-top: 12px !important;
+  }
+
+  .stats-grid {
+    padding: 10px 12px !important;
+  }
+
+  .stat-item {
+    padding: 9px 8px !important;
+    gap: 7px !important;
+  }
+
+  .stat-item > div:first-child {
+    width:  34px !important;
+    height: 34px !important;
+  }
+
+  .stat-item > div:last-child p:first-child {
+    font-size: 1rem !important;
+  }
+
+  .stat-item > div:last-child p:last-child {
+    font-size: 0.57rem !important;
+  }
+}
