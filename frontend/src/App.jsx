@@ -8,11 +8,12 @@ import Departments from './pages/Departments/Departments'
 import Documents from './pages/Documents/Documents'
 import News from './pages/News/News'
 import Notices from './pages/Notices/Notices'
-import Tenders from './pages/Tenders/Tenders'
 import Gallery from './pages/Gallery/Gallery'
 import FAQ from './pages/FAQ/FAQ'
 import Contact from './pages/Contact/Contact'
 import ComingSoon from './components/ComingSoon'
+import CMSLogin from './pages/CMS/CMSLogin'
+import CMSDashboard from './pages/CMS/CMSDashboard'
 import NotFound from './pages/NotFound'
 
 export default function App() {
@@ -21,6 +22,10 @@ export default function App() {
     <Routes>
       {/* Language-selection gateway – standalone, no Navbar/Footer */}
       <Route path="/" element={<LandingPage />} />
+
+      {/* CMS Admin Portal – standalone, no Navbar/Footer */}
+      <Route path="/cms" element={<CMSLogin />} />
+      <Route path="/cms/dashboard" element={<CMSDashboard />} />
 
       {/* Main site – wrapped in Navbar + Footer layout */}
       <Route element={<MainLayout />}>
@@ -39,7 +44,6 @@ export default function App() {
         <Route path="documents" element={<Documents />} />
         <Route path="news" element={<News />} />
         <Route path="notices" element={<Notices />} />
-        <Route path="tenders" element={<Tenders />} />
         <Route path="gallery" element={<Gallery />} />
         <Route path="faq" element={<FAQ />} />
         <Route path="contact" element={<Contact />} />
