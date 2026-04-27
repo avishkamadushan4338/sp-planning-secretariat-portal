@@ -37,6 +37,8 @@ const T = {
     mapHours:     'Monday – Friday: 8:30 AM – 4:30 PM',
     mapHoursLbl:  'Office Hours',
     mapDirections:'Get Directions',
+    mapFaxLbl:    'Fax',
+    dirCount:     'departments',
     dirTitle:     'Telephone Directory',
     dirSub:       'Direct contact numbers for all divisions and departments',
     dirSearch:    'Search department or division…',
@@ -82,6 +84,8 @@ const T = {
     mapHours:     'සඳු – සිකු: 8:30 – 16:30',
     mapHoursLbl:  'කාර්යාල වේලාවන්',
     mapDirections:'මාර්ගය ලබා ගන්න',
+    mapFaxLbl:    'ෆැක්ස්',
+    dirCount:     'දෙපාර්තමේන්තු',
     dirTitle:     'දූරකථන නාමාවලිය',
     dirSub:       'සියලු අංශ හා දෙපාර්තමේන්තු සඳහා සෘජු සම්බන්ධතා අංක',
     dirSearch:    'අංශය සොයන්න…',
@@ -127,6 +131,8 @@ const T = {
     mapHours:     'திங்கள் – வெள்ளி: 8:30 மு.ப – 4:30 பி.ப',
     mapHoursLbl:  'அலுவலக நேரம்',
     mapDirections:'வழிகாட்டுதல் பெறுங்கள்',
+    mapFaxLbl:    'தொலைநகல்',
+    dirCount:     'திணைக்களங்கள்',
     dirTitle:     'தொலைபேசி அடைவு',
     dirSub:       'அனைத்து பிரிவுகள் மற்றும் திணைக்களங்களுக்கான நேரடி தொடர்பு எண்கள்',
     dirSearch:    'பிரிவை தேடுங்கள்…',
@@ -163,7 +169,8 @@ const T = {
 
 /* ── Telephone directory data ───────────────────────────────────────────── */
 const DIRECTORY = [
-  { en: 'Office of the Provincial Secretary',                si: 'පළාත් ලේකම් කාර්යාලය',                           ta: 'மாகாண செயலாளர் அலுவலகம்',                ext: '101', phone: '+94 91 222 5878', email: 'secretary@splanning.gov.lk' },
+  { en: 'Office of the Provincial Secretary',               si: 'පළාත් ලේකම් කාර්යාලය',                           ta: 'மாகாண செயலாளர் அலுவலகம்',                ext: '101', phone: '+94 91 222 5878', email: 'secretary@splanning.gov.lk' },
+  { en: 'Planning Secretary',                               si: 'සංවර්ධන සැලසුම් අංශය',                          ta: 'வளர்ச்சி திட்டமிடல் பிரிவு',             ext: '102', phone: '+94 91 222 3868', email: 'planning@splanning.gov.lk' },
   { en: 'Development Planning Division',                    si: 'සංවර්ධන සැලසුම් අංශය',                          ta: 'வளர்ச்சி திட்டமிடல் பிரிவு',             ext: '102', phone: '+94 91 222 5879', email: 'planning@splanning.gov.lk' },
   { en: 'Statistics & Research Division',                   si: 'සංඛ්‍යාලේඛන හා පර්යේෂණ අංශය',                  ta: 'புள்ளியியல் & ஆராய்ச்சி பிரிவு',         ext: '103', phone: '+94 91 222 5880', email: 'statistics@splanning.gov.lk' },
   { en: 'Monitoring & Evaluation Division',                 si: 'අධීක්ෂණ හා ඇගයුම් අංශය',                        ta: 'கண்காணிப்பு & மதிப்பீட்டு பிரிவு',       ext: '104', phone: '+94 91 222 5881', email: 'monitoring@splanning.gov.lk' },
@@ -231,7 +238,7 @@ function PageHero({ t, meta }) {
     <section
       className="contact-hero"
       style={{
-        background: `linear-gradient(135deg, ${DEEP} 0%, ${MAROON} 55%, #6E1024 100%)`,
+        background: 'linear-gradient(135deg, #FCFBFA 0%, #F5EFE6 45%, #EDE5D8 100%)',
         position: 'relative', overflow: 'hidden',
         paddingTop: 'clamp(3rem,8vw,5rem)',
         paddingBottom: 'clamp(2.5rem,6vw,4rem)',
@@ -242,7 +249,7 @@ function PageHero({ t, meta }) {
         <HoneycombBg />
       </div>
 
-      {/* Gold arc bottom */}
+      {/* Bottom wave — fills with the page background colour */}
       <svg viewBox="0 0 1440 60" preserveAspectRatio="none"
         style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', height: 60, display: 'block' }}>
         <path d="M0,60 Q360,10 720,30 Q1080,50 1440,15 L1440,60 Z" fill={CREAM} />
@@ -275,7 +282,7 @@ function PageHero({ t, meta }) {
           style={{
             fontFamily: meta.headFont,
             fontSize: 'clamp(2rem, 5vw, 3.4rem)',
-            fontWeight: 800, color: '#fff',
+            fontWeight: 800, color: '#4A0918',
             lineHeight: meta.isNonLatin ? 1.4 : 1.12,
             marginBottom: '0.75rem',
           }}
@@ -290,7 +297,7 @@ function PageHero({ t, meta }) {
           style={{
             fontFamily: meta.font,
             fontSize: 'clamp(0.88rem, 1.5vw, 1.05rem)',
-            color: 'rgba(252,251,250,0.75)',
+            color: 'rgba(74,9,24,0.62)',
             maxWidth: 540, margin: '0 auto',
             lineHeight: 1.8,
           }}
@@ -362,7 +369,7 @@ function MapSection({ t, meta }) {
 
             <InfoRow icon={<FiMapPin size={16} />} label={t.mapAddress} meta={meta} />
             <InfoRow icon={<FiPhone size={16} />}  label={t.mapPhone}   meta={meta} href={`tel:${t.mapPhone}`} />
-            <InfoRow icon={<FiPhone size={16} />}  label={`Fax: ${t.mapFax}`} meta={meta} />
+            <InfoRow icon={<FiPhone size={16} />}  label={`${t.mapFaxLbl}: ${t.mapFax}`} meta={meta} />
             <InfoRow icon={<FiMail size={16} />}   label={t.mapEmail}   meta={meta} href={`mailto:${t.mapEmail}`} />
 
             <div style={{
@@ -598,7 +605,7 @@ function DirectorySection({ t, meta, lang }) {
           }}>
             <HiOutlineOfficeBuilding size={13} style={{ color: GOLD }} />
             <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.75rem', color: '#9B7A82' }}>
-              {filtered.length} / {DIRECTORY.length} departments
+              {filtered.length} / {DIRECTORY.length} {t.dirCount}
             </span>
           </div>
         </motion.div>
