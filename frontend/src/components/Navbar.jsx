@@ -25,32 +25,72 @@ const SITE_LOGO_PATH = '/branding/logo.png'
 
 const ABOUT_US_MENU = [
   {
-    title: 'Planning Secretariat Overview',
-    description: 'Vision, Mission, Mandate and Scope of the Planning Secretariat',
+    title: {
+      en: 'Planning Secretariat Overview',
+      si: 'සැලසුම් ලේකම් කාර්යාලය දළ විශ්ලේෂණය',
+      ta: 'திட்டமிடல் செயலக கண்ணோட்டம்',
+    },
+    description: {
+      en: 'Vision, Mission, Mandate and Scope of the Planning Secretariat',
+      si: 'සැලසුම් ලේකම් කාර්යාලයේ දැක්ම, මෙහෙවර, බලය සහ විෂය පථය',
+      ta: 'திட்டமிடல் செயலகத்தின் தொலைநோக்கு, நோக்கம், ஆணை மற்றும் நோக்கெல்லை',
+    },
     path: '/about/secretariat-overview',
     icon: Building2,
   },
   {
-    title: 'Organization Structure',
-    description: 'Organizational setup of the Planning Secretariat',
+    title: {
+      en: 'Organization Structure',
+      si: 'සංවිධාන ව්‍යුහය',
+      ta: 'நிறுவன அமைப்பு',
+    },
+    description: {
+      en: 'Organizational setup of the Planning Secretariat',
+      si: 'සැලසුම් ලේකම් කාර්යාලයේ සංවිධානාත්මක සැකැස්ම',
+      ta: 'திட்டமிடல் செயலகத்தின் நிறுவன அமைப்பு',
+    },
     path: '/about/organization-structure',
     icon: Network,
   },
   {
-    title: 'Functions & Duties',
-    description: 'Key functions and responsibilities of the Secretariat',
+    title: {
+      en: 'Functions & Duties',
+      si: 'කාර්යයන් හා රාජකාරි',
+      ta: 'செயல்பாடுகள் & கடமைகள்',
+    },
+    description: {
+      en: 'Key functions and responsibilities of the Secretariat',
+      si: 'ලේකම් කාර්යාලයේ ප්‍රධාන කාර්යයන් සහ වගකීම්',
+      ta: 'செயலகத்தின் முக்கிய செயல்பாடுகள் மற்றும் பொறுப்புகள்',
+    },
     path: '/about/functions-duties',
     icon: ClipboardList,
   },
   {
-    title: 'History',
-    description: 'Journey and milestones of the Planning Secretariat',
+    title: {
+      en: 'History',
+      si: 'ඉතිහාසය',
+      ta: 'வரலாறு',
+    },
+    description: {
+      en: 'Journey and milestones of the Planning Secretariat',
+      si: 'සැලසුම් ලේකම් කාර්යාලයේ ගමන් මග සහ ජයග්‍රහණ',
+      ta: 'திட்டமிடல் செயலகத்தின் பயணம் மற்றும் மைல்கற்கள்',
+    },
     path: '/about/history',
     icon: BookOpen,
   },
   {
-    title: 'Affiliated Divisions',
-    description: 'Departments, Boards, Councils and Statutory Bodies',
+    title: {
+      en: 'Affiliated Divisions',
+      si: 'අනුබද්ධ අංශ',
+      ta: 'இணைந்த பிரிவுகள்',
+    },
+    description: {
+      en: 'Departments, Boards, Councils and Statutory Bodies',
+      si: 'දෙපාර්තමේන්තු, මණ්ඩල, කවුන්සිල සහ ව්‍යවස්ථාපිත ආයතන',
+      ta: 'திணைக்களங்கள், குழுக்கள், மன்றங்கள் மற்றும் சட்டரீதியான அமைப்புகள்',
+    },
     path: '/about/affiliated-divisions',
     icon: GitBranch,
   },
@@ -59,13 +99,21 @@ const ABOUT_US_MENU = [
 // Update name and photo path for each official below
 const FEATURED_OFFICIALS = [
   {
-    role: 'Deputy Secretary – Planning',
+    role: {
+      en: 'Deputy Secretary – Planning',
+      si: 'නියෝජ්‍ය ලේකම් – සැලසුම්',
+      ta: 'உதவி செயலாளர் – திட்டமிடல்',
+    },
     name: 'Mr. M.K.G.S.P.K. Jayasekara',
     path: '/about/deputy-secretary',
     photo: '/staff/deputy-secretary.jpg',
   },
   {
-    role: 'Director – Planning',
+    role: {
+      en: 'Director – Planning',
+      si: 'අධ්‍යක්ෂ – සැලසුම්',
+      ta: 'இயக்குநர் – திட்டமிடல்',
+    },
     name: 'Mr. [Director Name]',
     path: '/about/director-planning',
     photo: '/staff/director-planning.jpg',
@@ -84,7 +132,11 @@ const CONTACT_DETAILS = {
   address: '153B, S.H. Dahanayaka Mawatha, Galle, Sri Lanka',
   phone:   '+94 91 222 5878',
   email:   'info@splanning.gov.lk',
-  hours:   'Mon – Fri: 8:30 AM – 4:30 PM',
+  hours: {
+    en: 'Mon – Fri: 8:30 AM – 4:30 PM',
+    si: 'සඳු – සිකු: 8:30 – 16:30',
+    ta: 'திங்கள் – வெள்ளி: 8:30 மு.ப – 4:30 பி.ப',
+  },
 }
 
 // ─── Translations ────────────────────────────────────────────────────────────
@@ -147,6 +199,39 @@ const LANG_FONT = {
   en: 'inherit',
   si: "'Noto Sans Sinhala', sans-serif",
   ta: "'Noto Sans Tamil', sans-serif",
+}
+
+const NAVBAR_UI = {
+  en: {
+    contactTitle:      'Planning Secretariat',
+    quickLinks:        'Quick Links',
+    keyOfficials:      'Key Officials',
+    planningTeam:      'Planning Team',
+    deputyDirectors:   'Deputy Directors',
+    deputyDirectorsSub:'5 Deputy Directors – Planning',
+    readMore:          'Read More →',
+    viewAll:           'View All →',
+  },
+  si: {
+    contactTitle:      'සැලසුම් ලේකම් කාර්යාලය',
+    quickLinks:        'ඉක්මන් සබැඳි',
+    keyOfficials:      'ප්‍රධාන නිලධාරීන්',
+    planningTeam:      'සැලසුම් කණ්ඩායම',
+    deputyDirectors:   'නියෝජ්‍ය අධ්‍යක්ෂවරුන්',
+    deputyDirectorsSub:'නියෝජ්‍ය අධ්‍යක්ෂවරු 5 – සැලසුම්',
+    readMore:          'තව කියවන්න →',
+    viewAll:           'සියල්ල බලන්න →',
+  },
+  ta: {
+    contactTitle:      'திட்டமிடல் செயலகம்',
+    quickLinks:        'விரைவு இணைப்புகள்',
+    keyOfficials:      'முக்கிய அதிகாரிகள்',
+    planningTeam:      'திட்டமிடல் குழு',
+    deputyDirectors:   'உதவி இயக்குநர்கள்',
+    deputyDirectorsSub:'5 உதவி இயக்குநர்கள் – திட்டமிடல்',
+    readMore:          'மேலும் படிக்கவும் →',
+    viewAll:           'அனைத்தையும் காண்க →',
+  },
 }
 
 const LANGUAGES = [
@@ -353,8 +438,9 @@ function DesktopNavItem({ item, lang, isActive, activeDropdown, onEnter, onLeave
 
             {/* Left — contact details */}
             <div className="px-7 py-6 border-r border-white/10">
-              <p className="text-[10px] font-bold tracking-[0.22em] uppercase text-gold/70 mb-4">
-                Planning Secretariat
+              <p className="text-[10px] font-bold tracking-[0.22em] uppercase text-gold/70 mb-4"
+                style={{ fontFamily: LANG_FONT[lang] }}>
+                {(NAVBAR_UI[lang] || NAVBAR_UI.en).contactTitle}
               </p>
               <div className="flex flex-col gap-4">
                 <div className="flex items-start gap-3">
@@ -391,8 +477,8 @@ function DesktopNavItem({ item, lang, isActive, activeDropdown, onEnter, onLeave
                   <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full border border-gold/60 text-gold">
                     <Clock size={14} strokeWidth={2} />
                   </span>
-                  <span className="text-[13px] text-white/85">
-                    {CONTACT_DETAILS.hours}
+                  <span className="text-[13px] text-white/85" style={{ fontFamily: LANG_FONT[lang] }}>
+                    {CONTACT_DETAILS.hours[lang] || CONTACT_DETAILS.hours.en}
                   </span>
                 </div>
               </div>
@@ -400,8 +486,9 @@ function DesktopNavItem({ item, lang, isActive, activeDropdown, onEnter, onLeave
 
             {/* Right — navigation links */}
             <div className="flex flex-col justify-center px-5 py-6 gap-1 min-w-[195px]">
-              <p className="text-[10px] font-bold tracking-[0.22em] uppercase text-gold/70 mb-3">
-                Quick Links
+              <p className="text-[10px] font-bold tracking-[0.22em] uppercase text-gold/70 mb-3"
+                style={{ fontFamily: LANG_FONT[lang] }}>
+                {(NAVBAR_UI[lang] || NAVBAR_UI.en).quickLinks}
               </p>
               {item.dropdown.map((sub) => (
                 <Link
@@ -527,8 +614,18 @@ function MobileNavItem({ item, lang, isActive }) {
                     ? <Icon size={14} className="text-gold mt-0.5 flex-shrink-0" />
                     : <span className="w-1.5 h-1.5 rounded-full bg-gold flex-shrink-0 mt-[7px]" />}
                   <span className="leading-snug">
-                    <span className="block text-prem-black font-semibold">{sub.title || sub.label}</span>
-                    {sub.description && <span className="block text-[11px] text-pro-gray/90">{sub.description}</span>}
+                    <span className="block text-prem-black font-semibold">
+                      {typeof sub.title === 'object'
+                        ? (sub.title[lang] || sub.title.en)
+                        : (sub.title || sub.label)}
+                    </span>
+                    {sub.description && (
+                      <span className="block text-[11px] text-pro-gray/90">
+                        {typeof sub.description === 'object'
+                          ? (sub.description[lang] || sub.description.en)
+                          : sub.description}
+                      </span>
+                    )}
                   </span>
                 </Link>
               )
@@ -727,12 +824,12 @@ export default function Navbar() {
                         <span className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full border border-gold/80 text-gold group-hover:shadow-[0_0_18px_rgba(199,154,43,0.55)] transition-shadow duration-200">
                           <Icon size={18} strokeWidth={2} />
                         </span>
-                        <span className="min-w-0">
+                        <span className="min-w-0" style={{ fontFamily: LANG_FONT[activeLang] }}>
                           <span className="block text-[18px] font-semibold tracking-wide text-white leading-snug">
-                            {menuItem.title}
+                            {menuItem.title[activeLang] || menuItem.title.en}
                           </span>
                           <span className="mt-1 block text-[14.5px] leading-relaxed text-[#f0ddd0]/80 whitespace-nowrap">
-                            {menuItem.description}
+                            {menuItem.description[activeLang] || menuItem.description.en}
                           </span>
                         </span>
                       </Link>
@@ -743,8 +840,9 @@ export default function Navbar() {
                 {/* Featured officials column */}
                 <div className="flex flex-col gap-4 px-5 py-5 bg-black/25 border-l border-gold/20">
                   {/* Key Officials label */}
-                  <p className="text-[11px] font-bold tracking-[0.2em] uppercase text-gold/70">
-                    Key Officials
+                  <p className="text-[11px] font-bold tracking-[0.2em] uppercase text-gold/70"
+                    style={{ fontFamily: LANG_FONT[activeLang] }}>
+                    {(NAVBAR_UI[activeLang] || NAVBAR_UI.en).keyOfficials}
                   </p>
 
                   {/* Individual official cards */}
@@ -758,14 +856,16 @@ export default function Navbar() {
                         <OfficialAvatar photo={official.photo} name={official.name} />
                       </div>
                       <div className="min-w-0">
-                        <p className="text-[11.5px] text-gold font-bold tracking-[0.15em] leading-none mb-2.5 uppercase">
-                          {official.role}
+                        <p className="text-[11.5px] text-gold font-bold tracking-[0.15em] leading-none mb-2.5 uppercase"
+                          style={{ fontFamily: LANG_FONT[activeLang] }}>
+                          {official.role[activeLang] || official.role.en}
                         </p>
                         <p className="text-[18px] font-bold text-white leading-snug mb-2">
                           {official.name}
                         </p>
-                        <p className="text-[13px] text-white/40 group-hover:text-gold transition-colors duration-200 font-medium">
-                          Read More →
+                        <p className="text-[13px] text-white/40 group-hover:text-gold transition-colors duration-200 font-medium"
+                          style={{ fontFamily: LANG_FONT[activeLang] }}>
+                          {(NAVBAR_UI[activeLang] || NAVBAR_UI.en).readMore}
                         </p>
                       </div>
                     </Link>
@@ -773,8 +873,9 @@ export default function Navbar() {
 
                   {/* Deputy Directors — group link */}
                   <div className="mt-1 border-t border-white/10 pt-3">
-                    <p className="text-[11px] font-bold tracking-[0.2em] uppercase text-gold/70 mb-2">
-                      Planning Team
+                    <p className="text-[11px] font-bold tracking-[0.2em] uppercase text-gold/70 mb-2"
+                      style={{ fontFamily: LANG_FONT[activeLang] }}>
+                      {(NAVBAR_UI[activeLang] || NAVBAR_UI.en).planningTeam}
                     </p>
                     <Link
                       to="/about/deputy-directors"
@@ -784,14 +885,17 @@ export default function Navbar() {
                         <Users size={24} className="text-gold" />
                       </div>
                       <div className="min-w-0">
-                        <p className="text-[16px] font-bold text-white leading-snug mb-1">
-                          Deputy Directors
+                        <p className="text-[16px] font-bold text-white leading-snug mb-1"
+                          style={{ fontFamily: LANG_FONT[activeLang] }}>
+                          {(NAVBAR_UI[activeLang] || NAVBAR_UI.en).deputyDirectors}
                         </p>
-                        <p className="text-[13px] text-[#f0ddd0]/70 leading-snug mb-1.5">
-                          5 Deputy Directors – Planning
+                        <p className="text-[13px] text-[#f0ddd0]/70 leading-snug mb-1.5"
+                          style={{ fontFamily: LANG_FONT[activeLang] }}>
+                          {(NAVBAR_UI[activeLang] || NAVBAR_UI.en).deputyDirectorsSub}
                         </p>
-                        <p className="text-[13px] text-white/40 group-hover:text-gold transition-colors duration-200 font-medium">
-                          View All →
+                        <p className="text-[13px] text-white/40 group-hover:text-gold transition-colors duration-200 font-medium"
+                          style={{ fontFamily: LANG_FONT[activeLang] }}>
+                          {(NAVBAR_UI[activeLang] || NAVBAR_UI.en).viewAll}
                         </p>
                       </div>
                     </Link>
