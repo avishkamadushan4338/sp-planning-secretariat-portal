@@ -47,7 +47,7 @@ export default function ComingSoon({ pageKey }) {
       gallery:     'Gallery',
       news:        'Media Center',
       notices:     'Notices',
-      tenders:     'Tenders',
+      cms:         'Content Management System',
     },
     si: {
       about:       'අප ගැන',
@@ -67,7 +67,7 @@ export default function ComingSoon({ pageKey }) {
       gallery:     'ගැලරිය',
       news:        'මාධ්‍ය මධ්‍යස්ථානය',
       notices:     'නිවේදන',
-      tenders:     'ටෙන්ඩර්',
+      cms:         'අන්තර්ගත කළමනාකරණ පද්ධතිය',
     },
     ta: {
       about:       'எங்களைப் பற்றி',
@@ -87,7 +87,7 @@ export default function ComingSoon({ pageKey }) {
       gallery:     'தொகுப்பு',
       news:        'ஊடக மையம்',
       notices:     'அறிவிப்புகள்',
-      tenders:     'டெண்டர்கள்',
+      cms:         'உள்ளடக்க மேலாண்மை அமைப்பு',
     },
   }
 
