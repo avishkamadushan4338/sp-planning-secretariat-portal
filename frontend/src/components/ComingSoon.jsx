@@ -26,7 +26,7 @@ export default function ComingSoon({ pageKey }) {
   const lang = localStorage.getItem('lang') || 'en'
   const t    = LABELS[lang] || LABELS.en
   const { setHidden } = useFooter()
-  useEffect(() => { setHidden(true); return () => setHidden(false) }, [])
+  useEffect(() => { setHidden(true); return () => setHidden(false) }, [setHidden])
 
   const PAGE_NAMES = {
     en: {

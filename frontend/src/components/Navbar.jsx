@@ -123,14 +123,6 @@ const FEATURED_OFFICIALS = [
   },
 ]
 
-const chunkIntoColumns = (items, chunkSize = 3) => {
-  const chunks = []
-  for (let index = 0; index < items.length; index += chunkSize) {
-    chunks.push(items.slice(index, index + chunkSize))
-  }
-  return chunks
-}
-
 const NEWS_MENU = [
   {
     title: {
@@ -768,7 +760,6 @@ export default function Navbar() {
 
   const navItems = NAV_TRANSLATIONS[activeLang] || NAV_TRANSLATIONS.en
   const activeMegaItem = navItems.find((item) => item.id === activeDropdown && item.megaMenu)
-  const megaColumns = activeMegaItem ? [activeMegaItem.dropdown] : []
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8)
