@@ -2,9 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { FiUser, FiLock, FiEye, FiEyeOff, FiShield, FiAlertCircle } from 'react-icons/fi'
-
-const ADMIN_USER = 'Admin'
-const ADMIN_PASS = 'Admin@123'
+import { verifyLogin } from './cmsAuth'
 
 const MAROON  = '#4A0918'
 const MAROON2 = '#3A0712'
@@ -42,22 +40,27 @@ export default function CMSLogin() {
 
   useEffect(() => { setMounted(true) }, [])
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     if (!username.trim() || !password.trim()) {
       setError('Please enter both username and password.')
       return
     }
-    if (username !== ADMIN_USER || password !== ADMIN_PASS) {
-      setError('Invalid username or password.')
-      return
-    }
     setError('')
     setLoading(true)
-    setTimeout(() => {
+    try {
+      const ok = await verifyLogin(username.trim(), password)
+      if (!ok) {
+        setError('Invalid username or password.')
+        setLoading(false)
+        return
+      }
       sessionStorage.setItem('cms_auth', '1')
       navigate('/cms/dashboard')
-    }, 1200)
+    } catch {
+      setError('Authentication error. Please try again.')
+      setLoading(false)
+    }
   }
 
   return (
@@ -226,6 +229,22 @@ export default function CMSLogin() {
           background: `radial-gradient(circle, rgba(199,154,43,0.1) 0%, transparent 70%)`,
           pointerEvents: 'none',
         }} />
+
+        {/* Back to portal link */}
+        <a href="/home"
+          style={{
+            position: 'absolute', top: '1.25rem', right: '1.5rem',
+            display: 'flex', alignItems: 'center', gap: 5,
+            fontSize: '0.72rem', color: 'rgba(74,9,24,0.42)',
+            textDecoration: 'none', fontWeight: 500, zIndex: 2,
+            padding: '5px 10px', borderRadius: 8,
+            border: '1px solid rgba(74,9,24,0.1)',
+            transition: 'all 0.15s',
+          }}
+          onMouseEnter={e => { e.currentTarget.style.color = MAROON; e.currentTarget.style.background = 'rgba(74,9,24,0.04)' }}
+          onMouseLeave={e => { e.currentTarget.style.color = 'rgba(74,9,24,0.42)'; e.currentTarget.style.background = 'transparent' }}>
+          ← Public Portal
+        </a>
 
         <div style={{ width: '100%', maxWidth: 420, position: 'relative', zIndex: 1 }}>
 
@@ -442,8 +461,8 @@ export default function CMSLogin() {
           </motion.div>
 
           {/* Divider + version */}
-          <motion.div variants={fadeUp(0.32)} initial="hidden" animate="visible"
-            style={{ marginTop: '1.5rem', display: 'flex', alignItems: 'center', gap: 10 }}>
+          <motion.div variants={fadeUp(0.34)} initial="hidden" animate="visible"
+            style={{ marginTop: '1.25rem', display: 'flex', alignItems: 'center', gap: 10 }}>
             <div style={{ flex: 1, height: 1, background: 'rgba(74,9,24,0.08)' }} />
             <span style={{ fontSize: '0.68rem', color: 'rgba(74,9,24,0.28)', fontFamily: "'Cinzel', serif", letterSpacing: '0.1em' }}>
               CMS v1.0
