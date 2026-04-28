@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import {
   FiCalendar, FiArrowRight, FiDownload, FiExternalLink,
   FiSearch, FiX, FiChevronLeft, FiChevronRight, FiEye,
@@ -247,7 +247,10 @@ const tabContent = {
 
 /* ── Helpers ─────────────────────────────────────────────────────────────────── */
 function formatDate(iso) {
-  return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+  if (!iso) return ''
+  const d = new Date(iso)
+  if (isNaN(d.getTime())) return ''
+  return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
 }
 
 function DiamondDivider() {
@@ -274,9 +277,20 @@ function SectionLabel({ icon: Icon, label }) {
 /* ══════════════════════════════════════════════════════════════════════════════
    PAGE ROOT
 ══════════════════════════════════════════════════════════════════════════════ */
+const VALID_TABS = ['news', 'gallery', 'notices']
+
 export default function News() {
-  const [lang, setLang] = useState(() => localStorage.getItem('lang') || 'en')
-  const [activeTab, setActiveTab] = useState('news')
+  const [lang, setLang]           = useState(() => localStorage.getItem('lang') || 'en')
+  const [searchParams]            = useSearchParams()
+  const [activeTab, setActiveTab] = useState(() => {
+    const tab = searchParams.get('tab')
+    return VALID_TABS.includes(tab) ? tab : 'news'
+  })
+
+  useEffect(() => {
+    const tab = searchParams.get('tab')
+    if (VALID_TABS.includes(tab)) setActiveTab(tab)
+  }, [searchParams])
 
   useEffect(() => {
     const h = (e) => setLang(e.detail || 'en')
@@ -305,7 +319,7 @@ export default function News() {
           )}
           {activeTab === 'notices' && (
             <motion.div key="notices" variants={tabContent} initial="hidden" animate="visible" exit="exit">
-              <NoticesSection t={t} font={font} />
+              <NoticesSection t={t} font={font} lang={lang} />
             </motion.div>
           )}
         </AnimatePresence>
@@ -377,7 +391,7 @@ function MediaHero({ t, font }) {
       </div>
 
       <svg className="nc-hero__wave" viewBox="0 0 1440 60" preserveAspectRatio="none">
-        <path d="M0,60 Q360,8 720,32 Q1080,56 1440,12 L1440,60 Z" fill={CREAM} />
+        <path d="M0,60 Q360,8 720,32 Q1080,56 1440,12 L1440,60 Z" fill="#F7F0E6" />
       </svg>
     </section>
   )
@@ -556,24 +570,189 @@ function NewsSection({ t, font }) {
 /* ══════════════════════════════════════════════════════════════════════════════
    GALLERY SECTION
 ══════════════════════════════════════════════════════════════════════════════ */
-function GallerySection({ t, font }) {
-  const [lightboxIdx, setLightboxIdx] = useState(null)
+const SPAN_CYCLE = ['wide', 'normal', 'tall', 'normal', 'normal', 'wide']
 
-  const open  = (i) => setLightboxIdx(i)
-  const close = () => setLightboxIdx(null)
-  const prev  = useCallback(() => setLightboxIdx(i => (i - 1 + GALLERY_ITEMS.length) % GALLERY_ITEMS.length), [])
-  const next  = useCallback(() => setLightboxIdx(i => (i + 1) % GALLERY_ITEMS.length), [])
+/* ── Album viewer — full-screen slideshow for a single CMS album ── */
+function AlbumViewer({ album, font, t, onClose }) {
+  const images = album.images?.length ? album.images : (album.imageUrl ? [album.imageUrl] : [])
+  const [idx, setIdx] = useState(0)
+
+  const prev = useCallback(() => setIdx(i => (i - 1 + images.length) % images.length), [images.length])
+  const next = useCallback(() => setIdx(i => (i + 1) % images.length), [images.length])
+
+  const caption = font.includes('Sinhala') && album.titleSi
+    ? album.titleSi
+    : font.includes('Tamil') && album.titleTa
+      ? album.titleTa
+      : album.titleEn || album.titleSi || album.titleTa || 'Gallery Album'
+
+  useEffect(() => {
+    const h = (e) => {
+      if (e.key === 'Escape')      onClose()
+      if (e.key === 'ArrowLeft')   prev()
+      if (e.key === 'ArrowRight')  next()
+    }
+    window.addEventListener('keydown', h)
+    return () => window.removeEventListener('keydown', h)
+  }, [prev, next, onClose])
+
+  if (!images.length) return null
+
+  return (
+    <motion.div
+      className="nc-lightbox"
+      initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+      transition={{ duration: 0.22 }}
+      onClick={onClose}
+    >
+      <motion.div
+        className="nc-lightbox__card"
+        initial={{ scale: 0.92, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.92, opacity: 0 }}
+        transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
+        onClick={e => e.stopPropagation()}
+      >
+        <AnimatePresence mode="wait">
+          <motion.img
+            key={idx}
+            src={images[idx]}
+            alt={caption}
+            className="nc-lightbox__img"
+            initial={{ opacity: 0, scale: 1.03 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.97 }}
+            transition={{ duration: 0.22 }}
+          />
+        </AnimatePresence>
+
+        <div className="nc-lightbox__footer">
+          <p className="nc-lightbox__caption" style={{ fontFamily: font }}>{caption}</p>
+          <span className="nc-lightbox__counter">{idx + 1} / {images.length}</span>
+        </div>
+
+        {/* Dot strip */}
+        {images.length > 1 && (
+          <div style={{
+            position: 'absolute', bottom: 54, left: '50%', transform: 'translateX(-50%)',
+            display: 'flex', gap: 6, zIndex: 2,
+          }}>
+            {images.map((_, i) => (
+              <button
+                key={i}
+                onClick={(e) => { e.stopPropagation(); setIdx(i) }}
+                style={{
+                  width: i === idx ? 18 : 7, height: 7, borderRadius: 4,
+                  background: i === idx ? '#fff' : 'rgba(255,255,255,0.38)',
+                  border: 'none', padding: 0, cursor: 'pointer',
+                  transition: 'all 0.2s',
+                }}
+              />
+            ))}
+          </div>
+        )}
+
+        {/* Thumbnail strip */}
+        {images.length > 1 && (
+          <div style={{
+            position: 'absolute', bottom: 70, left: '50%', transform: 'translateX(-50%)',
+            display: 'none',
+          }} />
+        )}
+
+        <button className="nc-lightbox__close" onClick={onClose} aria-label={t.closeLight}>
+          <FiX size={18} />
+        </button>
+        {images.length > 1 && (
+          <>
+            <button className="nc-lightbox__prev" onClick={prev} aria-label={t.prevImg}>
+              <FiChevronLeft size={22} />
+            </button>
+            <button className="nc-lightbox__next" onClick={next} aria-label={t.nextImg}>
+              <FiChevronRight size={22} />
+            </button>
+          </>
+        )}
+      </motion.div>
+    </motion.div>
+  )
+}
+
+function GallerySection({ t, font }) {
+  const [lightboxIdx,  setLightboxIdx]  = useState(null)
+  const [albumViewer,  setAlbumViewer]  = useState(null)  // CMS album object
+  const [cmsAlbums,    setCmsAlbums]    = useState([])
+
+  useEffect(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem('cms_gallery_albums') || '[]')
+      setCmsAlbums(saved)
+    } catch { /* ignore */ }
+  }, [])
+
+  const cmsItems = cmsAlbums.map((a, i) => ({
+    id: `cms-${a.id}`,
+    caption: a.titleEn || a.titleSi || a.titleTa || 'Gallery Album',
+    captionSi: a.titleSi,
+    captionTa: a.titleTa,
+    image: a.imageUrl || '/branding/hero.jpeg',
+    span: SPAN_CYCLE[i % SPAN_CYCLE.length],
+    isAlbum: true,
+    albumData: a,
+    photoCount: a.photos || 0,
+  }))
+
+  const allItems = [...cmsItems, ...GALLERY_ITEMS]
+
+  const openItem = (item) => {
+    if (item.isAlbum) {
+      setAlbumViewer(item.albumData)
+    } else {
+      const flatIdx = allItems.findIndex(x => x.id === item.id)
+      setLightboxIdx(flatIdx)
+    }
+  }
+
+  const closeLight  = () => setLightboxIdx(null)
+  const closeAlbum  = () => setAlbumViewer(null)
+
+  // Regular lightbox only navigates through non-album items
+  const regularItems = allItems.filter(x => !x.isAlbum)
+  const lightItem    = lightboxIdx !== null ? allItems[lightboxIdx] : null
+
+  const prevLight = useCallback(() => {
+    setLightboxIdx(i => {
+      let next = (i - 1 + allItems.length) % allItems.length
+      while (allItems[next]?.isAlbum) next = (next - 1 + allItems.length) % allItems.length
+      return next
+    })
+  }, [allItems.length])
+
+  const nextLight = useCallback(() => {
+    setLightboxIdx(i => {
+      let next = (i + 1) % allItems.length
+      while (allItems[next]?.isAlbum) next = (next + 1) % allItems.length
+      return next
+    })
+  }, [allItems.length])
 
   useEffect(() => {
     if (lightboxIdx === null) return
     const h = (e) => {
-      if (e.key === 'Escape') close()
-      if (e.key === 'ArrowLeft') prev()
-      if (e.key === 'ArrowRight') next()
+      if (e.key === 'Escape')     closeLight()
+      if (e.key === 'ArrowLeft')  prevLight()
+      if (e.key === 'ArrowRight') nextLight()
     }
     window.addEventListener('keydown', h)
     return () => window.removeEventListener('keydown', h)
-  }, [lightboxIdx, prev, next])
+  }, [lightboxIdx, prevLight, nextLight])
+
+  const getCaption = (item) => {
+    if (!item) return ''
+    if (font.includes('Sinhala') && item.captionSi) return item.captionSi
+    if (font.includes('Tamil')   && item.captionTa) return item.captionTa
+    return item.caption
+  }
 
   return (
     <section className="nc-section">
@@ -581,7 +760,7 @@ function GallerySection({ t, font }) {
         <SectionLabel icon={FiImage} label="Photo Gallery" />
 
         <div className="nc-gallery-grid">
-          {GALLERY_ITEMS.map((item, i) => (
+          {allItems.map((item, i) => (
             <motion.div
               key={item.id}
               className={`nc-gallery-item nc-gallery-item--${item.span}`}
@@ -590,11 +769,11 @@ function GallerySection({ t, font }) {
               initial="hidden"
               whileInView="visible"
               viewport={{ once: true, amount: 0.1 }}
-              onClick={() => open(i)}
+              onClick={() => openItem(item)}
             >
               <img
                 src={item.image}
-                alt={item.caption}
+                alt={getCaption(item)}
                 className="nc-gallery-item__img"
                 onError={e => { e.currentTarget.style.opacity = '0' }}
               />
@@ -602,8 +781,21 @@ function GallerySection({ t, font }) {
                 <div className="nc-gallery-item__icon">
                   <FiEye size={20} style={{ color: '#fff' }} />
                 </div>
-                <p className="nc-gallery-item__caption" style={{ fontFamily: font }}>{item.caption}</p>
+                <p className="nc-gallery-item__caption" style={{ fontFamily: font }}>{getCaption(item)}</p>
               </div>
+              {/* Album badge */}
+              {item.isAlbum && item.photoCount > 0 && (
+                <div style={{
+                  position: 'absolute', top: 10, right: 10,
+                  background: 'rgba(0,0,0,0.52)', backdropFilter: 'blur(4px)',
+                  borderRadius: 6, padding: '3px 8px',
+                  display: 'flex', alignItems: 'center', gap: 4,
+                  fontSize: '0.65rem', fontWeight: 700, color: '#fff',
+                  pointerEvents: 'none',
+                }}>
+                  <FiImage size={10} /> {item.photoCount}
+                </div>
+              )}
             </motion.div>
           ))}
         </div>
@@ -615,16 +807,21 @@ function GallerySection({ t, font }) {
         </div>
       </div>
 
-      {/* Lightbox */}
+      {/* Album viewer */}
       <AnimatePresence>
-        {lightboxIdx !== null && (
+        {albumViewer && (
+          <AlbumViewer album={albumViewer} font={font} t={t} onClose={closeAlbum} />
+        )}
+      </AnimatePresence>
+
+      {/* Regular lightbox */}
+      <AnimatePresence>
+        {lightItem && !lightItem.isAlbum && (
           <motion.div
             className="nc-lightbox"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             transition={{ duration: 0.22 }}
-            onClick={close}
+            onClick={closeLight}
           >
             <motion.div
               className="nc-lightbox__card"
@@ -636,26 +833,25 @@ function GallerySection({ t, font }) {
             >
               <img
                 key={lightboxIdx}
-                src={GALLERY_ITEMS[lightboxIdx].image}
-                alt={GALLERY_ITEMS[lightboxIdx].caption}
+                src={lightItem.image}
+                alt={getCaption(lightItem)}
                 className="nc-lightbox__img"
               />
               <div className="nc-lightbox__footer">
                 <p className="nc-lightbox__caption" style={{ fontFamily: font }}>
-                  {GALLERY_ITEMS[lightboxIdx].caption}
+                  {getCaption(lightItem)}
                 </p>
                 <span className="nc-lightbox__counter">
-                  {lightboxIdx + 1} / {GALLERY_ITEMS.length}
+                  {regularItems.findIndex(x => x.id === lightItem.id) + 1} / {regularItems.length}
                 </span>
               </div>
-
-              <button className="nc-lightbox__close" onClick={close} aria-label={t.closeLight}>
+              <button className="nc-lightbox__close" onClick={closeLight} aria-label={t.closeLight}>
                 <FiX size={18} />
               </button>
-              <button className="nc-lightbox__prev" onClick={prev} aria-label={t.prevImg}>
+              <button className="nc-lightbox__prev" onClick={prevLight} aria-label={t.prevImg}>
                 <FiChevronLeft size={22} />
               </button>
-              <button className="nc-lightbox__next" onClick={next} aria-label={t.nextImg}>
+              <button className="nc-lightbox__next" onClick={nextLight} aria-label={t.nextImg}>
                 <FiChevronRight size={22} />
               </button>
             </motion.div>
@@ -666,13 +862,76 @@ function GallerySection({ t, font }) {
   )
 }
 
+// Open a provided attachment URL directly (Drive/Dropbox/OneDrive links)
+async function openSignedUrl(fileUrl, forceDownload = false, fileName = 'notice-attachment') {
+  try {
+    if (!fileUrl) throw new Error('No file URL provided')
+    if (forceDownload) {
+      const a = document.createElement('a')
+      a.href = fileUrl
+      a.download = fileName
+      a.rel = 'noopener noreferrer'
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+    } else {
+      window.open(fileUrl, '_blank', 'noopener,noreferrer')
+    }
+  } catch (err) {
+    alert(`Download failed: ${err.message}`)
+  }
+}
+
+// Check if user can download based on permissions
+function canDownload(notice) {
+  if (!notice.fileUrl) return false
+  const access = notice.downloadAccess || 'Everyone'
+  if (access === 'Everyone') return true
+  if (access === 'RegisteredOnly') {
+    // Check if user is logged in (CMS session)
+    return !!sessionStorage.getItem('cms_auth')
+  }
+  if (access === 'AdminOnly') {
+    // Only admins can download
+    return !!sessionStorage.getItem('cms_auth')
+  }
+  return false
+}
+
 /* ══════════════════════════════════════════════════════════════════════════════
    NOTICES SECTION
 ══════════════════════════════════════════════════════════════════════════════ */
-function NoticesSection({ t, font }) {
-  const [activeType, setActiveType] = useState('All')
+function NoticesSection({ t, font, lang = 'en' }) {
+  const [activeType,  setActiveType]  = useState('All')
+  const [cmsNotices,  setCmsNotices]  = useState([])
 
-  const filtered = NOTICES.filter(n =>
+  useEffect(() => {
+    const load = () => {
+      try {
+        const saved = JSON.parse(localStorage.getItem('cms_notices') || '[]')
+        const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000
+        setCmsNotices(
+          saved
+            .filter(n => n.status === 'Active')
+            .map(n => ({ ...n, isNew: n.isNew || new Date(n.date).getTime() > sevenDaysAgo }))
+        )
+      } catch { /* ignore */ }
+    }
+    load()
+    const bc = typeof BroadcastChannel !== 'undefined' ? new BroadcastChannel('cms_notices') : null
+    if (bc) bc.onmessage = load
+    window.addEventListener('storage', load)
+    window.addEventListener('cms_notices_updated', load)
+    return () => {
+      bc?.close()
+      window.removeEventListener('storage', load)
+      window.removeEventListener('cms_notices_updated', load)
+    }
+  }, [])
+
+  const allNotices = [...cmsNotices, ...NOTICES]
+
+  const filtered = allNotices.filter(n =>
     activeType === 'All' || n.type === activeType
   )
 
@@ -734,9 +993,11 @@ function NoticesSection({ t, font }) {
                   </div>
 
                   <p className="nc-notice-row__ref" style={{ fontFamily: font }}>{notice.ref}</p>
-                  <h3 className="nc-notice-row__title" style={{ fontFamily: font }}>{notice.title}</h3>
+                  <h3 className="nc-notice-row__title" style={{ fontFamily: font }}>
+                    {(lang === 'si' && notice.titleSi) || (lang === 'ta' && notice.titleTa) || notice.title}
+                  </h3>
 
-                  {notice.deadline && (
+                  {notice.deadline && formatDate(notice.deadline) && (
                     <p className="nc-notice-row__deadline" style={{ fontFamily: font }}>
                       Closing Date: <strong>{formatDate(notice.deadline)}</strong>
                     </p>
@@ -745,14 +1006,28 @@ function NoticesSection({ t, font }) {
 
                 {/* Actions */}
                 <div className="nc-notice-row__actions">
-                  <span className="nc-notice-row__size">{notice.fileSize} · {notice.fileType}</span>
-                  <button className="nc-btn-dl" style={{ fontFamily: font }} aria-label={t.noticeDl}>
-                    <FiDownload size={14} />
-                    <span>{t.download}</span>
-                  </button>
-                  <button className="nc-btn-icon" aria-label="View">
+                  <button
+                    className={`nc-btn-dl ${notice.fileUrl ? '' : 'nc-btn-dl--disabled'}`}
+                    onClick={() => notice.fileUrl ? openSignedUrl(notice.fileUrl, false) : null}
+                    style={{ fontFamily: font }}
+                    aria-label="View document"
+                    disabled={!notice.fileUrl}
+                    title={notice.fileUrl ? 'View document' : 'No document link available'}
+                  >
                     <FiExternalLink size={14} />
+                    <span>View document</span>
                   </button>
+                  {canDownload(notice) && (
+                      <button
+                        className="nc-btn-dl"
+                        onClick={() => openSignedUrl(notice.fileUrl, true, notice.fileName)}
+                        style={{ fontFamily: font, background: 'none', border: 'none', padding: 0, cursor: 'pointer', display: 'inline-flex', alignItems: 'center' }}
+                        aria-label={t.noticeDl}
+                      >
+                        <FiDownload size={14} />
+                        <span>{t.download}</span>
+                      </button>
+                  )}
                 </div>
               </motion.div>
             )

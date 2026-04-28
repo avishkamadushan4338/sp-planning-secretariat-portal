@@ -1,2 +1,2 @@
-import ComingSoon from '../../components/ComingSoon'
-export default function Notices() { return <ComingSoon pageKey="notices" /> }
+import { Navigate } from 'react-router-dom'
+export default function Notices() { return <Navigate to="/news?tab=notices" replace /> }

@@ -13,6 +13,9 @@ import {
   Phone,
   Mail,
   Clock,
+  Newspaper,
+  Camera,
+  Bell,
 } from 'lucide-react'
 import {
   FaBars,
@@ -114,7 +117,7 @@ const FEATURED_OFFICIALS = [
       si: 'අධ්‍යක්ෂ – සැලසුම්',
       ta: 'இயக்குநர் – திட்டமிடல்',
     },
-    name: 'Mr. [Director Name]',
+    name: 'Mrs. K.S. Weerawardhane',
     path: '/about/director-planning',
     photo: '/staff/director-planning.jpg',
   },
@@ -127,6 +130,51 @@ const chunkIntoColumns = (items, chunkSize = 3) => {
   }
   return chunks
 }
+
+const NEWS_MENU = [
+  {
+    title: {
+      en: 'News & Updates',
+      si: 'පුවත් සහ යාවත්කාලීන',
+      ta: 'செய்திகள் & புதுப்பிப்புகள்',
+    },
+    description: {
+      en: 'Latest announcements, press releases and secretariat updates',
+      si: 'නවතම නිවේදන, මාධ්‍ය නිවේදන සහ ලේකම් කාර්යාල යාවත්කාලීන',
+      ta: 'சமீபத்திய அறிவிப்புகள், செய்தி வெளியீடுகள் மற்றும் செயலக புதுப்பிப்புகள்',
+    },
+    path: '/news?tab=news',
+    icon: Newspaper,
+  },
+  {
+    title: {
+      en: 'Photo Gallery',
+      si: 'ඡායාරූප ගැලරිය',
+      ta: 'புகைப்பட தொகுப்பு',
+    },
+    description: {
+      en: 'Events, official programs and captured moments',
+      si: 'සිදුවීම්, නිල වැඩසටහන් සහ ස්මරණීය මොහොත',
+      ta: 'நிகழ்வுகள், உத்தியோகபூர்வ நிகழ்ச்சிகள் மற்றும் கைப்பற்றப்பட்ட தருணங்கள்',
+    },
+    path: '/news?tab=gallery',
+    icon: Camera,
+  },
+  {
+    title: {
+      en: 'Official Notices',
+      si: 'නිල නිවේදන',
+      ta: 'அதிகாரப்பூர்வ அறிவிப்புகள்',
+    },
+    description: {
+      en: 'Circulars, tenders, gazette and formal notifications',
+      si: 'චක්‍රලේඛ, ටෙන්ඩර්, ගැසට් සහ නිල දැනුම්දීම්',
+      ta: 'சுற்றறிக்கைகள், டெண்டர்கள், வர்த்தமானி மற்றும் முறையான அறிவிப்புகள்',
+    },
+    path: '/news?tab=notices',
+    icon: Bell,
+  },
+]
 
 const CONTACT_DETAILS = {
   address: '153B, S.H. Dahanayaka Mawatha, Galle, Sri Lanka',
@@ -147,7 +195,7 @@ const NAV_TRANSLATIONS = {
     { id: 'about', label: 'ABOUT US',  path: '/about', megaMenu: true, dropdown: ABOUT_US_MENU },
     { id: 'divs',  label: 'DIVISIONS',    path: '/departments' },
     { id: 'svcs',  label: 'SERVICES',     path: '/services' },
-    { id: 'media', label: 'MEDIA CENTER', path: '/news' },
+    { id: 'media', label: 'MEDIA CENTER', path: '/news', newsPanel: true, dropdown: NEWS_MENU },
     { id: 'docs',  label: 'DOWNLOADS',    path: '/documents' },
     {
       id: 'contact', label: 'CONTACT US', path: '/contact',
@@ -164,7 +212,7 @@ const NAV_TRANSLATIONS = {
     { id: 'about', label: 'අප ගැන',               path: '/about', megaMenu: true, dropdown: ABOUT_US_MENU },
     { id: 'divs',  label: 'අංශ',                   path: '/departments' },
     { id: 'svcs',  label: 'සේවාවන්',              path: '/services' },
-    { id: 'media', label: 'මාධ්‍ය මධ්‍යස්ථානය', path: '/news' },
+    { id: 'media', label: 'මාධ්‍ය මධ්‍යස්ථානය', path: '/news', newsPanel: true, dropdown: NEWS_MENU },
     { id: 'docs',  label: 'බාගත කිරීම්',           path: '/documents' },
     {
       id: 'contact', label: 'අප අමතන්න',           path: '/contact',
@@ -181,7 +229,7 @@ const NAV_TRANSLATIONS = {
     { id: 'about', label: 'எங்களைப் பற்றி',          path: '/about', megaMenu: true, dropdown: ABOUT_US_MENU },
     { id: 'divs',  label: 'பிரிவுகள்',               path: '/departments' },
     { id: 'svcs',  label: 'சேவைகள்',                 path: '/services' },
-    { id: 'media', label: 'ஊடக மையம்',              path: '/news' },
+    { id: 'media', label: 'ஊடக மையம்',              path: '/news', newsPanel: true, dropdown: NEWS_MENU },
     { id: 'docs',  label: 'பதிவிறக்கங்கள்',          path: '/documents' },
     {
       id: 'contact', label: 'தொடர்பு கொள்ளுங்கள்',  path: '/contact',
@@ -208,7 +256,7 @@ const NAVBAR_UI = {
     keyOfficials:      'Key Officials',
     planningTeam:      'Planning Team',
     deputyDirectors:   'Deputy Directors',
-    deputyDirectorsSub:'5 Deputy Directors – Planning',
+    deputyDirectorsSub:'6 Deputy Directors – Planning',
     readMore:          'Read More →',
     viewAll:           'View All →',
   },
@@ -218,7 +266,7 @@ const NAVBAR_UI = {
     keyOfficials:      'ප්‍රධාන නිලධාරීන්',
     planningTeam:      'සැලසුම් කණ්ඩායම',
     deputyDirectors:   'නියෝජ්‍ය අධ්‍යක්ෂවරුන්',
-    deputyDirectorsSub:'නියෝජ්‍ය අධ්‍යක්ෂවරු 5 – සැලසුම්',
+    deputyDirectorsSub:'නියෝජ්‍ය අධ්‍යක්ෂවරු 6 – සැලසුම්',
     readMore:          'තව කියවන්න →',
     viewAll:           'සියල්ල බලන්න →',
   },
@@ -228,7 +276,7 @@ const NAVBAR_UI = {
     keyOfficials:      'முக்கிய அதிகாரிகள்',
     planningTeam:      'திட்டமிடல் குழு',
     deputyDirectors:   'உதவி இயக்குநர்கள்',
-    deputyDirectorsSub:'5 உதவி இயக்குநர்கள் – திட்டமிடல்',
+    deputyDirectorsSub:'6 உதவி இயக்குநர்கள் – திட்டமிடல்',
     readMore:          'மேலும் படிக்கவும் →',
     viewAll:           'அனைத்தையும் காண்க →',
   },
@@ -397,7 +445,7 @@ function DesktopNavItem({ item, lang, isActive, activeDropdown, onEnter, onLeave
       )}
 
       {/* Plain dropdown panel */}
-      {hasDropdown && !isAboutMega && !item.contactPanel && dropOpen && (
+      {hasDropdown && !isAboutMega && !item.contactPanel && !item.newsPanel && dropOpen && (
         <div
           className="absolute top-full left-0 min-w-[260px] bg-white shadow-dropdown border-t-[3px] border-gold z-50"
           role="menu"
@@ -422,6 +470,73 @@ function DesktopNavItem({ item, lang, isActive, activeDropdown, onEnter, onLeave
               {sub.label}
             </Link>
           ))}
+        </div>
+      )}
+
+      {/* Premium News / Media Centre panel */}
+      {item.newsPanel && dropOpen && (
+        <div
+          className="absolute top-full left-0 w-[500px] bg-gradient-to-br from-maroon to-deep-maroon shadow-[0_24px_42px_rgba(0,0,0,0.3)] border-t-[3px] border-gold rounded-b-2xl z-50 overflow-hidden"
+          role="menu"
+          onMouseEnter={() => onEnter(item.id)}
+          onMouseLeave={onLeave}
+        >
+          {/* Decorative radial overlay */}
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_0%,rgba(199,154,43,0.13),transparent_52%)] pointer-events-none" />
+
+          {/* Panel header */}
+          <div className="relative px-7 pt-5 pb-3 border-b border-white/10 flex items-center justify-between">
+            <p className="text-[10px] font-bold tracking-[0.22em] uppercase text-gold/70" style={{ fontFamily }}>
+              {item.label}
+            </p>
+            <span className="text-[10px] text-white/25 tracking-widest select-none">— Official Communications</span>
+          </div>
+
+          {/* 3 sections */}
+          <div className="relative flex flex-col">
+            {NEWS_MENU.map((newsItem, idx) => {
+              const Icon = newsItem.icon
+              return (
+                <Link
+                  key={newsItem.path}
+                  to={newsItem.path}
+                  role="menuitem"
+                  className={`
+                    group flex items-center gap-5 px-7 py-5
+                    hover:bg-white/10 transition-all duration-200
+                    ${idx < NEWS_MENU.length - 1 ? 'border-b border-white/10' : ''}
+                  `}
+                >
+                  <span className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full border border-gold/60 text-gold group-hover:shadow-[0_0_18px_rgba(199,154,43,0.55)] transition-shadow duration-200">
+                    <Icon size={20} strokeWidth={1.75} />
+                  </span>
+                  <span className="flex-1 min-w-0" style={{ fontFamily: LANG_FONT[lang] }}>
+                    <span className="block text-[16px] font-semibold text-white leading-snug mb-0.5">
+                      {newsItem.title[lang] || newsItem.title.en}
+                    </span>
+                    <span className="block text-[12.5px] text-[#f0ddd0]/65 leading-relaxed">
+                      {newsItem.description[lang] || newsItem.description.en}
+                    </span>
+                  </span>
+                  <span className="text-[18px] text-gold/35 group-hover:text-gold group-hover:translate-x-1.5 transition-all duration-200 flex-shrink-0 font-light">
+                    →
+                  </span>
+                </Link>
+              )
+            })}
+          </div>
+
+          {/* Footer bar */}
+          <div className="relative px-7 py-3 bg-black/20 border-t border-white/10 flex items-center justify-between">
+            <Link
+              to="/news?tab=news"
+              className="text-[11px] font-semibold text-gold/70 hover:text-gold tracking-wide transition-colors duration-150"
+              style={{ fontFamily }}
+            >
+              {(NAVBAR_UI[lang] || NAVBAR_UI.en).viewAll} Media
+            </Link>
+            <span className="text-[10px] text-white/20 tracking-widest select-none">✦</span>
+          </div>
         </div>
       )}
 
