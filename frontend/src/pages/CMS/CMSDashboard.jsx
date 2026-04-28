@@ -373,7 +373,6 @@ export default function CMSDashboard() {
                         justifyContent: collapsed ? 'center' : 'flex-start',
                         padding: collapsed ? '11px 0' : '10px 1rem',
                         background: isActive ? 'rgba(199,154,43,0.14)' : 'transparent',
-                        borderLeft: `3px solid ${isActive ? GOLD : 'transparent'}`,
                         border: 'none',
                         borderLeft: `3px solid ${isActive ? GOLD : 'transparent'}`,
                         color: isActive ? GOLD : 'rgba(255,255,255,0.52)',
