@@ -7,7 +7,6 @@ import { verifyLogin } from './cmsAuth'
 const MAROON  = '#4A0918'
 const MAROON2 = '#3A0712'
 const GOLD    = '#C79A2B'
-const GOLD2   = '#E8B84B'
 const CREAM   = '#FCFBFA'
 
 const fadeUp = (delay = 0) => ({

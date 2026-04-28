@@ -22,7 +22,7 @@ export default function NotFound() {
 
   const t = LABELS[lang] || LABELS.en
 
-  useEffect(() => { setHidden(true); return () => setHidden(false) }, [])
+  useEffect(() => { setHidden(true); return () => setHidden(false) }, [setHidden])
 
   useEffect(() => {
     if (count <= 0) { navigate('/home'); return }

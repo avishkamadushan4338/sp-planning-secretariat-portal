@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { toast, Toaster } from 'sonner'
 import {
-  FiGrid, FiFileText, FiBell, FiDownload, FiImage, FiUpload,
+  FiGrid, FiFileText, FiBell, FiDownload, FiImage,
   FiLogOut, FiPlus, FiEdit2, FiTrash2,
   FiChevronRight, FiChevronLeft, FiSearch, FiEye, FiEyeOff,
   FiCheck, FiClock, FiCalendar, FiActivity,
@@ -15,7 +15,6 @@ import { changeUsername, changePassword, getCredentials } from './cmsAuth'
 const MAROON  = '#4A0918'
 const MAROON2 = '#3A0712'
 const GOLD    = '#C79A2B'
-const CREAM   = '#FCFBFA'
 const SIDEBAR_FULL = 242
 const SIDEBAR_MINI = 66
 
@@ -95,15 +94,6 @@ function friendlyDate() {
   })
 }
 
-function readFileAsDataUrl(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader()
-    reader.onload = () => resolve(reader.result)
-    reader.onerror = () => reject(new Error('Unable to read file'))
-    reader.readAsDataURL(file)
-  })
-}
-
 // ── Cross-tab notice sync ─────────────────────────────────────────────────────
 const _noticeChannel = typeof BroadcastChannel !== 'undefined' ? new BroadcastChannel('cms_notices') : null
 function notifyNoticesUpdated() {
@@ -140,7 +130,7 @@ export default function CMSDashboard() {
 
   useEffect(() => {
     if (!sessionStorage.getItem('cms_auth')) navigate('/cms', { replace: true })
-  }, [])
+  }, [navigate])
 
   useEffect(() => {
     const fn = e => {
@@ -169,7 +159,6 @@ export default function CMSDashboard() {
     }
     if (deleteModal.section === 'notices') {
       const stored = JSON.parse(localStorage.getItem('cms_notices') || '[]')
-      const target = stored.find(n => n.id === deleteModal.id)
       localStorage.setItem('cms_notices', JSON.stringify(stored.filter(n => n.id !== deleteModal.id)))
       notifyNoticesUpdated()
       // If the notice had an attached link, no backend deletion is required.
@@ -761,7 +750,7 @@ export default function CMSDashboard() {
                   </h3>
                   <p style={{ fontSize: '0.83rem', color: 'rgba(74,9,24,0.55)', lineHeight: 1.65 }}>
                     Are you sure you want to delete{' '}
-                    <strong style={{ color: MAROON }}>"{deleteModal.title}"</strong>?
+                    <strong style={{ color: MAROON }}>&quot;{deleteModal.title}&quot;</strong>?
                     {' '}This action cannot be undone.
                   </p>
                 </div>
@@ -1503,7 +1492,7 @@ function NoticeFormModal({ onClose, onSave, initialData = null }) {
         downloadAccess: attachment ? downloadAccess : 'Everyone',
       })
     }, 280)
-  }, [title, titleSi, titleTa, type, ref, deadline, status, description, descriptionSi, descriptionTa, attachment, initialData, onSave])
+  }, [title, titleSi, titleTa, type, ref, deadline, status, description, descriptionSi, descriptionTa, attachment, initialData, onSave, downloadAccess])
 
   const selectStyle = {
     width: '100%', padding: '9px 12px',
@@ -2702,7 +2691,7 @@ function SettingsSection({ onUsernameChange }) {
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontSize: '1.05rem', fontWeight: 700, color: MAROON }}>{creds?.username ?? 'Admin'}</div>
           <div style={{ fontSize: '0.74rem', color: 'rgba(74,9,24,0.45)', marginTop: 3 }}>Super Administrator</div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 8, flexWrap: 'wrap', gap: 8 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8, flexWrap: 'wrap' }}>
             <span style={{
               display: 'inline-flex', alignItems: 'center', gap: 5,
               background: 'rgba(22,101,52,0.09)', border: '1px solid rgba(22,101,52,0.18)',
@@ -2886,7 +2875,7 @@ function SettingsSection({ onUsernameChange }) {
       }}>
         <FiShield size={14} color={GOLD} style={{ marginTop: 2, flexShrink: 0 }} />
         <p style={{ fontSize: '0.73rem', color: 'rgba(74,9,24,0.5)', lineHeight: 1.7, margin: 0 }}>
-          All passwords are hashed with <strong>SHA-256</strong> using the browser's built-in Web Crypto API
+          All passwords are hashed with <strong>SHA-256</strong> using the browser&apos;s built-in Web Crypto API
           before being stored in <code style={{ fontSize: '0.7rem', background: 'rgba(74,9,24,0.07)', padding: '1px 5px', borderRadius: 4 }}>localStorage</code>.
           Plain-text passwords are never saved. After changing credentials, your current session remains active.
         </p>

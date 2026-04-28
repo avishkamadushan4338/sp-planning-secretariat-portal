@@ -1,10 +1,10 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Link, useSearchParams } from 'react-router-dom'
+import { useSearchParams } from 'react-router-dom'
 import {
   FiCalendar, FiArrowRight, FiDownload, FiExternalLink,
   FiSearch, FiX, FiChevronLeft, FiChevronRight, FiEye,
-  FiFileText, FiBell, FiImage, FiTag,
+  FiFileText, FiBell, FiImage,
 } from 'react-icons/fi'
 import { HiOutlineNewspaper } from 'react-icons/hi'
 import { useInView } from 'react-intersection-observer'
@@ -702,7 +702,7 @@ function GallerySection({ t, font }) {
     photoCount: a.photos || 0,
   }))
 
-  const allItems = [...cmsItems, ...GALLERY_ITEMS]
+  const allItems = useMemo(() => [...cmsItems, ...GALLERY_ITEMS], [cmsItems])
 
   const openItem = (item) => {
     if (item.isAlbum) {
@@ -726,7 +726,7 @@ function GallerySection({ t, font }) {
       while (allItems[next]?.isAlbum) next = (next - 1 + allItems.length) % allItems.length
       return next
     })
-  }, [allItems.length])
+  }, [allItems])
 
   const nextLight = useCallback(() => {
     setLightboxIdx(i => {
@@ -734,7 +734,7 @@ function GallerySection({ t, font }) {
       while (allItems[next]?.isAlbum) next = (next + 1) % allItems.length
       return next
     })
-  }, [allItems.length])
+  }, [allItems])
 
   useEffect(() => {
     if (lightboxIdx === null) return
@@ -1063,19 +1063,3 @@ function PageFooterRibbon() {
   )
 }
 
-function HoneycombSVG() {
-  const r = 16, hx = r * Math.sqrt(3), vy = r * 1.5
-  const cells = []
-  for (let row = 0; row < 10; row++)
-    for (let col = 0; col < 5; col++) {
-      const cx = col * hx + (row % 2 ? hx / 2 : 0) + r
-      const cy = row * vy + r
-      const pts = Array.from({ length: 6 }, (_, k) => {
-        const a = (Math.PI / 180) * (60 * k)
-        return `${cx + r * Math.cos(a)},${cy + r * Math.sin(a)}`
-      }).join(' ')
-      cells.push(<polygon key={`${row}-${col}`} points={pts} stroke={GOLD} strokeWidth="1" fill="none" />)
-    }
-  const W = 5 * hx + r + 4, H = 9 * vy + r * 2 + 4
-  return <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} fill="none">{cells}</svg>
-}
