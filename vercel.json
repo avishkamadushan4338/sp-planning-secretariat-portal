@@ -1,0 +1,7 @@
+{
+  "buildCommand": "cd sp-planning-secretariat-portal/frontend && npm install && npm run build",
+  "outputDirectory": "sp-planning-secretariat-portal/frontend/dist",
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}
