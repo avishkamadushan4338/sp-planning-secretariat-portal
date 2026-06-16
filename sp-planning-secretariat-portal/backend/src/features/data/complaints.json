@@ -1,0 +1,38 @@
+[
+  {
+    "id": 1780291690428,
+    "createdAt": "2026-06-01T05:28:10.428Z",
+    "status": "New",
+    "name": "Avishka Madushan",
+    "email": "avishkamadushan4338@gmail.com",
+    "phone": "+94 71 331 6679",
+    "type": "Complaint",
+    "dept": "Development",
+    "subject": "About it",
+    "message": "Twelve specialised divisions work in harmony to drive economic progress, infrastructure development, and social welfare throughout the Southern Province."
+  },
+  {
+    "id": 1780291594845,
+    "createdAt": "2026-06-01T05:26:34.845Z",
+    "status": "New",
+    "name": "Avishka Madushan",
+    "email": "avishkamadushan4338@gmail.com",
+    "phone": "+94 71 331 6679",
+    "type": "Complaint",
+    "dept": "Development",
+    "subject": "About it",
+    "message": "Twelve specialised divisions work in harmony to drive economic progress, infrastructure development, and social welfare throughout the Southern Province."
+  },
+  {
+    "id": 1780290865245,
+    "createdAt": "2026-06-01T05:14:25.245Z",
+    "status": "New",
+    "name": "Avishka Madushan",
+    "email": "avishkamadushan4338@gmail.com",
+    "phone": "+94 71 331 6679",
+    "type": "Complaint",
+    "dept": "Development",
+    "subject": "About it",
+    "message": "The Planning Secretariat – Southern Province is committed to effective planning, coordination, and implementation to ensure sustainable development and improved quality of life for all."
+  }
+]
