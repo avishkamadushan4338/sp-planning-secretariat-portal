@@ -1,0 +1,36 @@
+{
+  "name": "sp-planning-backend",
+  "version": "1.0.0",
+  "description": "Backend API for SP Planning Secretariat Portal",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js",
+    "seed": "node src/db/seed.js",
+    "test": "jest --runInBand"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "moduleNameMapper": {
+      "^uuid$": "<rootDir>/src/__mocks__/uuid.js"
+    }
+  },
+  "dependencies": {
+    "bcryptjs": "3.0.3",
+    "cloudinary": "2.10.0",
+    "cors": "2.8.6",
+    "dotenv": "16.6.1",
+    "express": "4.22.1",
+    "express-rate-limit": "8.5.2",
+    "jsonwebtoken": "9.0.3",
+    "multer": "1.4.5-lts.2",
+    "node-cron": "4.2.1",
+    "nodemailer": "8.0.7",
+    "uuid": "14.0.0"
+  },
+  "devDependencies": {
+    "jest": "^30.4.2",
+    "nodemon": "3.1.14",
+    "supertest": "^7.2.2"
+  }
+}
