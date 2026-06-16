@@ -1,0 +1,36 @@
+/* Fills exactly the visible area below the fixed navbar — no scroll on any device */
+.not-found-root {
+  height: calc(100dvh - clamp(58px, 7vw, 76px));
+  max-height: calc(100dvh - clamp(58px, 7vw, 76px));
+}
+
+@media (max-width: 359px) {
+  .not-found-root { height: calc(100dvh - 54px); max-height: calc(100dvh - 54px); }
+}
+@media (min-width: 360px) and (max-width: 480px) {
+  .not-found-root { height: calc(100dvh - 58px); max-height: calc(100dvh - 58px); }
+}
+@media (min-width: 480px) and (max-width: 640px) {
+  .not-found-root { height: calc(100dvh - 62px); max-height: calc(100dvh - 62px); }
+}
+@media (min-width: 640px) and (max-width: 768px) {
+  .not-found-root { height: calc(100dvh - 66px); max-height: calc(100dvh - 66px); }
+}
+@media (min-width: 768px) and (max-width: 1023px) {
+  .not-found-root { height: calc(100dvh - 68px); max-height: calc(100dvh - 68px); }
+}
+@media (min-width: 1024px) and (max-width: 1279px) {
+  .not-found-root { height: calc(100dvh - 70px); max-height: calc(100dvh - 70px); }
+}
+@media (min-width: 1280px) and (max-width: 1439px) {
+  .not-found-root { height: calc(100dvh - 72px); max-height: calc(100dvh - 72px); }
+}
+@media (min-width: 1440px) {
+  .not-found-root { height: calc(100dvh - 76px); max-height: calc(100dvh - 76px); }
+}
+
+/* Scale down content on very small screens so nothing overflows */
+.not-found-root > div[style] {
+  max-height: 100%;
+  overflow: hidden;
+}
