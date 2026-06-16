@@ -1,0 +1,11 @@
+$kind: http-request
+url: "{{baseUrl}}/api/smp/auth/logout"
+method: POST
+body:
+  type: json
+  content: ""
+auth:
+  type: bearer
+  credentials:
+    token: "{{supabase_service_role_api_key_177z}}"
+order: 3101578916106132

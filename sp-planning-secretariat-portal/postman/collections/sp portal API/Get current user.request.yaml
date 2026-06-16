@@ -1,0 +1,4 @@
+$kind: http-request
+url: "\t{{baseUrl}}/api/smp/auth/me"
+method: GET
+order: 2773072128701820

@@ -1,0 +1,7 @@
+$kind: collection
+name: sp portal API
+variables:
+  - key: supabase_service_role_api_key_177z
+    secret: true
+  - key: json_web_token_177z
+    secret: true

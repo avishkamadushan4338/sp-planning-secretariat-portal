@@ -1,0 +1,9 @@
+$kind: http-request
+name: List users
+url: "{{baseUrl}}/api/smp/users"
+method: GET
+auth:
+  type: bearer
+  credentials:
+    token: "{{json_web_token_177z}}"
+order: 3627859278522974

@@ -1,0 +1,9 @@
+$kind: http-request
+name: List all items
+url: "{{baseUrl}}/api/smp/items"
+method: GET
+auth:
+  type: bearer
+  credentials:
+    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjVmN2YzNTdlLTQ3NjgtNDI5MC1hYzVjLWUyZmU3NWY3OWIyMyIsInVzZXJuYW1lIjoiU3RvcmUiLCJyb2xlIjoiYWRtaW4iLCJuYW1lIjoiam9uZTEyIiwibG9nSWQiOiIzOTc1ZmIxOC00MmVkLTQ2NjEtYjlhZS04OTc2ZDIwNDVlZWYiLCJpYXQiOjE3ODE1ODU5NTQsImV4cCI6MTc4MTYxNDc1NH0.HLpMwp_e4bVE7MyqLzFjvW-0CvZcJiRsXgia6U0SPQw
+order: 4473911091393041

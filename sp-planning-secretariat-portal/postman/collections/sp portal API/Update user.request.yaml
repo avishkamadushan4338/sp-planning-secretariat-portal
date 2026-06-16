@@ -1,0 +1,11 @@
+$kind: http-request
+url: "{{baseUrl}}/api/smp/users/ed2fdf5b-a778-4fc3-9909-4fd44ed9cb08"
+method: PATCH
+body:
+  type: json
+  content: '{"name":"avishka1","active":true}'
+auth:
+  type: bearer
+  credentials:
+    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjVmN2YzNTdlLTQ3NjgtNDI5MC1hYzVjLWUyZmU3NWY3OWIyMyIsInVzZXJuYW1lIjoiU3RvcmUiLCJyb2xlIjoiYWRtaW4iLCJuYW1lIjoiam9uZTEyIiwibG9nSWQiOiIwZTIzNTNjYS02MjE1LTRlYzktYTNiMS04OTIwYTA5YWRkYTkiLCJpYXQiOjE3ODE1MTg3OTAsImV4cCI6MTc4MTU0NzU5MH0.Sk1Zlw3Ss0o6t6HsGus3YUfJJeZgeGFGUrCblM9Iuu4
+order: 4305550278731895
