@@ -1,0 +1,612 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   History.css — Southern Province Planning Secretariat
+   Premium 2050 Institutional History Page
+   Maroon #4A0918 · Gold #C79A2B · Cream #FCFBFA
+   Fully responsive 320px → 4K
+═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Reduced motion ─────────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .hist-tl-card,
+  .hist-project-card,
+  .hist-stat-card,
+  .hist-directors-table__row,
+  .hist-directors-card-item {
+    transition: none !important;
+  }
+  .hist-tl-card__glow,
+  .hist-project-card__glow {
+    display: none !important;
+  }
+}
+
+/* ── Shared section spacing ─────────────────────────────────────────────── */
+.hist-content {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(2.5rem, 5vw, 4rem);
+  padding-bottom: 1.5rem;
+}
+
+/* ── Section label ──────────────────────────────────────────────────────── */
+.hist-section-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: clamp(0.68rem, 1.2vw, 0.78rem);
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ab-gold, #C79A2B);
+  margin-bottom: clamp(0.9rem, 2.5vw, 1.4rem);
+}
+.hist-section-label__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--ab-gold, #C79A2B);
+  flex-shrink: 0;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   SECTION 1 — INTRO
+═══════════════════════════════════════════════════════════════════════════ */
+.hist-intro {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Intro glass card */
+.hist-intro-card {
+  position: relative;
+  background: var(--ab-card-bg, #fff);
+  border: 1px solid var(--ab-border, rgba(74,9,24,0.10));
+  border-radius: var(--ab-radius, 16px);
+  overflow: hidden;
+  box-shadow: var(--ab-shadow-card);
+  transition: box-shadow 0.28s var(--ab-ease, cubic-bezier(0.16,1,0.3,1));
+  margin-bottom: clamp(1.2rem, 3vw, 1.8rem);
+}
+.hist-intro-card:hover {
+  box-shadow: var(--ab-shadow-hover);
+}
+
+/* Animated left border accent */
+.hist-intro-card__accent {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: linear-gradient(180deg, var(--ab-gold, #C79A2B) 0%, var(--ab-maroon, #4A0918) 100%);
+  animation: hist-accent-pulse 3s ease-in-out infinite;
+}
+@keyframes hist-accent-pulse {
+  0%, 100% { opacity: 0.9; }
+  50%       { opacity: 0.55; }
+}
+
+.hist-intro-card__inner {
+  display: flex;
+  gap: clamp(1rem, 3vw, 1.8rem);
+  padding: clamp(1.4rem, 4vw, 2rem) clamp(1.4rem, 4vw, 2rem) clamp(1.4rem, 4vw, 2rem) clamp(1.8rem, 5vw, 2.4rem);
+  align-items: flex-start;
+}
+
+.hist-intro-card__icon-wrap {
+  flex-shrink: 0;
+  width: clamp(44px, 5vw, 60px);
+  height: clamp(44px, 5vw, 60px);
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(74,9,24,0.08) 0%, rgba(199,154,43,0.10) 100%);
+  border: 1px solid var(--ab-border-gold, rgba(199,154,43,0.28));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: clamp(1.2rem, 2.5vw, 1.6rem);
+  color: var(--ab-maroon, #4A0918);
+}
+
+.hist-intro-card__body {
+  flex: 1;
+  min-width: 0;
+}
+
+.hist-intro-card__title {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: clamp(1.3rem, 2.5vw, 1.75rem);
+  font-weight: 700;
+  color: var(--ab-text, #1a0509);
+  margin: 0 0 0.6rem;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+}
+
+.hist-intro-card__rule {
+  width: clamp(32px, 6vw, 52px);
+  height: 3px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, var(--ab-gold, #C79A2B), transparent);
+  margin-bottom: clamp(0.8rem, 2vw, 1.1rem);
+}
+
+.hist-intro-card__text {
+  font-size: clamp(0.93rem, 1.5vw, 1.03rem);
+  line-height: 1.82;
+  color: var(--ab-text-body, #3d1520);
+  margin: 0 0 0.75rem;
+  max-width: 72ch;
+}
+.hist-intro-card__text:last-child { margin-bottom: 0; }
+
+/* Decorative corner ornament */
+.hist-intro-card__ornament {
+  position: absolute;
+  bottom: -10px;
+  right: -10px;
+  opacity: 0.5;
+  pointer-events: none;
+  transform: rotate(15deg);
+}
+
+/* ── Stat strip ─────────────────────────────────────────────────────────── */
+.hist-stat-strip {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: clamp(0.7rem, 2vw, 1.1rem);
+}
+
+.hist-stat-card {
+  position: relative;
+  background: var(--ab-card-bg, #fff);
+  border: 1px solid var(--ab-border, rgba(74,9,24,0.10));
+  border-radius: var(--ab-radius-sm, 10px);
+  padding: clamp(0.9rem, 2.5vw, 1.25rem) clamp(0.8rem, 2vw, 1.1rem);
+  text-align: center;
+  box-shadow: var(--ab-shadow-card);
+  transition: transform 0.26s var(--ab-ease), box-shadow 0.26s var(--ab-ease);
+  overflow: hidden;
+}
+.hist-stat-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--ab-shadow-hover);
+}
+.hist-stat-card::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--ab-gold, #C79A2B), transparent);
+  opacity: 0;
+  transition: opacity 0.26s;
+}
+.hist-stat-card:hover::after { opacity: 1; }
+
+.hist-stat-card__icon {
+  font-size: clamp(1.15rem, 2vw, 1.4rem);
+  color: var(--ab-maroon, #4A0918);
+  margin-bottom: 0.4rem;
+  display: flex;
+  justify-content: center;
+}
+.hist-stat-card__value {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: clamp(1.3rem, 2.5vw, 1.65rem);
+  font-weight: 700;
+  color: var(--ab-maroon, #4A0918);
+  line-height: 1.1;
+}
+.hist-stat-card__label {
+  font-size: clamp(0.68rem, 1.1vw, 0.76rem);
+  color: var(--ab-text-muted, #7a4a55);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-top: 0.25rem;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   SECTION 2 — DIRECTORS TABLE
+═══════════════════════════════════════════════════════════════════════════ */
+.hist-directors-section {
+  display: flex;
+  flex-direction: column;
+}
+
+.hist-directors-card {
+  background: var(--ab-card-bg, #fff);
+  border: 1px solid var(--ab-border, rgba(74,9,24,0.10));
+  border-radius: var(--ab-radius, 16px);
+  overflow: hidden;
+  box-shadow: var(--ab-shadow-card);
+}
+
+/* Table wrapper — enables horizontal scroll on small screens */
+.hist-directors-table-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.hist-directors-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: clamp(0.88rem, 1.4vw, 0.98rem);
+}
+
+.hist-directors-table__th {
+  padding: clamp(0.75rem, 2vw, 1rem) clamp(1rem, 2.5vw, 1.5rem);
+  text-align: left;
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: clamp(0.65rem, 1.1vw, 0.74rem);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ab-gold, #C79A2B);
+  background: linear-gradient(135deg, rgba(74,9,24,0.04) 0%, rgba(199,154,43,0.04) 100%);
+  border-bottom: 2px solid var(--ab-border-gold, rgba(199,154,43,0.28));
+  white-space: nowrap;
+}
+.hist-directors-table__th--num {
+  width: 52px;
+  text-align: center;
+}
+
+.hist-directors-table__row {
+  border-bottom: 1px solid var(--ab-border, rgba(74,9,24,0.07));
+  transition: background 0.20s;
+  cursor: default;
+}
+.hist-directors-table__row:last-child { border-bottom: none; }
+.hist-directors-table__row:hover {
+  background: rgba(199,154,43,0.04);
+}
+.hist-directors-table__row:focus-visible {
+  outline: 2px solid var(--ab-gold, #C79A2B);
+  outline-offset: -2px;
+}
+
+.hist-directors-table__td {
+  padding: clamp(0.7rem, 2vw, 0.95rem) clamp(1rem, 2.5vw, 1.5rem);
+  color: var(--ab-text-body, #3d1520);
+  line-height: 1.5;
+  vertical-align: middle;
+}
+.hist-directors-table__td--num {
+  text-align: center;
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--ab-maroon, #4A0918);
+  opacity: 0.6;
+}
+.hist-directors-table__td--name {
+  font-weight: 600;
+  color: var(--ab-text, #1a0509);
+}
+.hist-directors-table__td--period {
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: clamp(0.82rem, 1.2vw, 0.90rem);
+  color: var(--ab-gold-dim, #a07e20);
+  white-space: nowrap;
+}
+
+/* Mobile cards — hidden by default, shown at 600px */
+.hist-directors-cards {
+  display: none;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   SECTION 3 — PROJECTS
+═══════════════════════════════════════════════════════════════════════════ */
+.hist-projects-section {
+  display: flex;
+  flex-direction: column;
+}
+
+.hist-projects-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: clamp(1rem, 2.5vw, 1.5rem);
+}
+
+.hist-project-card {
+  position: relative;
+  background: var(--ab-card-bg, #fff);
+  border: 1px solid var(--ab-border, rgba(74,9,24,0.10));
+  border-radius: var(--ab-radius, 16px);
+  overflow: hidden;
+  box-shadow: var(--ab-shadow-card);
+  display: flex;
+  flex-direction: column;
+  transition: box-shadow 0.28s var(--ab-ease), transform 0.28s var(--ab-ease);
+  cursor: default;
+}
+.hist-project-card:hover {
+  box-shadow: var(--ab-shadow-hover);
+  transform: translateY(-4px);
+}
+.hist-project-card:focus-visible {
+  outline: 2px solid var(--ab-gold, #C79A2B);
+  outline-offset: 2px;
+}
+
+/* Image area */
+.hist-project-card__img-wrap {
+  position: relative;
+  height: clamp(140px, 18vw, 200px);
+  overflow: hidden;
+  background: linear-gradient(135deg, rgba(74,9,24,0.08) 0%, rgba(199,154,43,0.06) 100%);
+}
+
+.hist-project-card__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  transition: transform 0.40s var(--ab-ease);
+}
+.hist-project-card:hover .hist-project-card__img {
+  transform: scale(1.05);
+}
+
+.hist-project-card__img-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent 40%, rgba(74,9,24,0.20) 100%);
+}
+
+/* Placeholder when image missing */
+.hist-project-card__img-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background: linear-gradient(135deg, rgba(74,9,24,0.06) 0%, rgba(199,154,43,0.08) 100%);
+}
+.hist-project-card__placeholder-icon {
+  font-size: clamp(1.8rem, 4vw, 2.5rem);
+  color: var(--ab-maroon, #4A0918);
+  opacity: 0.4;
+}
+.hist-project-card__placeholder-abbr {
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: clamp(0.8rem, 1.5vw, 1rem);
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  color: var(--ab-maroon, #4A0918);
+  opacity: 0.5;
+}
+
+/* Card body */
+.hist-project-card__body {
+  padding: clamp(1rem, 2.5vw, 1.4rem);
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  gap: 0.5rem;
+}
+
+.hist-project-card__year {
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: clamp(0.65rem, 1.1vw, 0.72rem);
+  letter-spacing: 0.14em;
+  color: var(--ab-gold, #C79A2B);
+  text-transform: uppercase;
+}
+
+.hist-project-card__title {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: clamp(0.95rem, 1.6vw, 1.07rem);
+  font-weight: 700;
+  color: var(--ab-text, #1a0509);
+  margin: 0;
+  line-height: 1.30;
+}
+
+.hist-project-card__desc {
+  font-size: clamp(0.83rem, 1.3vw, 0.92rem);
+  line-height: 1.78;
+  color: var(--ab-text-body, #3d1520);
+  margin: 0;
+  flex: 1;
+}
+
+.hist-project-card__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.4rem;
+  align-self: flex-start;
+  font-family: 'Plus Jakarta Sans', Inter, system-ui, sans-serif;
+  font-size: clamp(0.78rem, 1.2vw, 0.84rem);
+  font-weight: 600;
+  color: var(--ab-maroon, #4A0918);
+  background: rgba(74,9,24,0.06);
+  border: 1px solid var(--ab-border, rgba(74,9,24,0.12));
+  border-radius: var(--ab-radius-xs, 6px);
+  padding: 0.42rem 0.9rem;
+  cursor: pointer;
+  transition: background 0.22s, color 0.22s, border-color 0.22s;
+}
+.hist-project-card__btn:hover {
+  background: var(--ab-maroon, #4A0918);
+  color: var(--ab-gold, #C79A2B);
+  border-color: var(--ab-maroon, #4A0918);
+}
+.hist-project-card__btn:focus-visible {
+  outline: 2px solid var(--ab-gold, #C79A2B);
+  outline-offset: 2px;
+}
+
+/* Hover glow */
+.hist-project-card__glow {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(ellipse at 50% 0%, rgba(199,154,43,0.07) 0%, transparent 60%);
+  opacity: 0;
+  transition: opacity 0.28s;
+  pointer-events: none;
+}
+.hist-project-card:hover .hist-project-card__glow { opacity: 1; }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   RESPONSIVE BREAKPOINTS
+═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Tablet: ≤ 1060px ── */
+@media (max-width: 1060px) {
+  .hist-projects-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* ── Medium: ≤ 840px ── */
+@media (max-width: 840px) {
+  .hist-stat-strip {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .hist-intro-card__inner {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+/* ── Mobile: ≤ 600px ── */
+@media (max-width: 600px) {
+  .hist-content {
+    gap: clamp(2rem, 6vw, 3rem);
+  }
+
+  .hist-stat-strip {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.7rem;
+  }
+
+  /* Switch table to mobile cards */
+  .hist-directors-table-wrap {
+    display: none;
+  }
+  .hist-directors-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .hist-directors-card-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: clamp(0.8rem, 3vw, 1rem) clamp(1rem, 4vw, 1.3rem);
+    border-bottom: 1px solid var(--ab-border, rgba(74,9,24,0.07));
+    transition: background 0.20s;
+    cursor: default;
+  }
+  .hist-directors-card-item:last-child { border-bottom: none; }
+  .hist-directors-card-item:hover {
+    background: rgba(199,154,43,0.04);
+  }
+  .hist-directors-card-item:focus-visible {
+    outline: 2px solid var(--ab-gold, #C79A2B);
+    outline-offset: -2px;
+  }
+
+  .hist-directors-card-item__num {
+    font-family: 'Cinzel', Georgia, serif;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--ab-maroon, #4A0918);
+    opacity: 0.55;
+    min-width: 22px;
+    padding-top: 2px;
+  }
+
+  .hist-directors-card-item__body {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .hist-directors-card-item__name {
+    font-size: clamp(0.88rem, 3.5vw, 0.96rem);
+    font-weight: 600;
+    color: var(--ab-text, #1a0509);
+    line-height: 1.4;
+  }
+
+  .hist-directors-card-item__period {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-family: 'Cinzel', Georgia, serif;
+    font-size: clamp(0.72rem, 2.8vw, 0.80rem);
+    color: var(--ab-gold-dim, #a07e20);
+  }
+
+  .hist-projects-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .hist-project-card__img-wrap {
+    height: clamp(130px, 40vw, 170px);
+  }
+}
+
+/* ── Very small: ≤ 380px ── */
+@media (max-width: 380px) {
+  .hist-stat-strip {
+    grid-template-columns: 1fr 1fr;
+    gap: 0.55rem;
+  }
+  .hist-stat-card {
+    padding: 0.8rem 0.6rem;
+  }
+  .hist-intro-card__icon-wrap {
+    display: none;
+  }
+}
+
+/* ── 2K / 4K: ≥ 1800px ── */
+@media (min-width: 1800px) {
+  .hist-content {
+    gap: clamp(3.5rem, 4vw, 5rem);
+  }
+
+  .hist-stat-strip {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.5rem;
+  }
+
+  .hist-projects-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+  }
+
+  .hist-intro-card__text {
+    font-size: clamp(1.02rem, 1.1vw, 1.15rem);
+    line-height: 1.88;
+  }
+
+  .hist-tl-card__desc {
+    font-size: clamp(0.94rem, 1.0vw, 1.05rem);
+    line-height: 1.82;
+  }
+
+  .hist-directors-table {
+    font-size: clamp(0.94rem, 1.0vw, 1.05rem);
+  }
+
+  .hist-location-card__address {
+    font-size: clamp(0.96rem, 1.0vw, 1.08rem);
+  }
+}
