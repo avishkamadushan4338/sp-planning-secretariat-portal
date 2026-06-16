@@ -1,0 +1,359 @@
+/* ── Footer shell ──────────────────────────────────────────────────────────── */
+.footer {
+  position: relative;
+  flex-shrink: 0;
+  margin-top: auto;
+}
+
+/* ── Main body ─────────────────────────────────────────────────────────────── */
+.footer-main {
+  position: relative;
+  background: #1c0508;
+  padding: 52px 24px 44px;
+  overflow: hidden;
+}
+
+/* ── Decorative concentric arc pattern (bottom-right) ─────────────────────── */
+.footer-arc {
+  position: absolute;
+  right: -180px;
+  bottom: -180px;
+  width: 800px;
+  height: 800px;
+  border-radius: 50%;
+  pointer-events: none;
+  box-shadow:
+    0 0 0 1px   rgba(199, 154, 43, 0.07),
+    0 0 0 60px  rgba(199, 154, 43, 0.05),
+    0 0 0 120px rgba(199, 154, 43, 0.035),
+    0 0 0 180px rgba(199, 154, 43, 0.022),
+    0 0 0 240px rgba(199, 154, 43, 0.014),
+    0 0 0 300px rgba(199, 154, 43, 0.008),
+    0 0 0 360px rgba(199, 154, 43, 0.004);
+}
+
+/* ── Container ─────────────────────────────────────────────────────────────── */
+.footer-container {
+  max-width: 1440px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 1;
+  padding-left: clamp(0px, 3vw, 48px);
+}
+
+/* ── 3-column grid ─────────────────────────────────────────────────────────── */
+.footer-grid {
+  display: grid;
+  grid-template-columns: 1.35fr 1fr 1fr;
+  gap: 24px;
+  align-items: start;
+}
+
+@media (max-width: 1024px) {
+  .footer-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .footer-card--media {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 640px) {
+  .footer-grid {
+    grid-template-columns: 1fr;
+  }
+  .footer-card--media {
+    grid-column: auto;
+  }
+  .footer-main {
+    padding: 36px 16px 32px;
+  }
+  /* Remove the extra 48px left indent that's only needed on wide screens */
+  .footer-container {
+    padding-left: 0;
+  }
+}
+
+/* ── Card panel ────────────────────────────────────────────────────────────── */
+.footer-card {
+  border: 1px solid rgba(199, 154, 43, 0.2);
+  border-radius: 10px;
+  padding: 28px 24px;
+  background: rgba(255, 255, 255, 0.03);
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+/* Brand card: center everything around the logo */
+.footer-card:first-child {
+  align-items: center;
+}
+
+.footer-card:first-child .footer-contact-item {
+  justify-content: flex-start;
+  width: 100%;
+}
+
+/* ── Logo ──────────────────────────────────────────────────────────────────── */
+.footer-logo-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: min(100%, 640px);
+}
+
+.footer-logo {
+  width: 100%;
+  max-width: 640px;
+  height: auto;
+  object-fit: contain;
+  display: block;
+}
+
+/* ── Contact list ──────────────────────────────────────────────────────────── */
+.footer-contact-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.footer-contact-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.footer-contact-icon-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(199, 154, 43, 0.18), rgba(10, 5, 2, 0.7));
+  border: 1px solid rgba(199, 154, 43, 0.45);
+  color: #E8C55A;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(199, 154, 43, 0.15);
+}
+
+.footer-contact-text {
+  font-family: Inter, system-ui, sans-serif;
+  font-size: 1rem;
+  color: rgba(235, 220, 195, 0.82);
+  line-height: 1.72;
+  padding-top: 7px;
+  letter-spacing: 0.015em;
+}
+
+/* ── Social buttons ────────────────────────────────────────────────────────── */
+.footer-socials {
+  display: flex;
+  gap: 10px;
+}
+
+.footer-social-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(255, 255, 255, 0.32);
+  color: rgba(255, 255, 255, 0.8);
+  text-decoration: none;
+  transition: border-color 0.2s ease, color 0.2s ease, background 0.2s ease;
+}
+
+.footer-social-btn:hover {
+  border-color: #C79A2B;
+  color: #C79A2B;
+  background: rgba(199, 154, 43, 0.1);
+}
+
+/* ── Card heading ──────────────────────────────────────────────────────────── */
+.footer-card-heading {
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #F0D070;
+  margin: 0;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(199, 154, 43, 0.35);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-shadow: 0 1px 8px rgba(199, 154, 43, 0.3);
+}
+
+/* ── Navigation list ───────────────────────────────────────────────────────── */
+.footer-nav-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.footer-nav-link {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: Inter, system-ui, sans-serif;
+  font-size: 0.94rem;
+  font-weight: 400;
+  color: rgba(225, 210, 180, 0.78);
+  text-decoration: none;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(199, 154, 43, 0.1);
+  letter-spacing: 0.03em;
+  transition: color 0.22s ease, gap 0.22s ease, padding-left 0.22s ease;
+}
+
+.footer-nav-list li:last-child .footer-nav-link {
+  border-bottom: none;
+}
+
+.footer-nav-link:hover {
+  color: #F0D070;
+  gap: 12px;
+  padding-left: 4px;
+}
+
+.footer-chevron {
+  color: rgba(199, 154, 43, 0.7);
+  flex-shrink: 0;
+  transition: transform 0.22s ease, color 0.22s ease;
+}
+
+.footer-nav-link:hover .footer-chevron {
+  transform: translateX(3px);
+  color: #E8C55A;
+}
+
+/* ── Government badge (bottom of media card) ───────────────────────────────── */
+.footer-gov-badge {
+  margin-top: auto;
+  border-top: 1px solid rgba(199, 154, 43, 0.15);
+  padding-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.footer-gov-badge-label {
+  font-family: Inter, system-ui, sans-serif;
+  font-size: 0.66rem;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: rgba(199, 154, 43, 0.65);
+  margin: 0;
+}
+
+.footer-gov-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.footer-gov-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: Inter, system-ui, sans-serif;
+  font-size: 0.76rem;
+  color: rgba(255, 255, 255, 0.48);
+  text-decoration: none;
+  transition: color 0.18s ease;
+}
+
+.footer-gov-link:hover {
+  color: #E8C55A;
+}
+
+/* ── Bottom bar ─────────────────────────────────────────────────────────────── */
+.footer-bottom-bar {
+  background: #f7f2ea;
+  padding: 14px 24px;
+}
+
+.footer-bottom-inner {
+  max-width: 1440px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.footer-copyright {
+  font-family: Inter, system-ui, sans-serif;
+  font-size: 0.72rem;
+  color: #4a3010;
+  margin: 0;
+}
+
+.footer-credit {
+  font-family: Inter, system-ui, sans-serif;
+  font-size: 0.72rem;
+  color: #6b4a18;
+  margin: 0;
+  text-align: center;
+}
+
+.footer-credit strong {
+  color: #8B6218;
+  font-weight: 700;
+}
+
+.footer-terms {
+  font-family: Inter, system-ui, sans-serif;
+  font-size: 0.72rem;
+  color: #6b4a18;
+  text-decoration: none;
+  transition: color 0.18s ease;
+}
+
+.footer-terms:hover {
+  color: #C79A2B;
+  text-decoration: underline;
+}
+
+@media (max-width: 640px) {
+  .footer-bottom-inner {
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    text-align: center;
+  }
+
+  .footer-copyright,
+  .footer-credit,
+  .footer-terms {
+    text-align: center;
+    width: 100%;
+  }
+
+  .footer-card {
+    padding: 22px 18px;
+    gap: 18px;
+  }
+
+  .footer-logo {
+    max-width: 280px;
+  }
+
+  .footer-contact-text {
+    font-size: 0.85rem;
+  }
+}

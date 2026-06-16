@@ -1,0 +1,526 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   Navbar.css  —  Premium 2050-level Government Navigation
+   Colour palette: Maroon / Gold / White  (unchanged)
+   Breakpoints: 360 · 480 · 640 · 768 · 1024 · 1280 · 1440 · 1920+
+═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Global box-sizing reset ──────────────────────────────────────────────── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* ── Prevent layout shift from scrollbar ─────────────────────────────────── */
+html {
+  scrollbar-gutter: stable;
+  -webkit-text-size-adjust: 100%;
+}
+
+/* ── Safe area insets (iOS notch / dynamic island) ────────────────────────── */
+#site-header {
+  padding-left: env(safe-area-inset-left, 0px);
+  padding-right: env(safe-area-inset-right, 0px);
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   LOGO
+══════════════════════════════════════════════════════════════════════════ */
+.navbar-logo-image {
+  height: clamp(44px, 6vw, 68px);
+  width: auto;
+  max-width: clamp(160px, 30vw, 520px);
+  object-fit: contain;
+  object-position: left center;
+  background: transparent;
+  padding: 5px clamp(8px, 1.2vw, 14px) 5px 0;
+  border-right: 2px solid rgba(199, 154, 43, 0.25);
+  transition: opacity 0.25s ease, border-color 0.25s ease;
+  display: block;
+  flex-shrink: 0;
+}
+
+.navbar-logo-skeleton {
+  height: clamp(44px, 6vw, 68px);
+  width: clamp(160px, 20vw, 260px);
+  border-radius: 6px;
+  background: linear-gradient(
+    110deg,
+    rgba(199,154,43,0.08) 0%,
+    rgba(199,154,43,0.18) 50%,
+    rgba(199,154,43,0.08) 100%
+  );
+  background-size: 250% 100%;
+  animation: pi-shimmer 1.6s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+.group:hover .navbar-logo-image,
+.navbar-logo-link:focus-visible .navbar-logo-image {
+  opacity: 0.88;
+  border-color: rgba(199, 154, 43, 0.55);
+}
+
+.navbar-logo-link {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  min-width: 0;
+  border-radius: 4px;
+}
+
+/* Government emblem fallback */
+.navbar-emblem {
+  width: clamp(48px, 5.5vw, 72px);
+  height: clamp(48px, 5.5vw, 72px);
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   INNER LAYOUT — navbar row
+══════════════════════════════════════════════════════════════════════════ */
+.navbar-inner {
+  width: 100%;
+  max-width: 1920px;
+  margin: 0 auto;
+  padding-left: clamp(12px, 2vw, 32px);
+  padding-right: clamp(12px, 2vw, 24px);
+  padding-left: max(clamp(12px, 2vw, 32px), env(safe-area-inset-left, 0px));
+  padding-right: max(clamp(12px, 2vw, 24px), env(safe-area-inset-right, 0px));
+}
+
+.navbar-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: clamp(58px, 7vw, 76px);
+  gap: 8px;
+}
+
+/* ── Desktop nav spacing — replaces hard-coded ml-32 ─────────────────────── */
+.navbar-nav-gap {
+  margin-left: clamp(12px, 3vw, 80px);
+  margin-right: auto;
+}
+
+/* ── Nav label font size ─────────────────────────────────────────────────── */
+.nav-label-size {
+  font-size: clamp(10px, 0.85vw, 12.5px);
+}
+
+/* ── Nav item horizontal padding ─────────────────────────────────────────── */
+.nav-px {
+  padding-left: clamp(8px, 1.1vw, 18px);
+  padding-right: clamp(8px, 1.1vw, 18px);
+}
+
+/* ── Chevron size ────────────────────────────────────────────────────────── */
+.nav-chevron {
+  font-size: clamp(6px, 0.55vw, 8px);
+  margin-top: 1px;
+}
+
+/* ── Extra boldness stroke ───────────────────────────────────────────────── */
+.nav-item-bold {
+  -webkit-text-stroke: 0.4px currentColor;
+  text-shadow: 0 0 0.3px currentColor;
+}
+
+/* ── Hamburger button ────────────────────────────────────────────────────── */
+.hamburger-btn {
+  width: clamp(38px, 5vw, 44px);
+  height: clamp(38px, 5vw, 44px);
+  flex-shrink: 0;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   DROP-IN ANIMATION
+══════════════════════════════════════════════════════════════════════════ */
+@keyframes dropIn {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0);    }
+}
+
+[role="menu"] {
+  animation: dropIn 0.15s ease forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [role="menu"],
+  .navbar-logo-image,
+  * {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   PLAIN DROPDOWN PANEL
+══════════════════════════════════════════════════════════════════════════ */
+.nav-plain-drop {
+  min-width: clamp(200px, 22vw, 280px);
+  max-width: calc(100vw - 32px);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18), 0 0 0 1px rgba(199, 154, 43, 0.12);
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   NEWS / MEDIA CENTRE PANEL
+══════════════════════════════════════════════════════════════════════════ */
+.nav-news-drop {
+  width: clamp(320px, 38vw, 520px);
+  max-width: calc(100vw - 32px);
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   CONTACT PANEL
+══════════════════════════════════════════════════════════════════════════ */
+.nav-contact-drop {
+  width: clamp(400px, 52vw, 680px);
+  max-width: calc(100vw - 32px);
+  /* Prevent right-side overflow */
+  right: 0;
+}
+
+.nav-contact-grid {
+  display: grid;
+  grid-template-columns: 1fr minmax(220px, 280px);
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   ABOUT US MEGA MENU POSITIONER
+══════════════════════════════════════════════════════════════════════════ */
+.mega-menu-positioner {
+  left: clamp(220px, 20vw, 320px);
+  transform: none;
+  width: min(92vw, 1160px);
+  max-width: calc(100vw - 24px);
+}
+
+.mega-grid {
+  display: grid;
+  grid-template-columns: minmax(360px, 1fr) clamp(380px, 40%, 500px);
+}
+
+.mega-title {
+  font-size: clamp(15px, 1.2vw, 17.5px);
+}
+
+.mega-desc {
+  font-size: clamp(12.5px, 0.95vw, 14px);
+  white-space: normal;
+  word-break: break-word;
+}
+
+/* Official avatar inside mega menu */
+.official-avatar-wrap {
+  width: clamp(72px, 7vw, 96px);
+  height: clamp(72px, 7vw, 96px);
+}
+
+.official-name {
+  font-size: clamp(14px, 1.2vw, 18px);
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   MOBILE MENU
+══════════════════════════════════════════════════════════════════════════ */
+.mobile-menu-container {
+  position: fixed;
+  /* top is set via inline style from measured navbar height */
+  left: 0;
+  right: 0;
+  /* no bottom:0 — only as tall as the content */
+  height: auto;
+  max-height: calc(100dvh - 58px);
+  z-index: 9998;
+  overflow: hidden;
+  border-bottom: 2px solid #E7E1DC;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.mobile-menu-inner {
+  max-height: calc(100dvh - 58px);
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  background: #fff;
+}
+
+/* Mobile nav label size */
+.mobile-nav-label {
+  font-size: clamp(12px, 3.2vw, 13.5px);
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   SHADOW TOKENS
+══════════════════════════════════════════════════════════════════════════ */
+.shadow-nav {
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.12), 0 1px 0 rgba(199, 154, 43, 0.08);
+}
+
+.shadow-dropdown {
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.14), 0 1px 0 rgba(199, 154, 43, 0.08);
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   FOCUS VISIBLE GLOBAL RING
+══════════════════════════════════════════════════════════════════════════ */
+:focus-visible {
+  outline: 2px solid rgba(199, 154, 43, 0.85);
+  outline-offset: 2px;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   ■  360px  —  tiny Android phones
+══════════════════════════════════════════════════════════════════════════ */
+@media (max-width: 359px) {
+  .navbar-logo-image {
+    height: 40px;
+    max-width: 140px;
+    padding-right: 8px;
+  }
+
+  .navbar-row {
+    height: 54px;
+    gap: 4px;
+  }
+
+  .hamburger-btn {
+    width: 38px;
+    height: 38px;
+  }
+
+}
+
+
+/* ══════════════════════════════════════════════════════════════════════════
+   ■  360px – 480px  —  mobile
+══════════════════════════════════════════════════════════════════════════ */
+@media (min-width: 360px) and (max-width: 480px) {
+  .navbar-logo-image {
+    height: 44px;
+    max-width: 180px;
+  }
+
+  .navbar-row {
+    height: 58px;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   ■  480px – 640px  —  large mobile / small tablet
+══════════════════════════════════════════════════════════════════════════ */
+@media (min-width: 480px) and (max-width: 640px) {
+  .navbar-logo-image {
+    height: 50px;
+    max-width: 220px;
+  }
+
+  .navbar-row {
+    height: 62px;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   ■  640px – 768px  —  tablet portrait
+══════════════════════════════════════════════════════════════════════════ */
+@media (min-width: 640px) and (max-width: 768px) {
+  .navbar-logo-image {
+    height: 54px;
+    max-width: 260px;
+  }
+
+  .navbar-row {
+    height: 66px;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   ■  768px – 1024px  —  tablet landscape / iPad
+══════════════════════════════════════════════════════════════════════════ */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .navbar-logo-image {
+    height: 56px;
+    max-width: 300px;
+  }
+
+  .navbar-row {
+    height: 68px;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   ■  1024px – 1280px  —  laptop / small desktop
+══════════════════════════════════════════════════════════════════════════ */
+@media (min-width: 1024px) and (max-width: 1279px) {
+  .navbar-logo-image {
+    height: 58px;
+  }
+
+  .navbar-row {
+    height: 70px;
+  }
+
+  .nav-px {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+
+  .nav-label-size {
+    font-size: 10.5px;
+  }
+
+  .navbar-nav-gap {
+    margin-left: 16px;
+  }
+
+  /* Mega menu: tighter on laptop screens */
+  .mega-menu-positioner {
+    width: min(96vw, 1000px);
+  }
+
+  .mega-grid {
+    grid-template-columns: minmax(300px, 1fr) clamp(300px, 38%, 420px);
+  }
+
+  .mega-title {
+    font-size: 15px;
+  }
+
+  .mega-desc {
+    font-size: 12.5px;
+    white-space: normal;
+    word-break: break-word;
+  }
+
+  .official-avatar-wrap {
+    width: 72px;
+    height: 72px;
+  }
+
+  /* News panel — tighter */
+  .nav-news-drop {
+    width: clamp(300px, 36vw, 460px);
+  }
+
+  /* Contact panel — tighter */
+  .nav-contact-drop {
+    width: clamp(300px, 38vw, 480px);
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   ■  1280px – 1440px  —  standard desktop / MacBook Pro 14"
+══════════════════════════════════════════════════════════════════════════ */
+@media (min-width: 1280px) and (max-width: 1439px) {
+  .navbar-logo-image {
+    height: 62px;
+  }
+
+  .navbar-row {
+    height: 72px;
+  }
+
+  .nav-label-size {
+    font-size: 11.5px;
+  }
+
+  .nav-px {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   ■  1440px – 1920px  —  large desktop / iMac / 1440p monitors
+══════════════════════════════════════════════════════════════════════════ */
+@media (min-width: 1440px) and (max-width: 1919px) {
+  .navbar-logo-image {
+    height: 66px;
+  }
+
+  .navbar-row {
+    height: 76px;
+  }
+
+  .nav-label-size {
+    font-size: 12px;
+  }
+
+  .nav-px {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   ■  1920px+  —  2K / 4K monitors
+══════════════════════════════════════════════════════════════════════════ */
+@media (min-width: 1920px) {
+  .navbar-inner {
+    max-width: 1800px;
+    padding-left: 48px;
+    padding-right: 48px;
+  }
+
+  .navbar-logo-image {
+    height: 68px;
+    max-width: 560px;
+  }
+
+  .navbar-row {
+    height: 80px;
+  }
+
+  .nav-label-size {
+    font-size: 12.5px;
+  }
+
+  .nav-px {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+
+  .navbar-nav-gap {
+    margin-left: 56px;
+  }
+
+  /* Mega menu: constrained on 4K so it doesn't stretch absurdly */
+  .mega-menu-positioner {
+    width: min(80vw, 1280px);
+  }
+
+  .nav-news-drop {
+    width: 540px;
+  }
+
+  .nav-contact-drop {
+    width: 600px;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   OVERFLOW GUARD — ensure no horizontal scroll on any viewport
+══════════════════════════════════════════════════════════════════════════ */
+#site-header {
+  overflow-x: clip;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   MOBILE MENU BORDER
+══════════════════════════════════════════════════════════════════════════ */
+#mobile-menu {
+  border-bottom: 2px solid #E7E1DC;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   HIGH CONTRAST / ACCESSIBILITY
+══════════════════════════════════════════════════════════════════════════ */
+@media (forced-colors: active) {
+  .navbar-logo-image {
+    border-right-color: ButtonText;
+  }
+  [role="menu"] {
+    border: 1px solid ButtonText;
+  }
+}

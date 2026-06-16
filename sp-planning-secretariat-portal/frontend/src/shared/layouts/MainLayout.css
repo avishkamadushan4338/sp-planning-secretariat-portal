@@ -1,0 +1,39 @@
+.layout {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.main-content {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  /* matches navbar clamp(58px, 7vw, 76px) exactly at every breakpoint */
+  padding-top: clamp(58px, 7vw, 76px);
+}
+
+/* mirror every Navbar.css breakpoint so there is zero gap */
+@media (max-width: 359px) {
+  .main-content { padding-top: 54px; }
+}
+@media (min-width: 360px) and (max-width: 480px) {
+  .main-content { padding-top: 58px; }
+}
+@media (min-width: 480px) and (max-width: 640px) {
+  .main-content { padding-top: 62px; }
+}
+@media (min-width: 640px) and (max-width: 768px) {
+  .main-content { padding-top: 66px; }
+}
+@media (min-width: 768px) and (max-width: 1023px) {
+  .main-content { padding-top: 68px; }
+}
+@media (min-width: 1024px) and (max-width: 1279px) {
+  .main-content { padding-top: 70px; }
+}
+@media (min-width: 1280px) and (max-width: 1439px) {
+  .main-content { padding-top: 72px; }
+}
+@media (min-width: 1440px) {
+  .main-content { padding-top: 76px; }
+}
