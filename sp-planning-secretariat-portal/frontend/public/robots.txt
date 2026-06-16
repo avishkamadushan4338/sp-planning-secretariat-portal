@@ -1,0 +1,217 @@
+# =============================================================================
+# robots.txt — Provincial Planning Secretariat – Southern Province
+# https://www.planningsec.sp.gov.lk/robots.txt
+# Last updated: 2026-06-15
+# =============================================================================
+
+# ── General web crawlers ──────────────────────────────────────────────────────
+User-agent: *
+Allow: /
+Allow: /home
+Allow: /about
+Allow: /about/
+Allow: /departments
+Allow: /departments/
+Allow: /news
+Allow: /documents
+Allow: /downloads
+Allow: /contact
+Allow: /faq
+Allow: /branding/
+Allow: /assets/images/
+Allow: /assets/icons/
+Allow: /assets/fonts/
+
+# Block admin, internal, and system paths
+Disallow: /admin/
+Disallow: /api/
+Disallow: /backend/
+Disallow: /_next/
+Disallow: /dashboard/
+Disallow: /login/
+Disallow: /register/
+Disallow: /profile/
+Disallow: /auth/
+Disallow: /cms/
+Disallow: /cms
+Disallow: /smp/
+Disallow: /smp
+Disallow: /.env
+Disallow: /config/
+Disallow: /private/
+Disallow: /tmp/
+Disallow: /cache/
+Disallow: /logs/
+Disallow: /uploads/private/
+Disallow: /*?print=*
+Disallow: /*?preview=*
+Disallow: /*?draft=*
+Disallow: /*?session=*
+Disallow: /*?token=*
+
+# Prevent crawling of query-parameter duplicates
+Disallow: /*?sort=
+Disallow: /*?filter=
+Disallow: /*?page=0
+Disallow: /*?lang=
+
+# Crawl delay to reduce server load
+Crawl-delay: 10
+
+# ── Google ────────────────────────────────────────────────────────────────────
+User-agent: Googlebot
+Allow: /
+Allow: /branding/
+Allow: /assets/
+Disallow: /admin/
+Disallow: /api/
+Disallow: /cms/
+Disallow: /smp/
+Disallow: /dashboard/
+Disallow: /login/
+Disallow: /auth/
+Crawl-delay: 5
+
+User-agent: Googlebot-Image
+Allow: /assets/images/
+Allow: /uploads/public/
+Disallow: /assets/images/internal/
+Crawl-delay: 5
+
+User-agent: Googlebot-News
+Allow: /news/
+Allow: /notices/
+Allow: /announcements/
+Crawl-delay: 5
+
+User-agent: Google-Extended
+Allow: /
+Disallow: /admin/
+Disallow: /api/
+
+# ── Bing ──────────────────────────────────────────────────────────────────────
+User-agent: bingbot
+Allow: /
+Disallow: /admin/
+Disallow: /api/
+Disallow: /dashboard/
+Crawl-delay: 10
+
+User-agent: msnbot
+Allow: /
+Disallow: /admin/
+Disallow: /api/
+Crawl-delay: 15
+
+User-agent: msnbot-media
+Allow: /assets/images/
+Crawl-delay: 10
+
+# ── AI Crawlers (allow for knowledge base and AI search indexing) ──────────────
+User-agent: GPTBot
+Allow: /
+Disallow: /admin/
+Disallow: /api/
+Disallow: /private/
+Crawl-delay: 15
+
+User-agent: ChatGPT-User
+Allow: /
+Disallow: /admin/
+Disallow: /api/
+Crawl-delay: 15
+
+User-agent: anthropic-ai
+Allow: /
+Disallow: /admin/
+Disallow: /api/
+Crawl-delay: 15
+
+User-agent: Claude-Web
+Allow: /
+Disallow: /admin/
+Disallow: /api/
+Crawl-delay: 15
+
+User-agent: PerplexityBot
+Allow: /
+Disallow: /admin/
+Disallow: /api/
+Crawl-delay: 15
+
+User-agent: cohere-ai
+Allow: /
+Disallow: /admin/
+Disallow: /api/
+Crawl-delay: 15
+
+User-agent: CCBot
+Allow: /
+Disallow: /admin/
+Disallow: /api/
+Crawl-delay: 20
+
+# ── Social Media Crawlers ─────────────────────────────────────────────────────
+User-agent: facebookexternalhit
+Allow: /
+Disallow: /admin/
+Disallow: /api/
+
+User-agent: Twitterbot
+Allow: /
+Disallow: /admin/
+Disallow: /api/
+
+User-agent: LinkedInBot
+Allow: /
+Disallow: /admin/
+Disallow: /api/
+
+User-agent: WhatsApp
+Allow: /
+Disallow: /admin/
+
+User-agent: Slackbot
+Allow: /
+Disallow: /admin/
+
+# ── Archive & Research ────────────────────────────────────────────────────────
+User-agent: ia_archiver
+Allow: /
+Disallow: /admin/
+Disallow: /api/
+Crawl-delay: 30
+
+# ── Block malicious/scraper bots ──────────────────────────────────────────────
+User-agent: AhrefsBot
+Disallow: /
+
+User-agent: SemrushBot
+Disallow: /
+
+User-agent: DotBot
+Disallow: /
+
+User-agent: MJ12bot
+Disallow: /
+
+User-agent: BLEXBot
+Disallow: /
+
+User-agent: SeznamBot
+Disallow: /
+
+User-agent: YandexBot
+Allow: /
+Disallow: /admin/
+Disallow: /api/
+Crawl-delay: 15
+
+# =============================================================================
+# SITEMAPS
+# =============================================================================
+Sitemap: https://www.planningsec.sp.gov.lk/sitemap.xml
+Sitemap: https://www.planningsec.sp.gov.lk/sitemap-news.xml
+
+# Host directive (for Yandex)
+Host: https://www.planningsec.sp.gov.lk

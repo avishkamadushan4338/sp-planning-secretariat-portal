@@ -1,0 +1,213 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ============================================================================
+  sitemap.xml — Provincial Planning Secretariat – Southern Province
+  https://www.planningsec.sp.gov.lk/sitemap.xml
+  Updated: 2026-06-15 | Standard: sitemaps.org 0.9
+  ============================================================================
+  Routes reflect actual React Router paths in App.jsx:
+    /               Language selector (LandingPage)
+    /home           Home
+    /about/*        About section (overview, topics, profiles)
+    /departments    Departments listing
+    /departments/:slug  Department detail / profile
+    /documents      Documents
+    /news           News & Media (tabs: news, notices, gallery)
+    /downloads      Downloads
+    /contact        Contact
+    /faq            FAQ (rendered inside About area via HomeFAQHighlights; direct route)
+    /terms          Terms & Services
+  ============================================================================
+  Priority Guidelines:
+    1.0 = Language selector (entry point)
+    0.9 = Home, core nav pages
+    0.8 = Major section landing pages
+    0.7 = Sub-section / content pages
+    0.5 = Supporting / legal pages
+    0.3 = Low-value / noindex pages
+  ============================================================================
+-->
+<urlset
+  xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+  xmlns:xhtml="http://www.w3.org/1999/xhtml"
+  xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"
+>
+
+  <!-- ══ LANGUAGE SELECTOR (entry gateway) ════════════════════════════════ -->
+  <url>
+    <loc>https://www.planningsec.sp.gov.lk/</loc>
+    <lastmod>2026-06-15</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>1.0</priority>
+    <xhtml:link rel="alternate" hreflang="en"        href="https://www.planningsec.sp.gov.lk/" />
+    <xhtml:link rel="alternate" hreflang="si"        href="https://www.planningsec.sp.gov.lk/" />
+    <xhtml:link rel="alternate" hreflang="ta"        href="https://www.planningsec.sp.gov.lk/" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.planningsec.sp.gov.lk/" />
+  </url>
+
+  <!-- ══ HOME ══════════════════════════════════════════════════════════════ -->
+  <url>
+    <loc>https://www.planningsec.sp.gov.lk/home</loc>
+    <lastmod>2026-06-15</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+    <xhtml:link rel="alternate" hreflang="en"        href="https://www.planningsec.sp.gov.lk/home" />
+    <xhtml:link rel="alternate" hreflang="si"        href="https://www.planningsec.sp.gov.lk/home" />
+    <xhtml:link rel="alternate" hreflang="ta"        href="https://www.planningsec.sp.gov.lk/home" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.planningsec.sp.gov.lk/home" />
+    <image:image>
+      <image:loc>https://www.planningsec.sp.gov.lk/branding/hero.jpeg</image:loc>
+      <image:caption>Provincial Planning Secretariat – Southern Province, Dakshinapaya, Galle</image:caption>
+      <image:title>Provincial Planning Secretariat – Southern Province Official Government Portal</image:title>
+    </image:image>
+  </url>
+
+  <!-- ══ ABOUT ══════════════════════════════════════════════════════════════ -->
+  <url>
+    <loc>https://www.planningsec.sp.gov.lk/about</loc>
+    <lastmod>2026-06-15</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.planningsec.sp.gov.lk/about/overview</loc>
+    <lastmod>2026-06-15</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.planningsec.sp.gov.lk/about/history</loc>
+    <lastmod>2026-06-15</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.planningsec.sp.gov.lk/about/functions-duties</loc>
+    <lastmod>2026-06-15</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.planningsec.sp.gov.lk/about/structure</loc>
+    <lastmod>2026-06-15</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.planningsec.sp.gov.lk/about/deputy-secretary</loc>
+    <lastmod>2026-06-15</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.planningsec.sp.gov.lk/about/director</loc>
+    <lastmod>2026-06-15</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.planningsec.sp.gov.lk/about/deputy-directors</loc>
+    <lastmod>2026-06-15</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <!-- ══ DEPARTMENTS ════════════════════════════════════════════════════════ -->
+  <url>
+    <loc>https://www.planningsec.sp.gov.lk/departments</loc>
+    <lastmod>2026-06-15</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.planningsec.sp.gov.lk/departments/accounts</loc>
+    <lastmod>2026-06-15</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.planningsec.sp.gov.lk/departments/administration</loc>
+    <lastmod>2026-06-15</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.planningsec.sp.gov.lk/departments/development</loc>
+    <lastmod>2026-06-15</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.planningsec.sp.gov.lk/departments/head-administration</loc>
+    <lastmod>2026-06-15</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://www.planningsec.sp.gov.lk/departments/head-accounts</loc>
+    <lastmod>2026-06-15</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+
+  <!-- ══ NEWS & MEDIA ═══════════════════════════════════════════════════════ -->
+  <url>
+    <loc>https://www.planningsec.sp.gov.lk/news</loc>
+    <lastmod>2026-06-15</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.planningsec.sp.gov.lk/news?tab=notices</loc>
+    <lastmod>2026-06-15</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.planningsec.sp.gov.lk/news?tab=gallery</loc>
+    <lastmod>2026-06-15</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+
+  <!-- ══ DOCUMENTS ══════════════════════════════════════════════════════════ -->
+  <url>
+    <loc>https://www.planningsec.sp.gov.lk/documents</loc>
+    <lastmod>2026-06-15</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <!-- ══ DOWNLOADS ══════════════════════════════════════════════════════════ -->
+  <url>
+    <loc>https://www.planningsec.sp.gov.lk/downloads</loc>
+    <lastmod>2026-06-15</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <!-- ══ CONTACT ═════════════════════════════════════════════════════════════ -->
+  <url>
+    <loc>https://www.planningsec.sp.gov.lk/contact</loc>
+    <lastmod>2026-06-15</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- ══ FAQ ═════════════════════════════════════════════════════════════════ -->
+  <url>
+    <loc>https://www.planningsec.sp.gov.lk/faq</loc>
+    <lastmod>2026-06-15</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+
+  <!-- ══ LEGAL ═══════════════════════════════════════════════════════════════ -->
+  <url>
+    <loc>https://www.planningsec.sp.gov.lk/terms</loc>
+    <lastmod>2026-01-01</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>
+
+</urlset>
