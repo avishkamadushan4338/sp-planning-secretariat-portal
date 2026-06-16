@@ -1,0 +1,72 @@
+[
+  {
+    "id": "e2ced635-df07-4d60-9cdb-5e375b8373d5",
+    "parentItemId": "291721cb-175b-4a45-b745-a3b411dcd8a7",
+    "itemName": "office chair",
+    "sku": "SPPS-83120",
+    "category": "Furniture",
+    "uniqueNo": "ps/f/c/001",
+    "status": "available",
+    "condition": "Good",
+    "purchaseValue": 20000,
+    "currentValue": 0,
+    "createdAt": "2026-06-10T06:10:42.860Z",
+    "updatedAt": "2026-06-10T06:10:42.860Z"
+  },
+  {
+    "id": "9d15a4da-e3a9-4745-ace5-e6babb2a9188",
+    "parentItemId": "291721cb-175b-4a45-b745-a3b411dcd8a7",
+    "itemName": "office chair",
+    "sku": "SPPS-83120",
+    "category": "Furniture",
+    "uniqueNo": "ps/f/c/002",
+    "status": "available",
+    "condition": "Good",
+    "purchaseValue": 20000,
+    "currentValue": 0,
+    "createdAt": "2026-06-10T06:10:42.860Z",
+    "updatedAt": "2026-06-10T06:10:42.860Z"
+  },
+  {
+    "id": "855fd160-db64-4a66-b80b-670492a14ac3",
+    "parentItemId": "485deb97-f310-482f-af3a-4eff373161e5",
+    "itemName": "Laptop",
+    "sku": "SPPS-40585",
+    "category": "Electronics",
+    "uniqueNo": "LAP-001",
+    "status": "available",
+    "condition": "Good",
+    "purchaseValue": 250000,
+    "currentValue": 200000,
+    "createdAt": "2026-06-16T05:06:11.342Z",
+    "updatedAt": "2026-06-16T05:06:11.342Z"
+  },
+  {
+    "id": "5c269fae-e95d-4e3b-bcfe-650f95e0fdce",
+    "parentItemId": "485deb97-f310-482f-af3a-4eff373161e5",
+    "itemName": "Laptop",
+    "sku": "SPPS-40585",
+    "category": "Electronics",
+    "uniqueNo": "LAP-002",
+    "status": "available",
+    "condition": "Good",
+    "purchaseValue": 250000,
+    "currentValue": 200000,
+    "createdAt": "2026-06-16T05:06:11.342Z",
+    "updatedAt": "2026-06-16T05:06:11.342Z"
+  },
+  {
+    "id": "fb74d90b-18a2-4066-b802-44965e0853c9",
+    "parentItemId": "485deb97-f310-482f-af3a-4eff373161e5",
+    "itemName": "Laptop",
+    "sku": "SPPS-40585",
+    "category": "Electronics",
+    "uniqueNo": "LAP-003",
+    "status": "available",
+    "condition": "Good",
+    "purchaseValue": 250000,
+    "currentValue": 200000,
+    "createdAt": "2026-06-16T05:06:11.342Z",
+    "updatedAt": "2026-06-16T05:06:11.342Z"
+  }
+]

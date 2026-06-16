@@ -1,0 +1,65 @@
+[
+  {
+    "id": "5f7f357e-4768-4290-ac5c-e2fe75f79b23",
+    "username": "Store",
+    "password": "$2b$10$YHBXiZ0G9QKQkILdk2dPouoo80GDgUQRNHBEA7y5IkykhxX2qxZni",
+    "role": "admin",
+    "name": "jone12",
+    "email": "store@planning.lk",
+    "active": true,
+    "createdAt": "2026-05-19T03:45:57.540Z",
+    "updatedAt": "2026-06-16T05:00:12.929Z"
+  },
+  {
+    "id": "3adbd835-0103-49e9-9659-7f6cbc0e8716",
+    "username": "john",
+    "password": "$2b$10$gNxf0IUJ37wfuY511LSyvu61hnsCA1QsnZrDIEgTKn.9pcovsUniO",
+    "role": "viewer",
+    "name": "John",
+    "email": "",
+    "active": true,
+    "createdAt": "2026-06-15T05:57:27.493Z"
+  },
+  {
+    "id": "10a95849-5691-4734-891d-58444f5abf6c",
+    "username": "john1",
+    "password": "$2b$10$Fs1i8rIPSXnA/ODl.eTYEendI2mOc5PSPEmJlP.5mhsAR6xeNXzPy",
+    "role": "viewer",
+    "name": "John",
+    "email": "",
+    "active": true,
+    "createdAt": "2026-06-15T06:00:10.210Z"
+  },
+  {
+    "id": "bd4e859d-b3b5-4098-8f38-71811060a6b8",
+    "username": "john15",
+    "password": "$2b$10$zyHxeLVIsfV2azWFzxtWAeVikVcCnN2xcoXOFopDehJOZXECqgMjG",
+    "role": "viewer",
+    "name": "John",
+    "email": "",
+    "active": true,
+    "createdAt": "2026-06-15T10:17:59.668Z"
+  },
+  {
+    "id": "47d33a82-5d16-42dd-8122-20438d6f134b",
+    "username": "john15r",
+    "password": "$2b$10$jYdPi3TBgj20yuTEJR4Pn.4C2PYIpTtw/y7yTSP56FKm1.fviFEYK",
+    "role": "viewer",
+    "name": "john15",
+    "email": "",
+    "active": true,
+    "createdAt": "2026-06-16T04:41:10.252Z",
+    "updatedAt": "2026-06-16T04:42:44.235Z"
+  },
+  {
+    "id": "066cef32-0331-483c-88b0-06992a0826f1",
+    "username": "avish2",
+    "password": "$2b$10$niD7DBKNVG6vEKB31Vl7UuC.BXSp5eBEf1IgaghVtIkm7R71ywjnO",
+    "role": "viewer",
+    "name": "john15",
+    "email": "",
+    "active": true,
+    "createdAt": "2026-06-16T04:48:36.571Z",
+    "updatedAt": "2026-06-16T04:49:35.658Z"
+  }
+]

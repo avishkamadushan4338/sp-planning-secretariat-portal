@@ -1,0 +1,84 @@
+[
+  {
+    "id": "3c60874a-1000-4f6d-800f-770c84d96906",
+    "userId": "5f7f357e-4768-4290-ac5c-e2fe75f79b23",
+    "username": "Store",
+    "action": "created",
+    "itemId": "6508d7c1-1b53-4e24-b1c3-15a5f4761127",
+    "itemName": "chair",
+    "qtyBefore": 0,
+    "qtyAfter": 2,
+    "note": "Item created",
+    "meta": {},
+    "createdAt": "2026-05-19T08:54:25.298Z"
+  },
+  {
+    "id": "c99328ad-4e1b-4a85-8177-d09a7f1b3437",
+    "userId": "5f7f357e-4768-4290-ac5c-e2fe75f79b23",
+    "username": "Store",
+    "action": "disposed",
+    "itemId": "6508d7c1-1b53-4e24-b1c3-15a5f4761127",
+    "itemName": "chair",
+    "qtyBefore": 2,
+    "qtyAfter": 1,
+    "note": "Disposed: 1 × chair | Reason: End of useful life | Method: Donation",
+    "meta": {
+      "disposalId": "5deab404-e759-4f93-9412-98a7e323727f"
+    },
+    "createdAt": "2026-05-19T08:55:08.612Z"
+  },
+  {
+    "id": "027f80a9-b764-4b48-872e-42b8731e8bc6",
+    "userId": "5f7f357e-4768-4290-ac5c-e2fe75f79b23",
+    "username": "Store",
+    "action": "deleted",
+    "itemId": "6508d7c1-1b53-4e24-b1c3-15a5f4761127",
+    "itemName": "chair",
+    "qtyBefore": 1,
+    "qtyAfter": 0,
+    "note": "Item deleted",
+    "meta": {},
+    "createdAt": "2026-06-10T06:06:59.293Z"
+  },
+  {
+    "id": "63ba89dd-77bb-4da3-837f-908b044e4796",
+    "userId": "5f7f357e-4768-4290-ac5c-e2fe75f79b23",
+    "username": "Store",
+    "action": "created",
+    "itemId": "291721cb-175b-4a45-b745-a3b411dcd8a7",
+    "itemName": "office chair",
+    "qtyBefore": 0,
+    "qtyAfter": 2,
+    "note": "Item created",
+    "meta": {},
+    "createdAt": "2026-06-10T06:10:42.862Z"
+  },
+  {
+    "id": "67e7e949-5534-442b-821d-9f93967f930e",
+    "userId": "5f7f357e-4768-4290-ac5c-e2fe75f79b23",
+    "username": "Store",
+    "action": "disposed",
+    "itemId": "291721cb-175b-4a45-b745-a3b411dcd8a7",
+    "itemName": "office chair",
+    "qtyBefore": 2,
+    "qtyAfter": 1,
+    "note": "Disposed: 1 × office chair | Reason: Broken / Non-functional | Method: Recycling",
+    "meta": {
+      "disposalId": "b514e202-7dcc-402c-8d38-0946ee202c47"
+    },
+    "createdAt": "2026-06-10T06:11:58.003Z"
+  },
+  {
+    "id": "5a4e210f-d4fb-4286-ab3b-52dbf6d959ec",
+    "userId": "5f7f357e-4768-4290-ac5c-e2fe75f79b23",
+    "username": "Store",
+    "action": "created",
+    "itemId": "485deb97-f310-482f-af3a-4eff373161e5",
+    "itemName": "Laptop",
+    "qtyBefore": 0,
+    "qtyAfter": 3,
+    "note": "Item created",
+    "meta": {},
+    "createdAt": "2026-06-16T05:06:11.344Z"
+  }
+]

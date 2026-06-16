@@ -1,0 +1,38 @@
+[
+  {
+    "id": "831c675b-4b40-458e-ab8d-081198efa6db",
+    "name": "Stationery",
+    "color": "#C79A2B",
+    "createdAt": "2026-05-19T03:15:41.542Z"
+  },
+  {
+    "id": "8bd354c2-a84f-47a6-a673-e8dfe08a9053",
+    "name": "Furniture",
+    "color": "#6366F1",
+    "createdAt": "2026-05-19T03:15:41.542Z"
+  },
+  {
+    "id": "73290abc-8d04-4338-8904-849d5fc5b179",
+    "name": "Electronics",
+    "color": "#0EA5E9",
+    "createdAt": "2026-05-19T03:15:41.542Z"
+  },
+  {
+    "id": "016ec158-3d16-4553-b934-bcbb2dbb82b0",
+    "name": "Cleaning",
+    "color": "#22C55E",
+    "createdAt": "2026-05-19T03:15:41.542Z"
+  },
+  {
+    "id": "32da0f60-a77b-43f9-a559-9a1bcbabfac6",
+    "name": "Printing",
+    "color": "#F97316",
+    "createdAt": "2026-05-19T03:15:41.542Z"
+  },
+  {
+    "id": "2524ef3c-79ea-4746-98cd-2f62d571a550",
+    "name": "Borrowable",
+    "color": "#EC4899",
+    "createdAt": "2026-05-19T03:15:41.542Z"
+  }
+]
