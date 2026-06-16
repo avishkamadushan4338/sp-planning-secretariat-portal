@@ -1,0 +1,217 @@
+/* ================================================================
+   HOME NEWS BAR — running ticker  ·  320 px → 4 K
+   ================================================================ */
+
+/* ── outer wrapper ───────────────────────────────────────────────── */
+.hnb {
+  position: relative;
+  z-index: 5;
+  background: #0a0a0a;
+}
+
+/* ── glass bar ───────────────────────────────────────────────────── */
+.hnb__shell {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  /* height grows with content — no fixed clipping */
+  min-height: clamp(52px, 6vw, 68px);
+  padding: clamp(10px, 1.4vw, 14px) clamp(14px, 3vw, 48px);
+  box-sizing: border-box;
+  background: linear-gradient(
+    135deg,
+    rgba(74, 9, 24, 0.82) 0%,
+    rgba(40, 4, 14, 0.88) 50%,
+    rgba(74, 9, 24, 0.82) 100%
+  );
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-top:    1px solid rgba(199, 154, 43, 0.22);
+  border-bottom: 1px solid rgba(199, 154, 43, 0.14);
+  box-shadow:
+    0 4px 24px rgba(74, 9, 24, 0.32),
+    0 0 0 1px rgba(199, 154, 43, 0.07) inset;
+  /* NO overflow:hidden here — that kills descenders and mobile text */
+  overflow: visible;
+  position: relative;
+}
+
+/* gold shimmer top line */
+.hnb__shell::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1.5px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    #C79A2B 25%,
+    #E8C55A 50%,
+    #C79A2B 75%,
+    transparent 100%
+  );
+  opacity: 0.9;
+  pointer-events: none;
+}
+
+/* ── "Latest News" label ─────────────────────────────────────────── */
+.hnb__label {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex-shrink: 0;
+  padding-right: clamp(10px, 1.2vw, 16px);
+}
+
+.hnb__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #C79A2B;
+  flex-shrink: 0;
+  box-shadow: 0 0 7px rgba(199, 154, 43, 0.85);
+  animation: hnbPulse 2.2s ease-in-out infinite;
+}
+
+@keyframes hnbPulse {
+  0%, 100% { opacity: 1;   box-shadow: 0 0 6px rgba(199,154,43,.7); }
+  50%       { opacity: 0.6; box-shadow: 0 0 14px rgba(199,154,43,1); }
+}
+
+.hnb__label-text {
+  font-family: 'Cinzel', serif;
+  font-size: clamp(0.85rem, 1.1vw, 1.05rem);
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #C79A2B;
+  white-space: nowrap;
+  line-height: 1.4;
+}
+
+/* ── gold divider ────────────────────────────────────────────────── */
+.hnb__divider {
+  width: 1px;
+  height: clamp(16px, 2vw, 22px);
+  background: linear-gradient(to bottom, transparent, rgba(199,154,43,0.5), transparent);
+  flex-shrink: 0;
+  margin-right: clamp(10px, 1.2vw, 16px);
+}
+
+/* ── scrolling track container ───────────────────────────────────── */
+.hnb__track-wrap {
+  flex: 1;
+  min-width: 0;
+  /* clip only horizontally so descenders are never cut */
+  overflow: hidden;
+  position: relative;
+}
+
+/* ── the animating row ───────────────────────────────────────────── */
+.hnb__track {
+  display: flex;
+  width: max-content;
+  animation: hnbScroll 28s linear infinite;
+  will-change: transform;
+}
+
+.hnb__track--paused {
+  animation-play-state: paused;
+}
+
+/* pause on hover */
+.hnb:hover .hnb__track {
+  animation-play-state: paused;
+}
+
+@keyframes hnbScroll {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+/* ── text spans ──────────────────────────────────────────────────── */
+.hnb__text {
+  display: inline-block;
+  white-space: nowrap;
+  font-family: 'Inter', sans-serif;
+  font-size: clamp(1.1rem, 1.35vw, 1.3rem);
+  font-weight: 500;
+  color: rgba(252, 251, 250, 0.92);
+  letter-spacing: 0.015em;
+  line-height: 1.5;
+  padding: 0 clamp(16px, 2vw, 28px);
+}
+
+/* ── screen-reader only static list ─────────────────────────────── */
+.hnb__sr-only {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden;
+  clip: rect(0,0,0,0);
+  white-space: nowrap;
+  border: 0;
+  list-style: none;
+}
+
+/* ================================================================
+   RESPONSIVE
+   ================================================================ */
+
+/* ── tablet (≤ 1023 px) ──────────────────────────────────────────── */
+@media (max-width: 1023px) {
+  .hnb__shell {
+    min-height: clamp(50px, 6.5vw, 62px);
+    padding: clamp(9px, 1.4vw, 12px) clamp(12px, 3vw, 24px);
+  }
+}
+
+/* ── mobile (≤ 767 px) ───────────────────────────────────────────── */
+@media (max-width: 767px) {
+  .hnb__shell {
+    min-height: 52px;
+    padding: 10px 14px;
+  }
+  .hnb__label-text { font-size: 0.82rem; letter-spacing: 0.1em; }
+  .hnb__text       { font-size: 1rem; line-height: 1.5; }
+  .hnb__track      { animation-duration: 20s; }
+}
+
+/* ── small phone (≤ 480 px) ──────────────────────────────────────── */
+@media (max-width: 480px) {
+  .hnb__shell {
+    min-height: 48px;
+    padding: 8px 12px;
+  }
+  .hnb__text { font-size: 0.95rem; }
+}
+
+/* ── very small phone (≤ 400 px) ─────────────────────────────────── */
+@media (max-width: 400px) {
+  .hnb__label   { display: none; }
+  .hnb__divider { display: none; }
+  .hnb__text    { font-size: 0.9rem; }
+  .hnb__track   { animation-duration: 18s; }
+}
+
+/* ── 2 K ─────────────────────────────────────────────────────────── */
+@media (min-width: 2560px) {
+  .hnb__shell      { min-height: 64px; }
+  .hnb__label-text { font-size: clamp(0.95rem, 0.88vw, 1.1rem); }
+  .hnb__text       { font-size: clamp(1.2rem, 1.15vw, 1.4rem); }
+  .hnb__track      { animation-duration: 34s; }
+}
+
+/* ── 4 K ─────────────────────────────────────────────────────────── */
+@media (min-width: 3840px) {
+  .hnb__shell      { min-height: 78px; }
+  .hnb__label-text { font-size: clamp(1.1rem, 1vw, 1.3rem); }
+  .hnb__text       { font-size: clamp(1.3rem, 1.25vw, 1.6rem); }
+  .hnb__track      { animation-duration: 42s; }
+}
+
+/* ── accessibility ───────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .hnb__track { animation: none !important; }
+  .hnb__dot   { animation: none !important; }
+}

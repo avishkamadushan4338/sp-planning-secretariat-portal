@@ -1,0 +1,829 @@
+/* ================================================================
+   HOME · HERO  —  Southern Province Planning Secretariat Portal
+   Premium 2050-style  ·  Responsive 320 px → 4 K
+   ================================================================ */
+
+/* ── Wrapper ─────────────────────────────────────────────────── */
+.home-wrap {
+  background: #0a0a0a;
+  overflow-x: hidden;
+}
+
+/* ================================================================
+   HERO SHELL
+   display:flex + flex-direction:column means:
+     hero__main (flex:1) pushes stats-bar to the bottom on desktop
+     and grows naturally on mobile when content overflows.
+   ================================================================ */
+.hero {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  /* min-height accounts for the responsive navbar — no hardcoded 76px */
+  min-height: calc(100vh  - clamp(58px, 7vw, 76px));
+  min-height: calc(100svh - clamp(58px, 7vw, 76px));
+  overflow: hidden;
+  background: #0a0a0a;
+}
+
+/* ── Progress bar ────────────────────────────────────────────── */
+.hero__progress {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  z-index: 10;
+  background: rgba(199,154,43,.18);
+  flex-shrink: 0;
+}
+.hero__progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #9A7520, #E8C55A);
+  transform-origin: left;
+  width: 100%;
+}
+
+/* ── Background image panels ─────────────────────────────────── */
+.hero__bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  opacity: 0;
+  transition: opacity .85s ease;
+  will-change: opacity;
+}
+.hero__bg--active { opacity: 1; }
+
+.hero__bg-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 25%;
+  display: block;
+  filter: saturate(1.1) contrast(1.08);
+}
+
+/* Subtle dark vignette — keeps full image visible while softening edges */
+.hero__bg-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(0,0,0,.18) 0%,
+    rgba(0,0,0,.08) 50%,
+    rgba(0,0,0,.42) 100%
+  );
+}
+
+/* ── Decorative honeycomb (left edge) ────────────────────────── */
+.hero__honeycomb {
+  position: absolute;
+  left: 0; top: 0;
+  opacity: .07;
+  z-index: 1;
+  pointer-events: none;
+  /* only rendered on larger screens */
+}
+
+/* ── Ambient glow orbs ───────────────────────────────────────── */
+.hero__orb {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 1;
+  filter: blur(90px);
+}
+.hero__orb--a {
+  width: clamp(200px, 30vw, 440px);
+  height: clamp(200px, 30vw, 440px);
+  background: radial-gradient(circle, rgba(199,154,43,.18) 0%, transparent 70%);
+  top: -80px;
+  right: 8%;
+  opacity: .45;
+  animation: orbDrift 9s ease-in-out infinite;
+}
+.hero__orb--b {
+  width: clamp(160px, 22vw, 340px);
+  height: clamp(160px, 22vw, 340px);
+  background: radial-gradient(circle, rgba(199,154,43,.12) 0%, transparent 70%);
+  bottom: 18%;
+  right: 22%;
+  opacity: .38;
+  animation: orbDrift 12s ease-in-out infinite reverse;
+}
+
+@keyframes orbDrift {
+  0%, 100% { transform: translateY(0)     scale(1);    }
+  50%       { transform: translateY(-18px) scale(1.04); }
+}
+
+/* ── Soft light beams ────────────────────────────────────────── */
+.hero__beams {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  background:
+    linear-gradient(128deg, transparent 28%, rgba(199,154,43,.04) 48%, transparent 68%),
+    linear-gradient( 52deg, transparent 38%, rgba(74,9,24,.03)    58%, transparent 78%);
+}
+
+/* ================================================================
+   MAIN CONTENT AREA
+   flex:1 ensures it expands to push stats-bar to the bottom
+   ================================================================ */
+.hero__main {
+  flex: 1;
+  position: relative;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  padding:
+    clamp(2rem, 4vw, 4rem)
+    clamp(1.5rem, 5vw, 5.5rem)
+    clamp(1.5rem, 3vw, 2.5rem);
+}
+
+/* ── Glass float animation ───────────────────────────────────── */
+@keyframes glassFloat {
+  0%, 100% { transform: translateY(0px);   }
+  50%       { transform: translateY(-10px); }
+}
+
+/* ── Glassmorphism text card ─────────────────────────────────── */
+.hero__glass {
+  animation: glassFloat 5s ease-in-out infinite;
+  width: 100%;
+  max-width: clamp(320px, 50%, 640px);
+  display: flex;
+  flex-direction: column;
+  gap: clamp(.75rem, 1.2vw, 1.1rem);
+  padding: clamp(2rem, 2.8vw, 3rem);
+  border-radius: 22px;
+  background: rgba(10,6,4,.52);
+  border: 1px solid rgba(255,255,255,.14);
+  backdrop-filter: blur(28px) saturate(160%);
+  -webkit-backdrop-filter: blur(28px) saturate(160%);
+  box-shadow:
+    0 22px 64px rgba(0,0,0,.45),
+    0  6px 20px rgba(0,0,0,.25),
+    inset 0 1px 0 rgba(255,255,255,.10);
+}
+
+/* ── Eyebrow pill ────────────────────────────────────────────── */
+.hero__eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: .55rem;
+  width: fit-content;
+  max-width: 100%;
+  padding: .6rem 1rem;
+  border-radius: 999px;
+  background: rgba(199,154,43,.15);
+  border: 1px solid rgba(199,154,43,.50);
+  color: #E8C55A;
+  box-shadow: 0 4px 16px rgba(0,0,0,.22);
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+.hero__accent {
+  font-size: clamp(.7rem, 1.05vw, .82rem);
+  font-weight: 600;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: #E8C55A;
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+.hero__accent--nl {
+  letter-spacing: 0;
+  text-transform: none;
+  font-size: clamp(.72rem, 1.1vw, .85rem);
+}
+
+/* ── Heading ─────────────────────────────────────────────────── */
+.hero__heading {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: .15rem;
+  color: #ffffff;
+  font-size: clamp(1.6rem, 2.8vw, 3rem);
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -.025em;
+  text-shadow: 0 2px 12px rgba(0,0,0,.45);
+}
+.hero__heading--nl {
+  font-size: clamp(1.35rem, 2.3vw, 2.5rem);
+  line-height: 1.32;
+  letter-spacing: 0;
+}
+
+.hero__line {
+  display: block;
+  text-shadow: 0 2px 10px rgba(0,0,0,.5);
+  word-break: break-word;
+  overflow-wrap: break-word;
+  /* intentionally NO white-space: nowrap */
+}
+.hero__line--gold {
+  color: #C79A2B;
+  -webkit-text-fill-color: #C79A2B;
+}
+
+/* ── Gold rule ───────────────────────────────────────────────── */
+.hero__rule {
+  width: 64px;
+  height: 2px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, #C79A2B, rgba(199,154,43,0));
+  transform-origin: left;
+  box-shadow: 0 2px 10px rgba(199,154,43,.35);
+}
+
+/* ── Body text ───────────────────────────────────────────────── */
+.hero__body {
+  margin: 0;
+  font-size: clamp(.9rem, 1.2vw, 1.05rem);
+  color: rgba(252,251,250,.80);
+  line-height: 1.88;
+  max-width: 48ch;
+}
+
+/* ── CTA button row ──────────────────────────────────────────── */
+.hero__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .75rem;
+  padding-top: .2rem;
+}
+
+/* ── Slide dots ──────────────────────────────────────────────── */
+.hero__dots {
+  display: flex;
+  gap: .45rem;
+  padding-top: .35rem;
+  align-items: center;
+}
+.hero__dot {
+  width: 8px;
+  height: 8px;
+  min-width: 8px;
+  padding: 0;
+  border: none;
+  border-radius: 4px;
+  background: rgba(255,255,255,.32);
+  cursor: pointer;
+  transition:
+    background .3s ease,
+    width .3s cubic-bezier(.16,1,.3,1);
+}
+.hero__dot--on {
+  background: #C79A2B;
+  width: 26px;
+}
+.hero__dot:focus-visible {
+  outline: 2px solid #C79A2B;
+  outline-offset: 3px;
+}
+
+/* ================================================================
+   HERO BUTTONS
+   ================================================================ */
+.hbtn {
+  display: inline-flex;
+  text-decoration: none;
+  border-radius: 10px;
+  overflow: hidden;
+}
+.hbtn:focus-visible {
+  outline: 2px solid #C79A2B;
+  outline-offset: 3px;
+  border-radius: 12px;
+}
+.hbtn__inner {
+  display: inline-flex;
+  align-items: center;
+  gap: .5rem;
+  padding: clamp(.75rem, 1.1vw, .9rem) clamp(1rem, 1.8vw, 1.4rem);
+  font-size: clamp(.82rem, 1vw, .9rem);
+  font-weight: 700;
+  letter-spacing: .02em;
+  cursor: pointer;
+  min-height: 44px;   /* WCAG touch target */
+  border-radius: inherit;
+  transition: box-shadow .28s ease;
+  position: relative;
+  overflow: hidden;
+}
+/* Shimmer on hover */
+.hbtn__inner::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,.22) 0%, transparent 60%);
+  opacity: 0;
+  transition: opacity .28s ease;
+}
+.hbtn:hover .hbtn__inner::before { opacity: 1; }
+
+.hbtn--solid .hbtn__inner {
+  background: #4A0918;
+  color: #FCFBFA;
+  box-shadow:
+    0  6px 22px rgba(74,9,24,.45),
+    inset 0 1px 0 rgba(255,255,255,.10);
+}
+.hbtn--solid:hover .hbtn__inner {
+  background: #6E1024;
+  box-shadow: 0 10px 30px rgba(74,9,24,.55);
+}
+
+.hbtn--gold .hbtn__inner {
+  background: linear-gradient(135deg, #C79A2B 0%, #9A7520 100%);
+  color: #FCFBFA;
+  border: 1px solid rgba(232,197,90,.35);
+  box-shadow:
+    0  6px 22px rgba(199,154,43,.40),
+    inset 0 1px 0 rgba(255,255,255,.18);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+.hbtn--gold:hover .hbtn__inner {
+  background: linear-gradient(135deg, #E8C55A 0%, #C79A2B 100%);
+  box-shadow: 0 10px 30px rgba(199,154,43,.52);
+}
+
+/* ================================================================
+   STATS BAR
+   position:relative + flex child of .hero
+   The absolutely-positioned SVG waves live inside it.
+   ================================================================ */
+.stats-bar {
+  position: relative;
+  z-index: 3;
+  padding:
+    0
+    clamp(1rem, 3vw, 2.5rem)
+    clamp(80px, 8vw, 115px);   /* bottom pad gives room for SVG waves */
+}
+
+.stats-bar__inner {
+  position: relative;
+  z-index: 2;
+  max-width: min(960px, 100%);
+  margin: 0 auto;
+}
+
+.stats-grid {
+  background: #2a0510;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(199,154,43,.28);
+  border-radius: 18px;
+  padding: clamp(.9rem, 1.8vw, 1.2rem) clamp(1rem, 2.5vw, 2rem);
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  overflow: hidden;
+  box-shadow:
+    0 20px 60px rgba(0,0,0,.35),
+    0  6px 20px rgba(0,0,0,.20),
+    inset 0 1px 0 rgba(199,154,43,.18);
+}
+
+.stat-item {
+  display: flex;
+  align-items: center;
+  gap: clamp(.6rem, 1.1vw, .9rem);
+  padding: clamp(.5rem, 1vw, .75rem) clamp(.6rem, 1.4vw, 1.4rem);
+  border-right: 1px solid rgba(199,154,43,.15);
+  min-width: 0;
+}
+.stat-item:last-child { border-right: none; }
+
+.stat-text {
+  min-width: 0;
+}
+
+.stat-icon {
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: rgba(28,3,9,.65);
+  border: 1px solid rgba(199,154,43,.32);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 10px rgba(0,0,0,.25);
+}
+
+.stat-num {
+  margin: 0;
+  font-size: clamp(1.15rem, 1.7vw, 1.55rem);
+  font-weight: 700;
+  color: #c79a2b;
+  line-height: 1.1;
+  white-space: nowrap;
+}
+.stat-lbl {
+  margin: 0;
+  font-size: clamp(.58rem, .78vw, .72rem);
+  color: rgba(252,251,250,.65);
+  letter-spacing: .02em;
+  line-height: 1.3;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
+}
+
+/* Decorative wave SVGs — absolute inside stats-bar */
+.stats-wave {
+  position: absolute;
+  bottom: 0; left: 0;
+  width: 100%;
+  pointer-events: none;
+}
+.stats-wave--gold   { height: clamp(70px, 8vw, 110px); z-index: 0; }
+.stats-wave--maroon { height: clamp(40px, 5vw,  55px); z-index: 0; }
+
+
+/* ================================================================
+   RESPONSIVE BREAKPOINTS
+   ================================================================ */
+
+/* ── 1024–1365 px  (iPad landscape / small laptop) ────────────  */
+@media (max-width: 1365px) {
+  .hero__glass { max-width: clamp(320px, 56%, 600px); }
+}
+
+/* ── 768–1023 px  (tablet) ─────────────────────────────────────  */
+@media (max-width: 1023px) {
+  .hero__main {
+    padding:
+      clamp(2rem, 4vw, 3rem)
+      clamp(1.5rem, 3vw, 2.5rem)
+      1.5rem;
+  }
+  .hero__glass {
+    max-width: clamp(300px, 68%, 560px);
+    padding: clamp(1.6rem, 2.5vw, 2.4rem);
+  }
+
+  /* Tablet: keep vignette only, no white bleed */
+  .hero__bg-overlay {
+    background: linear-gradient(
+      to bottom,
+      rgba(0,0,0,.22) 0%,
+      rgba(0,0,0,.10) 50%,
+      rgba(0,0,0,.50) 100%
+    );
+  }
+
+  /* Stats: 2-column grid on tablet */
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+  .stat-item:nth-child(2) { border-right: none; }
+  .stat-item:nth-child(3) {
+    border-right: 1px solid rgba(199,154,43,.15);
+    border-top:   1px solid rgba(199,154,43,.12);
+  }
+  .stat-item:nth-child(4) {
+    border-right: none;
+    border-top:   1px solid rgba(199,154,43,.12);
+  }
+}
+
+/* ── ≤ 767 px  (mobile — portrait phones) ──────────────────────  */
+@media (max-width: 767px) {
+  /* On mobile, let the hero grow to content height.
+     min-height is inherited but flex-grow handles overflow gracefully. */
+  .hero {
+    background: #0a0a0a;
+  }
+
+  /* Slightly stronger dark vignette on mobile for readability */
+  .hero__bg-overlay {
+    background: linear-gradient(
+      180deg,
+      rgba(0,0,0,.28) 0%,
+      rgba(0,0,0,.18) 50%,
+      rgba(0,0,0,.55) 100%
+    );
+  }
+
+  /* Image focus to face/subject which is often centred */
+  .hero__bg-img { object-position: center center; }
+
+  /* Hide heavy GPU elements on mobile */
+  .hero__orb      { display: none; }
+  .hero__beams    { display: none; }
+  .hero__honeycomb { display: none; }
+
+  .hero__main {
+    padding: 2.5rem 1.25rem 1.5rem;
+    align-items: flex-start;
+  }
+
+  /* Glass card spans full width on mobile */
+  .hero__glass {
+    max-width: 100%;
+    padding: 1.5rem 1.25rem;
+    background: rgba(10,6,4,.58);
+    border-radius: 18px;
+    gap: .85rem;
+    backdrop-filter: blur(18px) saturate(145%);
+    -webkit-backdrop-filter: blur(18px) saturate(145%);
+  }
+
+  .hero__heading {
+    font-size: clamp(1.3rem, 5.5vw, 1.9rem);
+    letter-spacing: -.015em;
+    line-height: 1.13;
+  }
+  .hero__heading--nl {
+    font-size: clamp(1.1rem, 4.8vw, 1.6rem);
+    line-height: 1.38;
+  }
+
+  .hero__body {
+    font-size: clamp(.88rem, 3.8vw, .98rem);
+    line-height: 1.78;
+    max-width: 100%;
+  }
+
+  .hero__eyebrow { padding: .5rem .85rem; }
+  .hero__accent  { font-size: clamp(.68rem, 3.2vw, .78rem); }
+
+  .hero__actions { gap: .6rem; }
+
+  /* Stats: keep 2-column on mobile */
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+    padding: .9rem 1rem;
+    border-radius: 14px;
+  }
+  .stat-item {
+    padding: .6rem .75rem;
+    gap: .6rem;
+  }
+  .stat-icon { width: 38px; height: 38px; }
+
+  .stats-bar {
+    padding-left: 1rem;
+    padding-right: 1rem;
+    padding-bottom: 88px;
+  }
+}
+
+/* ── ≤ 430 px  (large phones: iPhone 14 Pro Max, Pixel 7) ──────  */
+@media (max-width: 430px) {
+  .hero__main { padding: 2rem 1rem 1.25rem; }
+
+  .hero__glass {
+    padding: 1.25rem 1rem;
+    border-radius: 14px;
+    gap: .75rem;
+  }
+
+  .hero__heading     { font-size: clamp(1.2rem, 5.5vw, 1.6rem); }
+  .hero__heading--nl { font-size: clamp(1.05rem, 5vw, 1.4rem); }
+
+  .hbtn__inner {
+    padding: .7rem .95rem;
+    font-size: .82rem;
+    gap: .38rem;
+  }
+
+  .stats-grid {
+    padding: .75rem;
+    border-radius: 12px;
+  }
+  .stat-icon  { width: 34px; height: 34px; }
+  .stat-item  { padding: .5rem .55rem; gap: .5rem; }
+}
+
+/* ── ≤ 390 px  (iPhone 14 / 15, common Android midrange) ───────  */
+@media (max-width: 390px) {
+  .hero__heading     { font-size: clamp(1.15rem, 5.2vw, 1.5rem); }
+  .hero__heading--nl { font-size: clamp(1rem, 4.8vw, 1.3rem); }
+  .hero__body        { font-size: .87rem; line-height: 1.74; }
+}
+
+/* ── ≤ 375 px  (iPhone SE / small Android) ─────────────────────  */
+@media (max-width: 375px) {
+  .hero__main  { padding: 1.75rem .875rem 1rem; }
+  .hero__glass { padding: 1.1rem .9rem; }
+
+  .hero__heading     { font-size: clamp(1.1rem, 5.2vw, 1.45rem); }
+  .hero__heading--nl { font-size: clamp(.98rem, 4.8vw, 1.28rem); }
+
+  .hero__body    { font-size: .86rem; line-height: 1.72; }
+  .hero__eyebrow { padding: .45rem .75rem; }
+  .hero__accent  { font-size: .66rem; }
+
+  .hbtn__inner { padding: .68rem .85rem; font-size: .8rem; }
+}
+
+/* ── ≤ 320 px  (very small Android phones) ─────────────────────  */
+@media (max-width: 320px) {
+  .hero__main  { padding: 1.5rem .75rem .875rem; }
+  .hero__glass { padding: .95rem .8rem; gap: .65rem; }
+
+  .hero__heading     { font-size: 1.1rem;  line-height: 1.18; }
+  .hero__heading--nl { font-size: .95rem;  line-height: 1.42; }
+  .hero__body        { font-size: .84rem; }
+
+  /* Single column stats on very small screens */
+  .stats-grid { grid-template-columns: 1fr; }
+  .stat-item {
+    border-right: none !important;
+    border-top: 1px solid rgba(199,154,43,.12);
+  }
+  .stat-item:first-child { border-top: none; }
+}
+
+/* ================================================================
+   DESKTOP ONE-SCREEN LOCK
+   Applies to all screens ≥ 1024 px wide.
+   Forces the hero to exactly one viewport height so nothing
+   below the fold is needed on desktop / laptop / MacBook.
+   ================================================================ */
+@media (min-width: 1024px) {
+  .hero {
+    min-height: unset;
+    height: calc(100svh - 76px);
+    overflow: hidden;
+  }
+
+  /* Tighten vertical padding so glass + stats bar both fit */
+  .hero__main {
+    padding:
+      clamp(1rem,  1.8vw, 1.5rem)
+      clamp(1.5rem, 5vw,  5.5rem)
+      clamp(.75rem, 1.2vw, 1rem);
+  }
+
+  .hero__glass {
+    gap:     clamp(.5rem,  .75vw, .8rem);
+    padding: clamp(1.4rem, 2vw,   2.2rem);
+  }
+
+  .hero__body {
+    line-height: 1.7;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  /* Shorter wave ribbons save 40-50 px at the bottom */
+  .stats-bar          { padding-bottom: clamp(52px, 5.5vw, 78px); }
+  .stats-wave--gold   { height: clamp(46px, 5.5vw, 70px); }
+  .stats-wave--maroon { height: clamp(25px, 3vw,   38px); }
+}
+
+/* ── Laptop / short-viewport screens (≥ 1024 px wide, ≤ 800 px tall)
+   Targets: 1366×768, 1280×720, 1024×768, older 13″ laptops ─────── */
+@media (min-width: 1024px) and (max-height: 800px) {
+  .hero__heading     { font-size: clamp(1.25rem, 1.9vw, 1.85rem); }
+  .hero__heading--nl { font-size: clamp(1.05rem, 1.6vw, 1.5rem);  }
+
+  .hero__body {
+    font-size:  clamp(.82rem, .95vw, .9rem);
+    line-height: 1.62;
+    max-width:   42ch;
+  }
+
+  .hero__glass {
+    gap:     .48rem;
+    padding: clamp(1rem, 1.5vw, 1.4rem);
+  }
+
+  .hero__body {
+    -webkit-line-clamp: 2;
+  }
+
+  .hero__eyebrow { padding: .42rem .75rem; }
+  .hero__accent  { font-size: .7rem; }
+
+  /* Pull top/bottom padding way in on hero__main */
+  .hero__main {
+    padding-top:    .75rem;
+    padding-bottom: .5rem;
+  }
+
+  /* Smaller CTA buttons */
+  .hbtn__inner {
+    padding:    .58rem .9rem;
+    font-size:  .8rem;
+    min-height: 40px;
+  }
+
+  /* Compact stats bar */
+  .stats-grid { padding: .4rem .85rem; }
+  .stat-icon  { width: 34px; height: 34px; }
+  .stat-num   { font-size: clamp(.95rem, 1.3vw, 1.1rem); }
+  .stat-lbl   { font-size: .57rem; }
+
+  .stats-bar          { padding-bottom: 50px; }
+  .stats-wave--gold   { height: 42px; }
+  .stats-wave--maroon { height: 24px; }
+}
+
+/* ── 1366 px  (common laptop resolution — fine-tune only) ──────  */
+@media (min-width: 1366px) and (max-width: 1439px) {
+  .hero__glass { max-width: clamp(400px, 48%, 620px); }
+}
+
+/* ── 1440 px+  (large desktop / iMac) ──────────────────────────  */
+@media (min-width: 1440px) {
+  .hero__main {
+    padding:
+      clamp(1.5rem, 3vw,   3rem)
+      clamp(3rem,   6vw,   7rem)
+      clamp(1rem,   2.5vw, 2rem);
+  }
+  .hero__glass {
+    max-width: clamp(460px, 46%, 680px);
+    gap: clamp(.8rem, 1vw, 1.25rem);
+  }
+}
+
+/* ── 1921 px+  (Full-HD+) ───────────────────────────────────────  */
+@media (min-width: 1921px) {
+  .hero__heading     { font-size: clamp(2.8rem, 3.5vw, 4rem); }
+  .hero__heading--nl { font-size: clamp(2.2rem, 3vw, 3.2rem); }
+  .hero__body        { font-size: clamp(1.1rem, 1.35vw, 1.28rem); }
+  .hero__glass       { gap: 1.35rem; padding: clamp(2.4rem, 3.2vw, 3.5rem); }
+  .stats-grid        { padding: 1.8rem 2.5rem; }
+  .stat-icon         { width: 52px; height: 52px; }
+  .stat-num          { font-size: clamp(1.4rem, 1.9vw, 1.75rem); }
+}
+
+/* ── 2560 px+  (2 K / QHD) ─────────────────────────────────────  */
+@media (min-width: 2560px) {
+  .hero__glass {
+    max-width: clamp(500px, 43%, 740px);
+    gap: 1.5rem;
+    padding: clamp(3rem, 4vw, 4.5rem);
+    border-radius: 28px;
+  }
+  .hero__heading     { font-size: clamp(3.5rem, 4vw, 4.6rem); }
+  .hero__heading--nl { font-size: clamp(2.8rem, 3.2vw, 3.8rem); }
+  .hero__body        { font-size: clamp(1.2rem, 1.4vw, 1.45rem); max-width: 56ch; }
+  .hbtn__inner       { padding: 1.05rem 1.55rem; font-size: .98rem; }
+  .stats-bar__inner  { max-width: 1200px; }
+  .stats-grid        { padding: 2rem 3rem; border-radius: 24px; }
+  .stat-icon         { width: 56px; height: 56px; }
+  .stat-num          { font-size: clamp(1.5rem, 2vw, 1.9rem); }
+  .stat-lbl          { font-size: clamp(.68rem, .82vw, .82rem); }
+  .stats-wave--gold  { height: 130px; }
+  .stats-wave--maroon{ height: 65px;  }
+  .stats-bar         { padding-bottom: 145px; }
+}
+
+/* ── 3840 px+  (4 K / UHD) ─────────────────────────────────────  */
+@media (min-width: 3840px) {
+  .hero__glass {
+    max-width: clamp(630px, 40%, 920px);
+    gap: 2rem;
+    padding: clamp(4rem, 5vw, 6rem);
+    border-radius: 36px;
+  }
+  .hero__heading     { font-size: clamp(5rem, 5vw, 6.5rem); }
+  .hero__heading--nl { font-size: clamp(3.8rem, 4vw, 5rem); }
+  .hero__body        { font-size: clamp(1.6rem, 1.8vw, 2rem); max-width: 60ch; }
+  .hbtn__inner       { padding: 1.4rem 2rem; font-size: 1.25rem; min-height: 60px; }
+  .stats-bar__inner  { max-width: 1600px; }
+  .stats-grid        { padding: 3rem 4rem; border-radius: 28px; }
+  .stat-icon         { width: 70px; height: 70px; }
+  .stat-num          { font-size: clamp(2rem, 2.5vw, 2.6rem); }
+  .stat-lbl          { font-size: clamp(.85rem, 1vw, 1rem); }
+  .stats-wave--gold  { height: 160px; }
+  .stats-wave--maroon{ height: 80px; }
+  .stats-bar         { padding-bottom: 180px; }
+}
+
+/* ================================================================
+   ACCESSIBILITY
+   ================================================================ */
+
+/* Respect reduced-motion preference */
+@media (prefers-reduced-motion: reduce) {
+  .hero__bg,
+  .hero__orb,
+  .hero__dot,
+  .hero__glass,
+  .hbtn__inner,
+  .hero__progress-fill {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
+/* High-contrast focus rings — visible on all backgrounds */
+:is(.hero__dot, .hbtn):focus-visible {
+  outline: 3px solid #c79a2b;
+  outline-offset: 3px;
+}
