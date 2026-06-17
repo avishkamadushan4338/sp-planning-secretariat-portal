@@ -185,7 +185,7 @@
 /* ── Two-column body ───────────────────────────────────────────── */
 .hei__body {
   display:               grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 0.55fr) minmax(0, 1fr);
   gap:                   clamp(1.2rem, 2.5vw, 2rem);
   align-items:           start;
 }
@@ -210,7 +210,7 @@
   backdrop-filter: blur(18px) saturate(180%);
   -webkit-backdrop-filter: blur(18px) saturate(180%);
   border:        1px solid var(--hei-glass-border);
-  border-radius: var(--hei-radius-lg);
+  border-radius: 4px;
   box-shadow:    var(--hei-shadow-card);
   padding:       clamp(0.6rem, 1.4vw, 1rem);
   overflow:      hidden;
@@ -315,8 +315,8 @@
 
 .hei__cal-cell-num {
   font-family: 'Inter', sans-serif;
-  font-size:   clamp(0.58rem, 0.9vw, 0.68rem);
-  font-weight: 500;
+  font-size:   clamp(0.82rem, 1.3vw, 1rem);
+  font-weight: 600;
   color:       var(--hei-text-primary);
   line-height: 1;
 }
@@ -394,7 +394,7 @@
   backdrop-filter: blur(16px) saturate(160%);
   -webkit-backdrop-filter: blur(16px) saturate(160%);
   border:        1px solid var(--hei-glass-border);
-  border-radius: var(--hei-radius-md);
+  border-radius: 4px;
   box-shadow:    var(--hei-shadow-soft);
   padding:       clamp(0.8rem, 1.5vw, 1.1rem);
 }
@@ -852,7 +852,8 @@
   display:         flex;
   align-items:     center;
   justify-content: center;
-  height:          clamp(72px, 10vw, 110px);
+  height:          auto;
+  min-height:      unset;
   background:      rgba(255, 255, 255, 0.92);
   border:          1px solid rgba(199,154,43,0.20);
   border-radius:   var(--hei-radius-md);
@@ -860,7 +861,7 @@
   text-decoration: none;
   overflow:        hidden;
   cursor:          pointer;
-  padding:         clamp(0.55rem, 1.4vw, 0.9rem) clamp(0.8rem, 2vw, 1.4rem);
+  padding:         clamp(0.6rem, 1.2vw, 0.9rem) clamp(0.8rem, 1.8vw, 1.2rem);
   transition:      box-shadow 0.22s, border-color 0.22s, transform 0.22s;
 }
 .hei__inst-card:hover {
@@ -874,10 +875,11 @@
 
 .hei__inst-logo {
   max-width:  100%;
-  max-height: 100%;
+  max-height: clamp(70px, 9vw, 100px);
   width:      auto;
   height:     auto;
   object-fit: contain;
+  display:    block;
 }
 
 .hei__inst-logo-fallback {
@@ -917,7 +919,7 @@
 /* Medium / laptop (900px–1279px) — keep 2-col body + 2-col logos */
 @media (max-width: 1279px) and (min-width: 900px) {
   .hei__body {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 0.55fr 1fr;
   }
 }
 
@@ -975,7 +977,7 @@
   }
 
   .hei__cal-cell-num {
-    font-size: 0.66rem;
+    font-size: 0.88rem;
   }
 
   .hei__inst-grid {
@@ -984,7 +986,8 @@
   }
 
   .hei__inst-card {
-    padding: 0.7rem 0.5rem;
+    height:  auto;
+    padding: 0.55rem 0.7rem;
   }
 
   .hei__inst-logo-wrap {

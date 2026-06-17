@@ -5,8 +5,11 @@ const STORAGE_KEY = 'site_publish_mode'
 
 export function SitePublishProvider({ children }) {
   const [isLive, setIsLive] = useState(() => {
-    try { return localStorage.getItem(STORAGE_KEY) === 'live' }
-    catch { return false }
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY)
+      return stored === null ? true : stored === 'live'
+    }
+    catch { return true }
   })
 
   const setLive = useCallback((value) => {

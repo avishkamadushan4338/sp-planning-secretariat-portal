@@ -105,7 +105,7 @@ const DEPARTMENTS = [
     path:  '/departments/administration',
     icon:  Settings,
     color: '#4A0918',
-    staff: '18–22',
+    staff: '8+',
     label: { en: 'Administration Division', si: 'පරිපාලන අංශය', ta: 'நிர்வாகத் துறை' },
     desc:  {
       en: 'Responsible for administration, HR coordination, office operations, and institutional management of the Secretariat.',

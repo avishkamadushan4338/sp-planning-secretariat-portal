@@ -45,19 +45,19 @@ const PROFILES = {
     imgSrc:   '/branding/ao.png',
     deptPath: '/departments/administration',
     badge: {
-      en: 'Head of Administration Division',
-      si: 'පරිපාලන අංශ ප්‍රධානී',
-      ta: 'நிர்வாகத் துறை தலைவர்',
+      en: 'Administrative Officer',
+      si: 'පරිපාලන නිලධාරී',
+      ta: 'நிர்வாக அலுவலர்',
     },
     name: {
-      en: 'Mrs. A.B.C. Perera',
-      si: 'ශ්‍රීමතී. ඒ.බී.සී. පෙරේරා',
-      ta: 'திருமதி. ஏ.பி.சி. பெரேரா',
+      en: 'Mrs. K.K.G. Chandrika',
+      si: 'කේ.ජී. චන්ද්‍රිකා මහත්මිය',
+      ta: 'திருமதி. கே.கே.ஜி. சந்திரிகா',
     },
     position: {
-      en: 'Head of Administration Division',
-      si: 'පරිපාලන අංශ ප්‍රධානී',
-      ta: 'நிர்வாகத் துறை தலைவர்',
+      en: 'Administrative Officer',
+      si: 'පරිපාලන නිලධාරී',
+      ta: 'நிர்வாக அலுவலர்',
     },
     experience: {
       en: 'Over 18 years of experience in public administration and human resource management.',
@@ -94,8 +94,8 @@ const PROFILES = {
       ],
     },
     contact: {
-      phone:    '+94 91 222 XXXX',
-      email:    'admin.dept@planning.sp.gov.lk',
+      phone:    '+94 91 223 1943',
+      email:    'spdcsp@gmail.com',
       location: 'Administration Wing, Planning Secretariat, Galle',
     },
     dept: {

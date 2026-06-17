@@ -40,7 +40,7 @@ const UI = {
     staffLabel:     'Staff Members',
     locationLabel:  'Location',
     staffPlaceholder: '—',
-    locationValue:  'Secretariat Building, Galle',
+    locationValue:  'Southern Province Planning Secretariat - Galle',
     services:       'Division Services',
     noHead:         'Head of Division information is being updated.',
   },
@@ -204,16 +204,15 @@ const DEPT_DATA = {
       si: ['අයවැය සකස් කිරීම', 'වැටුප් සැකසීම', 'විගණන සම්බන්ධීකරණය', 'අත්තිකාරම් කළමනාකරණය', 'මූල්‍ය වාර්තාකරණය', 'වත්කම් කළමනාකරණය', 'ප්‍රසම්පාදන හා ගබඩා කළමනාකරණය'],
       ta: ['பட்ஜெட் தயாரிப்பு', 'சம்பள செயலாக்கம்', 'தணிக்கை ஒருங்கிணைப்பு', 'முன்பண மேலாண்மை', 'நிதி அறிக்கையிடல்', 'சொத்து மேலாண்மை', 'கொள்முதல் மற்றும் கடை மேலாண்மை'],
     },
-    downloads: { en: [], si: [], ta: [] },
   },
 
   administration: {
     icon: Settings,
     accentColor: '#4A0918',
-    staff: '18–22',
+    staff: '8+',
     profilePath: '/departments/head-administration',
-    headName:    { en: 'Mrs. A.B.C. Perera', si: 'ශ්‍රීමතී. ඒ.බී.සී. පෙරේරා', ta: 'திருமதி. ஏ.பி.சி. பெரேரா' },
-    headPosition:{ en: 'Head of Administration Division', si: 'පරිපාලන අංශ ප්‍රධානී', ta: 'நிர்வாகத் துறை தலைவர்' },
+    headName:    { en: 'Mrs. K.K.G. Chandrika', si: 'කේ.ජී. චන්ද්‍රිකා මහත්මිය', ta: 'திருமதி. கே.கே.ஜி. சந்திரிகா' },
+    headPosition:{ en: 'Administrative Officer', si: 'පරිපාලන නිලධාරී', ta: 'நிர்வாக அலுவலர்' },
     title: {
       en: 'Administration Division',
       si: 'පරිපාලන අංශය',
@@ -248,15 +247,10 @@ const DEPT_DATA = {
         'Maintain productivity activities properly',
         'All matters relating to security, sanitation and maintenance of the Planning Secretariat',
         'All duties related to the official quarters belonging to the Planning Secretariat',
-        'Performing all procurement activities of the Southern Provincial Planning Secretariat',
         'Carrying out repairs and maintenance of office buildings, machinery and equipment',
         'Activities related to providing information related to the Right to Information Act No. 12 of 2016',
         'All activities required to maintain the library of the Southern Provincial Planning Secretariat',
-        'Activities related to documents related to the Southern Province Rural Development Project',
-        'All activities related to keeping the store up to date and issuing stationery',
         'All activities related to asset management',
-        'Answering audit queries',
-        'Responding to the Annual Auditor General\'s Report',
       ],
       si: [
         'දකුණු පළාත් සැලසුම් ලේකම් කාර්යාලයට ලැබෙන දෛනික තැපෑල අදාළ අංශ වෙත ලබා දීම සහ ලේකම් කාර්යාලය මඟින් යවන ලිපි ඉක්මනින් ලබා දීම',
@@ -275,15 +269,10 @@ const DEPT_DATA = {
         'ඵලදායිතා කටයුතු නිසි ලෙස නඩත්තු කිරීම',
         'සැලසුම් ලේකම් කාර්යාලයේ ආරක්ෂාව, සනීපාරක්ෂාව සහ නඩත්තු සම්බන්ධ සියලු කරුණු',
         'සැලසුම් ලේකම් කාර්යාලයට අයත් නිල නිවාස සම්බන්ධ සියලු රාජකාරි',
-        'දකුණු පළාත් සැලසුම් ලේකම් කාර්යාලයේ සියලු ප්‍රසම්පාදන කටයුතු සිදු කිරීම',
         'කාර්යාල ගොඩනැගිලි, යන්ත්‍ර සහ උපකරණ අලුත්වැඩියා කිරීම සහ නඩත්තු කිරීම',
         '2016 අංක 12 දරන තොරතුරු දැනගැනීමේ අයිතිවාසිකම් පනත සම්බන්ධ තොරතුරු සැපයීමේ කටයුතු',
         'දකුණු පළාත් සැලසුම් ලේකම් කාර්යාලයේ පුස්තකාලය නඩත්තු කිරීමට අවශ්‍ය සියලු කටයුතු',
-        'දකුණු පළාත් ග්‍රාමීය සංවර්ධන ව්‍යාපෘතිය සම්බන්ධ ලේඛන සම්බන්ධ කටයුතු',
-        'ගබඩාව යාවත්කාලීනව තබා ගැනීම සහ කෙළෙඹ ද්‍රව්‍ය නිකුත් කිරීම සම්බන්ධ සියලු කටයුතු',
         'වත්කම් කළමනාකරණය සම්බන්ධ සියලු කටයුතු',
-        'විගණන විමසීම්වලට පිළිතුරු දීම',
-        'වාර්ෂික විගණන අධිකාරී ජනරාල්ගේ වාර්තාවට ප්‍රතිචාර දැක්වීම',
       ],
       ta: [
         'தென் மாகாண திட்டமிடல் செயலகத்திற்கு வரும் தினசரி அஞ்சலை உரிய பிரிவுகளுக்கு வழங்குதல் மற்றும் திட்டமிடல் செயலகம் அனுப்பும் கடிதங்களை விரைவாக வழங்குதல்',
@@ -302,15 +291,10 @@ const DEPT_DATA = {
         'உற்பத்தித்திறன் செயல்பாடுகளை முறையாக பராமரித்தல்',
         'திட்டமிடல் செயலகத்தின் பாதுகாப்பு, சுகாதாரம் மற்றும் பராமரிப்பு தொடர்பான அனைத்து விஷயங்களும்',
         'திட்டமிடல் செயலகத்திற்கு சொந்தமான அதிகாரப்பூர்வ குடியிருப்புகள் தொடர்பான அனைத்து கடமைகளும்',
-        'தென் மாகாண திட்டமிடல் செயலகத்தின் அனைத்து கொள்முதல் செயல்பாடுகளையும் மேற்கொள்ளுதல்',
         'அலுவலக கட்டிடங்கள், இயந்திரங்கள் மற்றும் உபகரணங்களின் பழுதுபார்ப்பு மற்றும் பராமரிப்பு',
         '2016 ஆம் ஆண்டு எண் 12 தகவல் அறியும் உரிமைச் சட்டம் தொடர்பான தகவல்களை வழங்குதல் தொடர்பான செயல்பாடுகள்',
         'தென் மாகாண திட்டமிடல் செயலகத்தின் நூலகத்தை பராமரிக்க தேவையான அனைத்து செயல்பாடுகளும்',
-        'தென் மாகாண கிராமிய வளர்ச்சி திட்டம் தொடர்பான ஆவணங்கள் தொடர்பான செயல்பாடுகள்',
-        'கடையை புதுப்பித்த நிலையில் வைத்திருத்தல் மற்றும் எழுதுபொருட்களை வழங்குதல் தொடர்பான அனைத்து செயல்பாடுகளும்',
         'சொத்து மேலாண்மை தொடர்பான அனைத்து செயல்பாடுகளும்',
-        'தணிக்கை கேள்விகளுக்கு பதிலளித்தல்',
-        'ஆண்டு தணிக்கையாளர் நாயக அறிக்கைக்கு பதிலளித்தல்',
       ],
     },
     responsibilities: {
@@ -397,29 +381,9 @@ const DEPT_DATA = {
       ],
     },
     services: {
-      en: ['HR Management', 'Recruitment', 'Leave Administration', 'Procurement', 'Records Management', 'Asset Management'],
-      si: ['HR කළමනාකරණය', 'බඳවා ගැනීම', 'නිවාඩු පරිපාලනය', 'ප්‍රසම්පාදනය', 'ලේඛන කළමනාකරණය', 'වත්කම් කළමනාකරණය'],
-      ta: ['HR மேலாண்மை', 'ஆட்சேர்ப்பு', 'விடுப்பு நிர்வாகம்', 'கொள்முதல்', 'பதிவு மேலாண்மை', 'சொத்து மேலாண்மை'],
-    },
-    downloads: {
-      en: [
-        { name: 'HR Policy Manual 2024',          type: 'PDF', size: '2.1 MB' },
-        { name: 'Leave Application Form',          type: 'PDF', size: '48 KB'  },
-        { name: 'Procurement Guidelines',          type: 'PDF', size: '960 KB' },
-        { name: 'Performance Appraisal Form',      type: 'DOCX', size: '112 KB'},
-      ],
-      si: [
-        { name: 'HR ප්‍රතිපත්ති අත්පොත 2024',     type: 'PDF', size: '2.1 MB' },
-        { name: 'නිවාඩු ඉල්ලුම් ආකෘතිය',          type: 'PDF', size: '48 KB'  },
-        { name: 'ප්‍රසම්පාදන මාර්ගෝපදේශ',          type: 'PDF', size: '960 KB' },
-        { name: 'ක්‍රියාකාරිත්ව ඇගයීම් ආකෘතිය', type: 'DOCX', size: '112 KB' },
-      ],
-      ta: [
-        { name: 'HR கொள்கை கையேடு 2024',         type: 'PDF', size: '2.1 MB' },
-        { name: 'விடுப்பு விண்ணப்பப் படிவம்',    type: 'PDF', size: '48 KB'  },
-        { name: 'கொள்முதல் வழிகாட்டுதல்கள்',     type: 'PDF', size: '960 KB' },
-        { name: 'செயல்திறன் மதிப்பீட்டு படிவம்', type: 'DOCX', size: '112 KB'},
-      ],
+      en: ['Human Resource Management', 'Recruitment', 'Leave Administration', 'Records Management', 'Asset Management'],
+      si: ['මානව සම්පත් කළමනාකරණය', 'බඳවා ගැනීම', 'නිවාඩු පරිපාලනය', 'ලේඛන කළමනාකරණය', 'වත්කම් කළමනාකරණය'],
+      ta: ['மனித வள மேலாண்மை', 'ஆட்சேர்ப்பு', 'விடுப்பு நிர்வாகம்', 'பதிவு மேலாண்மை', 'சொத்து மேலாண்மை'],
     },
   },
 
@@ -946,8 +910,6 @@ export default function DepartmentDetail() {
       <ResponsibilitiesSection dept={{ ...dept, key: deptKey }} lang={lang} meta={meta} ui={ui} />
       {dept.profilePath && <div className="dep-divider" />}
       <HeadCard                dept={{ ...dept, key: deptKey }} lang={lang} meta={meta} ui={ui} />
-      {dept.downloads && <><div className="dep-divider" />
-      <DownloadsSection        dept={{ ...dept, key: deptKey }} lang={lang} meta={meta} ui={ui} /></>}
     </div>
   )
 }
