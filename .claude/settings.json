@@ -1,0 +1,43 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//d/planing_se/sp-planning-secretariat-portal/**)",
+      "Bash(mv seo/SeoHead.jsx frontend/src/shared/components/SeoHead.jsx)",
+      "Bash(mv seo/robots.txt frontend/public/robots.txt)",
+      "Bash(mv seo/sitemap.xml frontend/public/sitemap.xml)",
+      "Bash(mv seo/sitemap-news.xml frontend/public/sitemap-news.xml)",
+      "Bash(git add *)",
+      "Bash(git commit '--author=avishkamadushan4338 <avishkamadushan4338@gmail.com>' -m ' *)",
+      "Bash(npx vite *)",
+      "Bash(echo \"PID: $!\")",
+      "Read(//d/planing_se/sp-planning-secretariat-portal/backend/**)",
+      "Bash(curl -s http://localhost:5000/api/contact -X GET)",
+      "Bash(node -e ' *)",
+      "Read(//d/planing_se/sp-planning-secretariat-portal/frontend/src/**)",
+      "Bash(git -C \"d:/planing_se\" remote -v)",
+      "Bash(git -C \"d:/planing_se\" status --short)",
+      "Bash(git -C \"d:/planing_se\" rm --cached -r .)",
+      "Bash(git -C \"d:/planing_se\" reset HEAD)",
+      "Bash(git -C \"d:/planing_se/sp-planning-secretariat-portal\" log --oneline -5)",
+      "Bash(git -C \"d:/planing_se/sp-planning-secretariat-portal\" remote -v)",
+      "Bash(git -C \"d:/planing_se/sp-planning-secretariat-portal\" remote add origin https://github.com/avishkamadushan4338/sp-planning-secretariat-portal.git)",
+      "Bash(git -C \"d:/planing_se/sp-planning-secretariat-portal\" fetch origin)",
+      "Bash(git -C \"d:/planing_se/sp-planning-secretariat-portal\" ls-remote origin)",
+      "Bash(git -C \"d:/planing_se/sp-planning-secretariat-portal\" fetch --depth=1 origin main)",
+      "Bash(git -C \"d:/planing_se/sp-planning-secretariat-portal\" status --short)",
+      "Bash(git -C \"d:/planing_se/sp-planning-secretariat-portal\" add .)",
+      "Bash(git -C \"d:/planing_se/sp-planning-secretariat-portal\" commit -m \"restore: full project source — SP Planning Secretariat Portal\")",
+      "Bash(git -C \"d:/planing_se/sp-planning-secretariat-portal\" push origin master:main --force)",
+      "Bash(grep -E \"\\\\.\\(js|jsx|tsx|ts\\)$\")",
+      "Bash(grep -E \"\\\\.\\(js|jsx\\)$\")",
+      "Bash(grep -E \"\\\\.\\(jsx|js|css\\)$\")",
+      "Bash(start http://localhost:5174/)",
+      "Bash(rm -rf sp-planning-secretariat-portal/.git && echo \"Done\")",
+      "Bash(start http://localhost:5173/)",
+      "Bash(git remote *)"
+    ],
+    "additionalDirectories": [
+      "D:\\planing_se\\sp-planning-secretariat-portal\\.git"
+    ]
+  }
+}
