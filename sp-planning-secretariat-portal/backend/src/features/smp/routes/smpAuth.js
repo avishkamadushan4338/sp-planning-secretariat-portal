@@ -22,10 +22,10 @@ router.post('/login', loginLimiter, async (req, res) => {
   const deviceInfo = req.headers['user-agent'] || 'unknown'
   const now        = new Date().toISOString()
 
-  const user = db.findOneWhere('users', u => u.username.toLowerCase() === username.toLowerCase())
+  const user = await db.findOneWhere('users', u => u.username.toLowerCase() === username.toLowerCase())
 
   if (!user || !user.active) {
-    db.insert('login_logs', {
+    await db.insert('login_logs', {
       id: uuid(), userId: null, username, loginTime: now, logoutTime: null,
       ip, deviceInfo, status: 'failed', failReason: 'invalid_credentials', createdAt: now,
     })
@@ -34,7 +34,7 @@ router.post('/login', loginLimiter, async (req, res) => {
 
   const match = await bcrypt.compare(password, user.password)
   if (!match) {
-    db.insert('login_logs', {
+    await db.insert('login_logs', {
       id: uuid(), userId: user.id, username, loginTime: now, logoutTime: null,
       ip, deviceInfo, status: 'failed', failReason: 'wrong_password', createdAt: now,
     })
@@ -42,7 +42,7 @@ router.post('/login', loginLimiter, async (req, res) => {
   }
 
   const logId = uuid()
-  db.insert('login_logs', {
+  await db.insert('login_logs', {
     id: logId, userId: user.id, username, loginTime: now, logoutTime: null,
     ip, deviceInfo, status: 'success', failReason: null, createdAt: now,
   })
@@ -52,15 +52,15 @@ router.post('/login', loginLimiter, async (req, res) => {
 })
 
 /* ── POST /api/smp/auth/logout ────────────────────────────────────────── */
-router.post('/logout', requireAuth, (req, res) => {
+router.post('/logout', requireAuth, async (req, res) => {
   const logId = req.user.logId
-  if (logId) db.update('login_logs', logId, { logoutTime: new Date().toISOString() })
+  if (logId) await db.update('login_logs', logId, { logoutTime: new Date().toISOString() })
   res.json({ ok: true })
 })
 
 /* ── GET /api/smp/auth/me ─────────────────────────────────────────────── */
-router.get('/me', requireAuth, (req, res) => {
-  const user = db.findById('users', req.user.id)
+router.get('/me', requireAuth, async (req, res) => {
+  const user = await db.findById('users', req.user.id)
   if (!user) return res.status(404).json({ error: 'User not found' })
   const { password: _, ...safe } = user
   res.json(safe)

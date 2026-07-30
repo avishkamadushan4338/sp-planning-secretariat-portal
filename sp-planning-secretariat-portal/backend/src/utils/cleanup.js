@@ -3,9 +3,9 @@ const db   = require('../db')
 
 const DAYS_28 = 28 * 24 * 60 * 60 * 1000
 
-function runCleanup() {
+async function runCleanup() {
   const cutoff = new Date(Date.now() - DAYS_28).toISOString()
-  const removed = db.removeWhere('login_logs', r => r.createdAt < cutoff)
+  const removed = await db.removeWhere('login_logs', r => r.createdAt < cutoff)
   if (removed > 0) console.log(`[cleanup] Removed ${removed} login logs older than 28 days`)
 }
 

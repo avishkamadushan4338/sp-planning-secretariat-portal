@@ -381,9 +381,9 @@ const DEPT_DATA = {
       ],
     },
     services: {
-      en: ['Human Resource Management', 'Recruitment', 'Leave Administration', 'Records Management', 'Asset Management'],
-      si: ['මානව සම්පත් කළමනාකරණය', 'බඳවා ගැනීම', 'නිවාඩු පරිපාලනය', 'ලේඛන කළමනාකරණය', 'වත්කම් කළමනාකරණය'],
-      ta: ['மனித வள மேலாண்மை', 'ஆட்சேர்ப்பு', 'விடுப்பு நிர்வாகம்', 'பதிவு மேலாண்மை', 'சொத்து மேலாண்மை'],
+      en: ['Human Resource Management', 'Leave Administration', 'Records Management'],
+      si: ['මානව සම්පත් කළමනාකරණය', 'නිවාඩු පරිපාලනය', 'ලේඛන කළමනාකරණය'],
+      ta: ['மனித வள மேலாண்மை', 'விடுப்பு நிர்வாகம்', 'பதிவு மேலாண்மை'],
     },
   },
 
@@ -668,7 +668,7 @@ function OverviewSection({ dept, lang, meta, ui }) {
               {ui.services}
             </div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-              {dept.services[lang].map((s, i) => {
+              {(dept.services?.[lang] ?? []).map((s, i) => {
                 const SIcon = serviceIcons[i % serviceIcons.length]
                 return (
                   <span key={i} style={{

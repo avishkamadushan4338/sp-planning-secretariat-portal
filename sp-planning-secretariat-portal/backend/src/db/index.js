@@ -1,71 +1,75 @@
-const fs   = require('fs')
-const path = require('path')
+const mysql  = require('mysql2/promise')
+const { getPool } = require('./pool')
+const { TABLES, ensureDatabase, ensureTables } = require('./schema')
 
-const DATA_DIR = path.join(__dirname, '../../data')
-
-const FILES = {
-  users:        'smp_users.json',
-  login_logs:   'smp_login_logs.json',
-  items:        'smp_items.json',
-  unique_items: 'smp_unique_items.json',
-  categories:   'smp_categories.json',
-  transactions: 'smp_transactions.json',
-  issued:       'smp_issued.json',
-  borrowed:     'smp_borrowed.json',
-  reservations: 'smp_reservations.json',
-  disposals:    'smp_disposals.json',
-  audit_logs:   'smp_audit_logs.json',
+let ready = null
+function init() {
+  if (!ready) ready = ensureDatabase(mysql).then(() => ensureTables(getPool()))
+  return ready
 }
 
-function filePath(key) {
-  return path.join(DATA_DIR, FILES[key])
+function table(key) {
+  const t = TABLES[key]
+  if (!t) throw new Error(`Unknown db collection: ${key}`)
+  return t
 }
 
-function read(key) {
-  const fp = filePath(key)
-  if (!fs.existsSync(fp)) return []
-  try { return JSON.parse(fs.readFileSync(fp, 'utf8')) } catch { return [] }
+function parseData(raw) {
+  return typeof raw === 'string' ? JSON.parse(raw) : raw
 }
 
-function write(key, data) {
-  if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true })
-  fs.writeFileSync(filePath(key), JSON.stringify(data, null, 2), 'utf8')
+async function read(key) {
+  await init()
+  const [rows] = await getPool().query(`SELECT data FROM \`${table(key)}\``)
+  return rows.map(r => parseData(r.data))
 }
 
-function findAll(key)           { return read(key) }
-function findById(key, id)      { return read(key).find(r => r.id === id) || null }
-function findWhere(key, fn)     { return read(key).filter(fn) }
-function findOneWhere(key, fn)  { return read(key).find(fn) || null }
+async function findAll(key)  { return read(key) }
+async function findById(key, id) {
+  await init()
+  const [rows] = await getPool().query(`SELECT data FROM \`${table(key)}\` WHERE id = ?`, [id])
+  return rows.length ? parseData(rows[0].data) : null
+}
+async function findWhere(key, fn)    { return (await read(key)).filter(fn) }
+async function findOneWhere(key, fn) { return (await read(key)).find(fn) || null }
 
-function insert(key, record) {
-  const rows = read(key)
-  rows.push(record)
-  write(key, rows)
+async function insert(key, record) {
+  await init()
+  await getPool().query(
+    `INSERT INTO \`${table(key)}\` (id, data) VALUES (?, ?)`,
+    [record.id, JSON.stringify(record)]
+  )
   return record
 }
 
-function update(key, id, patch) {
-  const rows = read(key)
-  const idx  = rows.findIndex(r => r.id === id)
-  if (idx === -1) return null
-  rows[idx] = { ...rows[idx], ...patch, updatedAt: new Date().toISOString() }
-  write(key, rows)
-  return rows[idx]
+async function update(key, id, patch) {
+  await init()
+  const current = await findById(key, id)
+  if (!current) return null
+  const next = { ...current, ...patch, updatedAt: new Date().toISOString() }
+  await getPool().query(
+    `UPDATE \`${table(key)}\` SET data = ? WHERE id = ?`,
+    [JSON.stringify(next), id]
+  )
+  return next
 }
 
-function remove(key, id) {
-  const rows = read(key)
-  const next = rows.filter(r => r.id !== id)
-  if (next.length === rows.length) return false
-  write(key, next)
-  return true
+async function remove(key, id) {
+  await init()
+  const [result] = await getPool().query(`DELETE FROM \`${table(key)}\` WHERE id = ?`, [id])
+  return result.affectedRows > 0
 }
 
-function removeWhere(key, fn) {
-  const rows = read(key)
-  const next = rows.filter(r => !fn(r))
-  write(key, next)
-  return rows.length - next.length
+async function removeWhere(key, fn) {
+  const rows   = await read(key)
+  const toKill = rows.filter(fn)
+  if (!toKill.length) return 0
+  await init()
+  await getPool().query(
+    `DELETE FROM \`${table(key)}\` WHERE id IN (?)`,
+    [toKill.map(r => r.id)]
+  )
+  return toKill.length
 }
 
 module.exports = { findAll, findById, findWhere, findOneWhere, insert, update, remove, removeWhere }

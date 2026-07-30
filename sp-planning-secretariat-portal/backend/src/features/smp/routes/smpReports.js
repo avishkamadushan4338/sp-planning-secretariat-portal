@@ -3,11 +3,11 @@ const db     = require('../../../db')
 const { requireAuth } = require('../../../middleware/auth')
 
 /* ── GET /api/smp/reports/dashboard ─────────────────────────────────────── */
-router.get('/dashboard', requireAuth, (req, res) => {
-  const items        = db.findAll('items')
-  const transactions = db.findAll('transactions')
-  const users        = db.findAll('users')
-  const disposals    = db.findAll('disposals')
+router.get('/dashboard', requireAuth, async (req, res) => {
+  const items        = await db.findAll('items')
+  const transactions = await db.findAll('transactions')
+  const users        = await db.findAll('users')
+  const disposals    = await db.findAll('disposals')
 
   const totalItems    = items.length
   const totalQty      = items.reduce((s, i) => s + (i.qty || 0), 0)
@@ -83,8 +83,8 @@ router.get('/dashboard', requireAuth, (req, res) => {
 })
 
 /* ── GET /api/smp/reports/transactions ──────────────────────────────────── */
-router.get('/transactions', requireAuth, (req, res) => {
-  let rows = db.findAll('transactions')
+router.get('/transactions', requireAuth, async (req, res) => {
+  let rows = await db.findAll('transactions')
   const { action, itemId, userId, from, to } = req.query
   if (action) rows = rows.filter(r => r.action === action)
   if (itemId) rows = rows.filter(r => r.itemId === itemId)
@@ -95,8 +95,8 @@ router.get('/transactions', requireAuth, (req, res) => {
 })
 
 /* ── GET /api/smp/reports/audit-logs ────────────────────────────────────── */
-router.get('/audit-logs', requireAuth, (req, res) => {
-  let rows = db.findAll('audit_logs')
+router.get('/audit-logs', requireAuth, async (req, res) => {
+  let rows = await db.findAll('audit_logs')
   const { userId, action, from, to } = req.query
   if (userId) rows = rows.filter(r => r.userId === userId)
   if (action) rows = rows.filter(r => r.action === action)
@@ -106,8 +106,8 @@ router.get('/audit-logs', requireAuth, (req, res) => {
 })
 
 /* ── GET /api/smp/reports/login-logs ────────────────────────────────────── */
-router.get('/login-logs', requireAuth, (req, res) => {
-  let rows = db.findAll('login_logs')
+router.get('/login-logs', requireAuth, async (req, res) => {
+  let rows = await db.findAll('login_logs')
   const { username, status, from, to } = req.query
   if (username) rows = rows.filter(r => r.username?.toLowerCase().includes(username.toLowerCase()))
   if (status)   rows = rows.filter(r => r.status === status)
@@ -117,8 +117,8 @@ router.get('/login-logs', requireAuth, (req, res) => {
 })
 
 /* ── GET /api/smp/reports/disposals ─────────────────────────────────────── */
-router.get('/disposals', requireAuth, (req, res) => {
-  let rows = db.findAll('disposals')
+router.get('/disposals', requireAuth, async (req, res) => {
+  let rows = await db.findAll('disposals')
   const { status, from, to } = req.query
   if (status) rows = rows.filter(r => r.status === status)
   if (from)   rows = rows.filter(r => r.createdAt >= from)
@@ -127,8 +127,8 @@ router.get('/disposals', requireAuth, (req, res) => {
 })
 
 /* ── GET /api/smp/reports/value-summary ─────────────────────────────────── */
-router.get('/value-summary', requireAuth, (req, res) => {
-  const items = db.findAll('items')
+router.get('/value-summary', requireAuth, async (req, res) => {
+  const items = await db.findAll('items')
   const summary = items.map(i => ({
     id: i.id, name: i.name, sku: i.sku, category: i.category,
     qty: i.qty,

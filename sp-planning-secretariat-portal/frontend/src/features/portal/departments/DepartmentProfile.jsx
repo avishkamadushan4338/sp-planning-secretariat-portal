@@ -59,11 +59,6 @@ const PROFILES = {
       si: 'පරිපාලන නිලධාරී',
       ta: 'நிர்வாக அலுவலர்',
     },
-    experience: {
-      en: 'Over 18 years of experience in public administration and human resource management.',
-      si: 'රාජ්‍ය පරිපාලනය සහ මානව සම්පත් කළමනාකරණ ක්ෂේත්‍රයේ වසර 18 කට වැඩි අත්දැකීම.',
-      ta: 'பொது நிர்வாகம் மற்றும் மனிதவள மேலாண்மையில் 18 ஆண்டுகளுக்கும் மேலான அனுபவம்.',
-    },
     responsibilities: {
       en: [
         'Overall administration and institutional management of the Secretariat',

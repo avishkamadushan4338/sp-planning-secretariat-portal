@@ -16,7 +16,7 @@ function auditLog(action, resourceType, resourceId, details = {}) {
           details:      typeof details === 'function' ? details(req, body) : details,
           ip:           req.ip || req.headers['x-forwarded-for'] || 'unknown',
           createdAt:    new Date().toISOString(),
-        })
+        }).catch(err => console.error('[audit] insert failed:', err.message))
       }
       return original(body)
     }

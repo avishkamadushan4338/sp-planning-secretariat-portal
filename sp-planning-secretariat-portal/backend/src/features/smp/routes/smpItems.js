@@ -37,8 +37,8 @@ function buildUniqueIds(item, uniqueNos, condition) {
   }))
 }
 
-function enrichItem(item) {
-  const uniqueIds = db.findWhere('unique_items', ui => ui.parentItemId === item.id)
+async function enrichItem(item) {
+  const uniqueIds = await db.findWhere('unique_items', ui => ui.parentItemId === item.id)
   return {
     ...item,
     status: computeStatus(item),
@@ -48,31 +48,31 @@ function enrichItem(item) {
 }
 
 /* ── GET /api/smp/items ──────────────────────────────────────────────────── */
-router.get('/', ...canRead, (req, res) => {
-  const items = db.findAll('items').map(enrichItem)
+router.get('/', ...canRead, async (req, res) => {
+  const items = await Promise.all((await db.findAll('items')).map(enrichItem))
   res.json(items)
 })
 
 /* ── GET /api/smp/items/meta/categories ─────────────────────────────────── */
-router.get('/meta/categories', ...canRead, (req, res) => res.json(db.findAll('categories')))
-router.post('/meta/categories', requireAuth, requireRole('admin'), (req, res) => {
+router.get('/meta/categories', ...canRead, async (req, res) => res.json(await db.findAll('categories')))
+router.post('/meta/categories', requireAuth, requireRole('admin'), async (req, res) => {
   const { name, color } = req.body || {}
   if (!name) return res.status(400).json({ error: 'name required' })
-  if (db.findOneWhere('categories', c => c.name.toLowerCase() === name.toLowerCase()))
+  if (await db.findOneWhere('categories', c => c.name.toLowerCase() === name.toLowerCase()))
     return res.status(409).json({ error: 'Category already exists' })
-  const cat = db.insert('categories', { id: uuid(), name, color: color || '#6366F1', createdAt: new Date().toISOString() })
+  const cat = await db.insert('categories', { id: uuid(), name, color: color || '#6366F1', createdAt: new Date().toISOString() })
   res.status(201).json(cat)
 })
 
 /* ── GET /api/smp/items/:id ──────────────────────────────────────────────── */
-router.get('/:id', ...canRead, (req, res) => {
-  const item = db.findById('items', req.params.id)
+router.get('/:id', ...canRead, async (req, res) => {
+  const item = await db.findById('items', req.params.id)
   if (!item) return res.status(404).json({ error: 'Item not found' })
-  res.json(enrichItem(item))
+  res.json(await enrichItem(item))
 })
 
 /* ── POST /api/smp/items ─────────────────────────────────────────────────── */
-router.post('/', ...canWrite, (req, res) => {
+router.post('/', ...canWrite, async (req, res) => {
   const {
     name, category, description, qty, condition,
     purchaseValue, currentValue,
@@ -92,22 +92,25 @@ router.post('/', ...canWrite, (req, res) => {
     return res.status(400).json({ error: 'Duplicate unique IDs in submission' })
 
   // Check for conflicts with existing unique IDs
-  const conflict = uidList.find(no => db.findOneWhere('unique_items', ui => ui.uniqueNo === no))
+  let conflict = null
+  for (const no of uidList) {
+    if (await db.findOneWhere('unique_items', ui => ui.uniqueNo === no)) { conflict = no; break }
+  }
   if (conflict)
     return res.status(409).json({ error: `Unique ID "${conflict}" is already in use` })
 
-  const genSKU = () => {
+  const genSKU = async () => {
     let sku; let attempts = 0
     do { sku = 'SPPS-' + String(Math.floor(10000 + Math.random() * 90000)); attempts++ }
-    while (db.findOneWhere('items', i => i.sku === sku) && attempts < 100)
+    while (await db.findOneWhere('items', i => i.sku === sku) && attempts < 100)
     return sku
   }
 
   const now  = new Date().toISOString()
-  const item = db.insert('items', {
+  const item = await db.insert('items', {
     id: uuid(),
     name: name.trim(),
-    sku: genSKU(),
+    sku: await genSKU(),
     category: category || 'General',
     description: description || '',
     qty: Number(qty),
@@ -121,15 +124,15 @@ router.post('/', ...canWrite, (req, res) => {
     updatedAt: now,
   })
 
-  buildUniqueIds(item, uidList).forEach(uid => db.insert('unique_items', uid))
+  for (const uid of buildUniqueIds(item, uidList)) await db.insert('unique_items', uid)
 
-  _logTx(req.user, 'created', item.id, item.name, 0, Number(qty), 'Item created')
-  res.status(201).json(enrichItem(item))
+  await _logTx(req.user, 'created', item.id, item.name, 0, Number(qty), 'Item created')
+  res.status(201).json(await enrichItem(item))
 })
 
 /* ── PATCH /api/smp/items/:id ────────────────────────────────────────────── */
-router.patch('/:id', ...canWrite, (req, res) => {
-  const item = db.findById('items', req.params.id)
+router.patch('/:id', ...canWrite, async (req, res) => {
+  const item = await db.findById('items', req.params.id)
   if (!item) return res.status(404).json({ error: 'Item not found' })
 
   const allowed = [
@@ -152,28 +155,28 @@ router.patch('/:id', ...canWrite, (req, res) => {
     patch.valueHistory = history
   }
 
-  const updated = db.update('items', item.id, patch)
-  _logTx(req.user, 'edited', item.id, item.name, item.qty, item.qty, 'Item details updated')
-  res.json(enrichItem(updated))
+  const updated = await db.update('items', item.id, patch)
+  await _logTx(req.user, 'edited', item.id, item.name, item.qty, item.qty, 'Item details updated')
+  res.json(await enrichItem(updated))
 })
 
 /* ── DELETE /api/smp/items/:id ───────────────────────────────────────────── */
-router.delete('/:id', requireAuth, requireRole('admin'), (req, res) => {
-  const item = db.findById('items', req.params.id)
+router.delete('/:id', requireAuth, requireRole('admin'), async (req, res) => {
+  const item = await db.findById('items', req.params.id)
   if (!item) return res.status(404).json({ error: 'Item not found' })
-  db.remove('items', item.id)
+  await db.remove('items', item.id)
   // Remove associated unique item IDs
-  db.removeWhere('unique_items', ui => ui.parentItemId === item.id)
-  _logTx(req.user, 'deleted', item.id, item.name, item.qty, 0, 'Item deleted')
+  await db.removeWhere('unique_items', ui => ui.parentItemId === item.id)
+  await _logTx(req.user, 'deleted', item.id, item.name, item.qty, 0, 'Item deleted')
   res.json({ ok: true })
 })
 
 /* ── POST /api/smp/items/:id/stock-in ───────────────────────────────────── */
-router.post('/:id/stock-in', ...canWrite, (req, res) => {
+router.post('/:id/stock-in', ...canWrite, async (req, res) => {
   const { qty, supplier, purchaseDate, invoiceNo, note, condition, uniqueIds: providedUniqueIds } = req.body || {}
   if (!qty || Number(qty) <= 0) return res.status(400).json({ error: 'qty must be positive' })
 
-  const item = db.findById('items', req.params.id)
+  const item = await db.findById('items', req.params.id)
   if (!item) return res.status(404).json({ error: 'Item not found' })
 
   const addQty  = Number(qty)
@@ -185,57 +188,60 @@ router.post('/:id/stock-in', ...canWrite, (req, res) => {
   if (uidSet.size !== uidList.length)
     return res.status(400).json({ error: 'Duplicate unique IDs in submission' })
 
-  const conflict = uidList.find(no => db.findOneWhere('unique_items', ui => ui.uniqueNo === no))
+  let conflict = null
+  for (const no of uidList) {
+    if (await db.findOneWhere('unique_items', ui => ui.uniqueNo === no)) { conflict = no; break }
+  }
   if (conflict)
     return res.status(409).json({ error: `Unique ID "${conflict}" is already in use` })
 
   const newQty  = item.qty + addQty
-  const updated = db.update('items', item.id, { qty: newQty })
+  const updated = await db.update('items', item.id, { qty: newQty })
 
-  buildUniqueIds({ ...item, condition: condition || item.condition }, uidList).forEach(uid => db.insert('unique_items', uid))
+  for (const uid of buildUniqueIds({ ...item, condition: condition || item.condition }, uidList)) await db.insert('unique_items', uid)
 
-  _logTx(req.user, 'stock_in', item.id, item.name, item.qty, newQty,
+  await _logTx(req.user, 'stock_in', item.id, item.name, item.qty, newQty,
     `Stock added: +${qty}${supplier ? ` | Supplier: ${supplier}` : ''}${invoiceNo ? ` | Invoice: ${invoiceNo}` : ''}${note ? ` | ${note}` : ''}`,
     { supplier, purchaseDate, invoiceNo, note })
 
-  res.json(enrichItem(updated))
+  res.json(await enrichItem(updated))
 })
 
 /* ── POST /api/smp/items/:id/stock-out ──────────────────────────────────── */
-router.post('/:id/stock-out', ...canWrite, (req, res) => {
+router.post('/:id/stock-out', ...canWrite, async (req, res) => {
   const { qty, reason, approvedBy, note } = req.body || {}
   if (!qty || Number(qty) <= 0) return res.status(400).json({ error: 'qty must be positive' })
 
-  const item = db.findById('items', req.params.id)
+  const item = await db.findById('items', req.params.id)
   if (!item) return res.status(404).json({ error: 'Item not found' })
   if (item.qty < Number(qty)) return res.status(400).json({ error: 'Insufficient stock' })
 
   const newQty  = item.qty - Number(qty)
-  const updated = db.update('items', item.id, { qty: newQty })
+  const updated = await db.update('items', item.id, { qty: newQty })
 
-  _logTx(req.user, 'stock_out', item.id, item.name, item.qty, newQty,
+  await _logTx(req.user, 'stock_out', item.id, item.name, item.qty, newQty,
     `Stock removed: -${qty}${reason ? ` | Reason: ${reason}` : ''}${approvedBy ? ` | Approved by: ${approvedBy}` : ''}${note ? ` | ${note}` : ''}`,
     { reason, approvedBy, note })
 
-  res.json(enrichItem(updated))
+  res.json(await enrichItem(updated))
 })
 
 /* ── GET /api/smp/items/:id/unique-ids ──────────────────────────────────── */
-router.get('/:id/unique-ids', ...canRead, (req, res) => {
-  const item = db.findById('items', req.params.id)
+router.get('/:id/unique-ids', ...canRead, async (req, res) => {
+  const item = await db.findById('items', req.params.id)
   if (!item) return res.status(404).json({ error: 'Item not found' })
-  const uids = db.findWhere('unique_items', ui => ui.parentItemId === item.id)
+  const uids = await db.findWhere('unique_items', ui => ui.parentItemId === item.id)
   res.json(uids.sort((a, b) => a.uniqueNo.localeCompare(b.uniqueNo)))
 })
 
 /* ── GET /api/smp/items/unique-ids/all ──────────────────────────────────── */
-router.get('/unique-ids/all', ...canRead, (req, res) => {
-  res.json(db.findAll('unique_items').sort((a, b) => a.uniqueNo.localeCompare(b.uniqueNo)))
+router.get('/unique-ids/all', ...canRead, async (req, res) => {
+  res.json((await db.findAll('unique_items')).sort((a, b) => a.uniqueNo.localeCompare(b.uniqueNo)))
 })
 
 /* ── PATCH /api/smp/items/unique-ids/:uid ───────────────────────────────── */
-router.patch('/unique-ids/:uid', ...canWrite, (req, res) => {
-  const ui = db.findById('unique_items', req.params.uid)
+router.patch('/unique-ids/:uid', ...canWrite, async (req, res) => {
+  const ui = await db.findById('unique_items', req.params.uid)
   if (!ui) return res.status(404).json({ error: 'Unique item not found' })
   const { status, condition, location, note } = req.body || {}
   const patch = {}
@@ -243,13 +249,13 @@ router.patch('/unique-ids/:uid', ...canWrite, (req, res) => {
   if (condition !== undefined) patch.condition = condition
   if (location  !== undefined) patch.location  = location
   if (note      !== undefined) patch.note      = note
-  const updated = db.update('unique_items', ui.id, patch)
+  const updated = await db.update('unique_items', ui.id, patch)
   res.json(updated)
 })
 
 /* ── helpers ─────────────────────────────────────────────────────────────── */
-function _logTx(user, action, itemId, itemName, qtyBefore, qtyAfter, note = '', meta = {}) {
-  db.insert('transactions', {
+async function _logTx(user, action, itemId, itemName, qtyBefore, qtyAfter, note = '', meta = {}) {
+  await db.insert('transactions', {
     id: uuid(), userId: user.id, username: user.username,
     action, itemId, itemName, qtyBefore, qtyAfter, note,
     meta, createdAt: new Date().toISOString(),

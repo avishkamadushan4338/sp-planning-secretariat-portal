@@ -34,7 +34,8 @@
       "Bash(start http://localhost:5174/)",
       "Bash(rm -rf sp-planning-secretariat-portal/.git && echo \"Done\")",
       "Bash(start http://localhost:5173/)",
-      "Bash(git remote *)"
+      "Bash(git remote *)",
+      "Bash(find /d/planing_se/sp-planning-secretariat-portal -type d -name \"departments\" 2>/dev/null)"
     ],
     "additionalDirectories": [
       "D:\\planing_se\\sp-planning-secretariat-portal\\.git"

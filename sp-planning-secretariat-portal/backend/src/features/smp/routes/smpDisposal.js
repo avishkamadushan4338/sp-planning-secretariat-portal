@@ -7,7 +7,7 @@ const canWrite = [requireAuth, requireRole('admin', 'storekeeper')]
 const adminOnly = [requireAuth, requireRole('admin')]
 
 /* ── POST /api/smp/disposal ──────────────────────────────────────────────── */
-router.post('/', ...canWrite, (req, res) => {
+router.post('/', ...canWrite, async (req, res) => {
   const {
     itemId, uniqueItemIds, qty,
     disposalReason, disposalMethod,
@@ -18,7 +18,7 @@ router.post('/', ...canWrite, (req, res) => {
   if (!itemId || !qty || !disposalReason || !disposalMethod)
     return res.status(400).json({ error: 'itemId, qty, disposalReason, disposalMethod required' })
 
-  const item = db.findById('items', itemId)
+  const item = await db.findById('items', itemId)
   if (!item) return res.status(404).json({ error: 'Item not found' })
   if (item.qty < Number(qty)) return res.status(400).json({ error: 'Insufficient stock to dispose' })
 
@@ -28,19 +28,19 @@ router.post('/', ...canWrite, (req, res) => {
   const resolvedUniqueIds = []
   if (uniqueItemIds && uniqueItemIds.length > 0) {
     for (const uid of uniqueItemIds) {
-      const ui = db.findById('unique_items', uid)
+      const ui = await db.findById('unique_items', uid)
       if (!ui) return res.status(404).json({ error: `Unique item ${uid} not found` })
       if (ui.parentItemId !== itemId) return res.status(400).json({ error: `Unique item ${uid} does not belong to this item` })
-      db.update('unique_items', uid, { status: 'disposed', updatedAt: now })
+      await db.update('unique_items', uid, { status: 'disposed', updatedAt: now })
       resolvedUniqueIds.push(ui.uniqueNo)
     }
   }
 
   // Reduce item qty
   const newQty = item.qty - Number(qty)
-  db.update('items', itemId, { qty: newQty })
+  await db.update('items', itemId, { qty: newQty })
 
-  const record = db.insert('disposals', {
+  const record = await db.insert('disposals', {
     id: uuid(),
     itemId,
     itemName: item.name,
@@ -63,7 +63,7 @@ router.post('/', ...canWrite, (req, res) => {
     updatedAt: now,
   })
 
-  db.insert('transactions', {
+  await db.insert('transactions', {
     id: uuid(), userId: req.user.id, username: req.user.username,
     action: 'disposed', itemId, itemName: item.name,
     qtyBefore: item.qty, qtyAfter: newQty,
@@ -75,8 +75,8 @@ router.post('/', ...canWrite, (req, res) => {
 })
 
 /* ── GET /api/smp/disposal ───────────────────────────────────────────────── */
-router.get('/', requireAuth, (req, res) => {
-  let rows = db.findAll('disposals')
+router.get('/', requireAuth, async (req, res) => {
+  let rows = await db.findAll('disposals')
   const { status, itemId, from, to } = req.query
   if (status) rows = rows.filter(r => r.status === status)
   if (itemId) rows = rows.filter(r => r.itemId === itemId)
@@ -86,20 +86,20 @@ router.get('/', requireAuth, (req, res) => {
 })
 
 /* ── GET /api/smp/disposal/:id ───────────────────────────────────────────── */
-router.get('/:id', requireAuth, (req, res) => {
-  const r = db.findById('disposals', req.params.id)
+router.get('/:id', requireAuth, async (req, res) => {
+  const r = await db.findById('disposals', req.params.id)
   if (!r) return res.status(404).json({ error: 'Disposal record not found' })
   res.json(r)
 })
 
 /* ── PATCH /api/smp/disposal/:id/approve ────────────────────────────────── */
-router.patch('/:id/approve', ...adminOnly, (req, res) => {
-  const record = db.findById('disposals', req.params.id)
+router.patch('/:id/approve', ...adminOnly, async (req, res) => {
+  const record = await db.findById('disposals', req.params.id)
   if (!record) return res.status(404).json({ error: 'Disposal record not found' })
   if (record.status !== 'pending_approval') return res.status(400).json({ error: 'Record is not pending approval' })
 
   const now = new Date().toISOString()
-  const updated = db.update('disposals', record.id, {
+  const updated = await db.update('disposals', record.id, {
     status: 'approved',
     approvedAt: now,
     approvedBy: req.user.username,
@@ -108,15 +108,15 @@ router.patch('/:id/approve', ...adminOnly, (req, res) => {
 })
 
 /* ── PATCH /api/smp/disposal/:id/status ─────────────────────────────────── */
-router.patch('/:id/status', ...adminOnly, (req, res) => {
+router.patch('/:id/status', ...adminOnly, async (req, res) => {
   const { status, notes } = req.body || {}
   const valid = ['pending_approval','approved','disposed','recycled','auctioned','written_off']
   if (!valid.includes(status)) return res.status(400).json({ error: 'Invalid status' })
 
-  const record = db.findById('disposals', req.params.id)
+  const record = await db.findById('disposals', req.params.id)
   if (!record) return res.status(404).json({ error: 'Disposal record not found' })
 
-  const updated = db.update('disposals', record.id, {
+  const updated = await db.update('disposals', record.id, {
     status,
     ...(notes ? { disposalNotes: notes } : {}),
     ...(status === 'approved' ? { approvedBy: req.user.username, approvedAt: new Date().toISOString() } : {}),
