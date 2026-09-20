@@ -11,6 +11,7 @@ import {
 } from 'react-icons/fi'
 import { HiOutlineOfficeBuilding } from 'react-icons/hi'
 import { useInView } from 'react-intersection-observer'
+import { staffApi, siteSettingsApi } from '@/features/cms/cmsContentApi'
 import './Contact.css'
 
 const MAROON = '#4A0918'
@@ -171,92 +172,7 @@ const T = {
 }
 
 /* ── Telephone directory data ───────────────────────────────────────────── */
-const DIRECTORY = [
-  {
-    en: 'Deputy Chief Secretary (Planning and Operations)',
-    si: 'නියෝජ්‍ය ප්‍රධාන ලේකම් (සැලසුම් සහ මෙහෙයුම්)',
-    ta: 'உதவி தலைமை செயலாளர் (திட்டமிடல் மற்றும் நடவடிக்கைகள்)',
-    person: 'Mr. M.K.G.S.P.K. Jayasekara',
-    phone: '+94 91 450 0656',
-  },
-  {
-    en: 'Director (Planning)',
-    si: 'අධ්‍යක්ෂ (සැලසුම්)',
-    ta: 'இயக்குனர் (திட்டமிடல்)',
-    person: 'Mrs. K.S.S. Weerawardena',
-    phone: '+94 91 222 3868',
-  },
-  {
-    en: 'Deputy Director (Planning)',
-    si: 'නියෝජ්‍ය අධ්‍යක්ෂ (සැලසුම්)',
-    ta: 'உதவி இயக்குனர் (திட்டமிடல்)',
-    person: 'Mrs. N.C. Dissanayake',
-    phone: '+94 91 223 1197',
-  },
-  {
-    en: 'Deputy Director (Planning)',
-    si: 'නියෝජ්‍ය අධ්‍යක්ෂ (සැලසුම්)',
-    ta: 'உதவி இயக்குனர் (திட்டமிடல்)',
-    person: 'Mrs. H.I.H. Salgamuwa',
-    phone: '+94 91 224 8750',
-  },
-  {
-    en: 'Deputy Director (Planning)',
-    si: 'නියෝජ්‍ය අධ්‍යක්ෂ (සැලසුම්)',
-    ta: 'உதவி இயக்குனர் (திட்டமிடல்)',
-    person: 'Mrs. A.K.E. Madhusarani',
-    phone: '+94 91 223 1943',
-  },
-  {
-    en: 'Deputy Director (Planning)',
-    si: 'නියෝජ්‍ය අධ්‍යක්ෂ (සැලසුම්)',
-    ta: 'உதவி இயக்குனர் (திட்டமிடல்)',
-    person: 'Mrs. Chandrika Malepathirana',
-    phone: '+94 91 222 7882',
-  },
-  {
-    en: 'Deputy Director (Planning)',
-    si: 'නියෝජ්‍ය අධ්‍යක්ෂ (සැලසුම්)',
-    ta: 'உதவி இயக்குனர் (திட்டமிடல்)',
-    person: 'Mrs. A.D.S. Priyadarshani',
-    phone: '+94 91 224 6481',
-  },
-  {
-    en: 'Accountant (Acting)',
-    si: 'ගණකාධිකාරී (වැඩබලන)',
-    ta: 'கணக்காளர் (பணியாற்றுதல்)',
-    person: 'Mrs. Manjula Gamage',
-    phone: '+94 91 212 1376',
-  },
-  {
-    en: 'Statistician',
-    si: 'සංඛ්‍යාලේඛනඥ',
-    ta: 'புள்ளியியலாளர்',
-    person: 'Mrs. U.D.D. Dilhani',
-    phone: '+94 91 224 7989',
-  },
-  {
-    en: 'Administrative Officer',
-    si: 'පරිපාලන නිලධාරී',
-    ta: 'நிர்வாக அதிகாரி',
-    person: 'Mrs. K.K.G. Chandrika',
-    phone: '+94 91 223 1943',
-  },
-  {
-    en: 'Chief Management Services Officer',
-    si: 'ප්‍රධාන කළමනාකරණ සේවා නිලධාරී',
-    ta: 'தலைமை மேலாண்மை சேவை அதிகாரி',
-    person: 'Mrs. S.K.M. Liyanage',
-    phone: '+94 71 818 6963',
-  },
-  {
-    en: 'Cash Assistant',
-    si: 'මුදල් සහකාර',
-    ta: 'பண உதவியாளர்',
-    person: 'Mrs. Muthumali Gunathilaka',
-    phone: '+94 91 212 1376',
-  },
-]
+/* Fetched from staffApi.list() (showInDirectory === true) — see Contact() below. */
 
 /* ── Shared animation variant ───────────────────────────────────────────── */
 const fadeUp = {
@@ -272,6 +188,9 @@ const MAP_URL = 'https://www.google.com/maps/place/Planning+Secretariat+Southern
 export default function Contact() {
   const held = usePageHold('contact')
   const [lang, setLang] = useState(() => localStorage.getItem('lang') || 'en')
+  const [directory, setDirectory] = useState([])
+  const [dirLoading, setDirLoading] = useState(true)
+  const [officeInfo, setOfficeInfo] = useState(null)
   const location = useLocation()
 
   useEffect(() => {
@@ -292,8 +211,51 @@ export default function Contact() {
     return () => clearTimeout(timer)
   }, [location.hash])
 
+  // ── load telephone directory (staff) + office info (site settings) ──
+  useEffect(() => {
+    let cancelled = false
+
+    setDirLoading(true)
+    staffApi.list()
+      .then(({ data }) => {
+        if (cancelled || !Array.isArray(data)) return
+        const dir = data
+          .filter((s) => s.showInDirectory === true)
+          .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+          .map((s) => ({
+            en: s.position?.en || '',
+            si: s.position?.si || '',
+            ta: s.position?.ta || '',
+            person: s.name?.en || '',
+            phone: s.phone || '',
+          }))
+        setDirectory(dir)
+      })
+      .catch((err) => console.error('Contact: failed to load staff directory', err))
+      .finally(() => { if (!cancelled) setDirLoading(false) })
+
+    siteSettingsApi.get()
+      .then(({ data }) => {
+        if (cancelled || !data) return
+        setOfficeInfo(data)
+      })
+      .catch((err) => console.error('Contact: failed to load site settings', err))
+
+    return () => { cancelled = true }
+  }, [])
+
   const meta = LANG_META[lang] || LANG_META.en
-  const t    = T[lang]         || T.en
+  const baseT = T[lang]        || T.en
+  const t = officeInfo
+    ? {
+        ...baseT,
+        mapAddress: officeInfo.address || baseT.mapAddress,
+        mapPhone:   officeInfo.phone   || baseT.mapPhone,
+        mapFax:     officeInfo.fax     || baseT.mapFax,
+        mapEmail:   officeInfo.email   || baseT.mapEmail,
+        mapHours:   (officeInfo.hours && (officeInfo.hours[lang] || officeInfo.hours.en)) || baseT.mapHours,
+      }
+    : baseT
 
   if (held) return <ComingSoon pageKey="contact" />
 
@@ -303,7 +265,9 @@ export default function Contact() {
       <div style={{ background: CREAM, minHeight: '100vh' }}>
         <PageHero t={t} meta={meta} />
         <div id="find-office"><MapSection t={t} meta={meta} /></div>
-        <div id="contact-info"><DirectorySection t={t} meta={meta} lang={lang} /></div>
+        <div id="contact-info">
+          <DirectorySection t={t} meta={meta} lang={lang} directory={directory} loading={dirLoading} />
+        </div>
         <div id="feedback"><ComplaintForm t={t} meta={meta} lang={lang} /></div>
       </div>
     </>
@@ -522,20 +486,20 @@ function MapInfoRow({ icon, label, meta, href }) {
 /* ════════════════════════════════════════════════════════════════════════
    Telephone directory
 ════════════════════════════════════════════════════════════════════════ */
-function DirectorySection({ t, meta, lang }) {
+function DirectorySection({ t, meta, lang, directory, loading }) {
   const [query, setQuery] = useState('')
   const { ref, inView } = useInView({ threshold: 0.06, triggerOnce: true })
 
   const filtered = useMemo(() => {
     const q = query.toLowerCase().trim()
-    if (!q) return DIRECTORY
-    return DIRECTORY.filter(d =>
+    if (!q) return directory
+    return directory.filter(d =>
       d.en.toLowerCase().includes(q) ||
       d[lang]?.toLowerCase().includes(q) ||
       d.person.toLowerCase().includes(q) ||
       d.phone.includes(q)
     )
-  }, [query, lang])
+  }, [query, lang, directory])
 
   const thFont = {
     fontFamily: meta.isNonLatin ? meta.font : "'Cinzel', serif",
@@ -587,7 +551,7 @@ function DirectorySection({ t, meta, lang }) {
           className="dir-stats"
         >
           <div className="dir-stats__item">
-            <span className="dir-stats__num">{DIRECTORY.length}</span>
+            <span className="dir-stats__num">{directory.length}</span>
             <span className="dir-stats__lbl" style={{ fontFamily: meta.font }}>{t.dirCount}</span>
           </div>
           <div className="dir-stats__divider" />
@@ -616,7 +580,13 @@ function DirectorySection({ t, meta, lang }) {
                 </tr>
               </thead>
               <tbody>
-                {filtered.length === 0 ? (
+                {loading ? (
+                  <tr>
+                    <td colSpan={3} className="dir-table__empty">
+                      <span style={{ fontFamily: meta.font }}>…</span>
+                    </td>
+                  </tr>
+                ) : filtered.length === 0 ? (
                   <tr>
                     <td colSpan={3} className="dir-table__empty">
                       <FiSearch size={28} style={{ opacity: 0.25, marginBottom: 8, display: 'block', margin: '0 auto 8px' }} />
@@ -684,7 +654,7 @@ function DirectorySection({ t, meta, lang }) {
           <div className="dir-footer">
             <HiOutlineOfficeBuilding size={14} style={{ color: GOLD }} />
             <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.75rem', color: '#9B7A82' }}>
-              {filtered.length} / {DIRECTORY.length} {t.dirCount}
+              {filtered.length} / {directory.length} {t.dirCount}
             </span>
             {query && (
               <span className="dir-footer__query" style={{ fontFamily: meta.font }}>

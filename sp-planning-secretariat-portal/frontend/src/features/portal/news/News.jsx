@@ -4,6 +4,7 @@ import { useSearchParams } from 'react-router-dom'
 import { usePageHold } from '@/shared/hooks/usePageHold'
 import ComingSoon from '@/shared/components/ComingSoon'
 import { SeoHead } from '@/shared/seo'
+import { resolveUploadUrl } from '@/shared/utils/resolveUploadUrl'
 import {
   FiCalendar, FiArrowRight, FiDownload, FiExternalLink,
   FiSearch, FiX, FiChevronLeft, FiChevronRight, FiEye,
@@ -403,7 +404,7 @@ function NewsSection({ t, font, lang = 'en' }) {
     titleSi:  n.titleSi || '',
     titleTa:  n.titleTa || '',
     excerpt:  n.excerpt || '',
-    image:    n.imageUrl || '',
+    image:    resolveUploadUrl(n.imageUrl) || '',
     tag:      null,
   }))
 
@@ -567,7 +568,8 @@ function NewsSection({ t, font, lang = 'en' }) {
 const SPAN_CYCLE = ['wide', 'normal', 'tall', 'normal', 'normal', 'wide']
 
 function AlbumViewer({ album, font, t, onClose }) {
-  const images = album.images?.length ? album.images : (album.imageUrl ? [album.imageUrl] : [])
+  const rawImages = album.images?.length ? album.images : (album.imageUrl ? [album.imageUrl] : [])
+  const images = rawImages.map(resolveUploadUrl)
   const [idx, setIdx] = useState(0)
 
   const prev = useCallback(() => setIdx(i => (i - 1 + images.length) % images.length), [images.length])
@@ -689,7 +691,7 @@ function GallerySection({ t, font }) {
     caption: a.titleEn || a.titleSi || a.titleTa || 'Gallery Album',
     captionSi: a.titleSi,
     captionTa: a.titleTa,
-    image: a.imageUrl || '/branding/hero.jpeg',
+    image: resolveUploadUrl(a.imageUrl) || '/branding/hero.webp',
     span: SPAN_CYCLE[i % SPAN_CYCLE.length],
     isAlbum: true,
     albumData: a,
