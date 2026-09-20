@@ -2,9 +2,11 @@ import { useState, useEffect, useRef } from 'react'
 import { motion, useInView } from 'framer-motion'
 import { Quote, BadgeCheck, PenLine } from 'lucide-react'
 import ProgressiveImage from '@/shared/components/ProgressiveImage'
+import { homeContentApi, staffApi } from '@/features/cms/cmsContentApi'
+import { resolveUploadUrl } from '@/shared/utils/resolveUploadUrl'
 import './HomeDeputySecretaryMessage.css'
 
-/* ── Translations ─────────────────────────────────────────────────────────── */
+/* ── Translations (fallback until CMS data resolves) ──────────────────────── */
 const T = {
   en: {
     eyebrow:   'Leadership Message',
@@ -55,6 +57,8 @@ export default function HomeDeputySecretaryMessage({ lang: propLang }) {
     () => propLang || localStorage.getItem('lang') || 'en'
   )
   const [reduced,  setReduced]  = useState(false)
+  const [message,  setMessage]  = useState(null)
+  const [staff,    setStaff]    = useState(null)
 
   useEffect(() => {
     const h = (e) => setLang(e.detail || 'en')
@@ -72,7 +76,33 @@ export default function HomeDeputySecretaryMessage({ lang: propLang }) {
     return () => mq.removeEventListener('change', h)
   }, [])
 
-  const t          = T[lang] || T.en
+  useEffect(() => {
+    let cancelled = false
+    homeContentApi.get()
+      .then(({ data }) => {
+        if (cancelled || !data) return
+        if (data.deputySecretaryMessage) setMessage(data.deputySecretaryMessage)
+        const staffId = data.deputySecretaryStaffId
+        if (!staffId) return
+        return staffApi.get(staffId).then(({ data: staffData }) => {
+          if (!cancelled && staffData) setStaff(staffData)
+        })
+      })
+      .catch((err) => console.error('HomeDeputySecretaryMessage: failed to load content', err))
+    return () => { cancelled = true }
+  }, [])
+
+  const fallback = T[lang] || T.en
+  const t = {
+    eyebrow:  fallback.eyebrow,
+    title:    fallback.title,
+    position: staff?.position?.[lang]   || staff?.position?.en   || fallback.position,
+    name:     staff?.name?.[lang]       || staff?.name?.en       || fallback.name,
+    message:  message?.[lang]           || message?.en           || fallback.message,
+    imgAlt:   fallback.imgAlt,
+    sigAlt:   fallback.sigAlt,
+  }
+  const imgSrc = resolveUploadUrl(staff?.photo || '/branding/sec-ho.webp')
   const isNonLatin = lang === 'si' || lang === 'ta'
 
   const sectionRef = useRef(null)
@@ -123,7 +153,7 @@ export default function HomeDeputySecretaryMessage({ lang: propLang }) {
             <span className="dsm__corner dsm__corner--br" aria-hidden="true" />
 
             <ProgressiveImage
-              src="/branding/sec-ho.png"
+              src={imgSrc}
               alt={t.imgAlt}
               className="dsm__img"
               loading="lazy"

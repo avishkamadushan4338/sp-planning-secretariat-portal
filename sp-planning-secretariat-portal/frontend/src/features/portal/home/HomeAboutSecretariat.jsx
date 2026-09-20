@@ -7,9 +7,11 @@ import {
   FiExternalLink,
 } from 'react-icons/fi'
 import ProgressiveImage from '@/shared/components/ProgressiveImage'
+import { homeContentApi } from '@/features/cms/cmsContentApi'
+import { resolveUploadUrl } from '@/shared/utils/resolveUploadUrl'
 import './HomeAboutSecretariat.css'
 
-/* ── Translations ─────────────────────────────────────────────────────────── */
+/* ── Translations (fallback until CMS data resolves) ─────────────────────── */
 const T = {
   en: {
     eyebrow:   'About the Secretariat',
@@ -60,6 +62,7 @@ export default function HomeAboutSecretariat({ lang: propLang }) {
     () => propLang || localStorage.getItem('lang') || 'en'
   )
   const [reduced, setReduced] = useState(false)
+  const [about, setAbout] = useState(null)
 
   useEffect(() => {
     const h = (e) => setLang(e.detail || 'en')
@@ -77,8 +80,33 @@ export default function HomeAboutSecretariat({ lang: propLang }) {
     return () => mq.removeEventListener('change', h)
   }, [])
 
-  const t = T[lang] || T.en
+  useEffect(() => {
+    let cancelled = false
+    homeContentApi.get()
+      .then(({ data }) => {
+        if (cancelled || !data?.aboutSecretariat) return
+        setAbout(data.aboutSecretariat)
+      })
+      .catch((err) => console.error('HomeAboutSecretariat: failed to load content', err))
+    return () => { cancelled = true }
+  }, [])
+
+  const fallback = T[lang] || T.en
+  const t = about
+    ? {
+        eyebrow:  about.eyebrow?.[lang]  || about.eyebrow?.en  || fallback.eyebrow,
+        title:    about.title?.[lang]    || about.title?.en    || fallback.title,
+        subtitle: about.subtitle?.[lang] || about.subtitle?.en || fallback.subtitle,
+        body:     about.body?.[lang]     || about.body?.en     || fallback.body,
+        imgAlt:   fallback.imgAlt,
+        readMore: fallback.readMore,
+        telDir:   fallback.telDir,
+      }
+    : fallback
   const isNonLatin = lang === 'si' || lang === 'ta'
+  const imgSrc   = resolveUploadUrl(about?.image || '/branding/office.webp')
+  const statValue = about?.statCard?.value ?? '3'
+  const statLabel = about?.statCard?.label?.[lang] || about?.statCard?.label?.en || 'Divisions'
 
   const sectionRef = useRef(null)
   const inView = useInView(sectionRef, { once: true, amount: 0.15 })
@@ -186,7 +214,7 @@ export default function HomeAboutSecretariat({ lang: propLang }) {
             <span className="has__corner has__corner--br" aria-hidden="true" />
 
             <ProgressiveImage
-              src="/branding/office.png"
+              src={imgSrc}
               alt={t.imgAlt}
               className="has__img"
               loading="lazy"
@@ -201,8 +229,8 @@ export default function HomeAboutSecretariat({ lang: propLang }) {
 
           {/* Floating stat card */}
           <div className="has__stat-card" aria-hidden="true">
-            <span className="has__stat-num">3</span>
-            <span className="has__stat-lbl">Divisions</span>
+            <span className="has__stat-num">{statValue}</span>
+            <span className="has__stat-lbl">{statLabel}</span>
           </div>
         </motion.div>
 

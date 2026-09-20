@@ -7,6 +7,7 @@ import { FiArrowRight, FiUsers, FiMapPin, FiTrendingUp, FiFileText } from 'react
 import { HiOutlineOfficeBuilding } from 'react-icons/hi'
 import CountUp from 'react-countup'
 import { useInView } from 'react-intersection-observer'
+import { homeContentApi } from '@/features/cms/cmsContentApi'
 import HomeNewsBar from './HomeNewsBar'
 import HomeQuickLinks from './HomeQuickLinks'
 import HomeAboutSecretariat from './HomeAboutSecretariat'
@@ -18,10 +19,10 @@ const GOLD           = '#C79A2B'
 const SLIDE_INTERVAL = 6000
 
 /* ── Slide content per language ──────────────────────────────────────────── */
-const SLIDES = {
+const SLIDES_FALLBACK = {
   en: [
     {
-      img:    '/branding/hero.jpeg',
+      img:    '/branding/hero.webp',
       accent: 'Towards a Prosperous Southern Province',
       line1:  'Planning for',
       line2:  'Sustainable Development',
@@ -31,7 +32,7 @@ const SLIDES = {
       btn2: { label: 'Explore Services', path: '/services'    },
     },
     {
-      img:    '/branding/hero2.jpeg',
+      img:    '/branding/hero2.webp',
       accent: 'Coordinating Growth Across the Province',
       line1:  'Governing with',
       line2:  'Purpose & Vision',
@@ -41,7 +42,7 @@ const SLIDES = {
       btn2: { label: 'Learn More',    path: '/documents'   },
     },
     {
-      img:    '/branding/hero3.jpeg',
+      img:    '/branding/hero3.webp',
       accent: 'Empowering Every Community',
       line1:  'Serving Over',
       line2:  '2,600,000 Citizens',
@@ -53,7 +54,7 @@ const SLIDES = {
   ],
   si: [
     {
-      img:    '/branding/hero.jpeg',
+      img:    '/branding/hero.webp',
       accent: 'සමෘද්ධිමත් දකුණු පළාතක් කරා',
       line1:  'තිරසාර සංවර්ධනය',
       line2:  'හා දීප්තිමත් හෙටක් සඳහා',
@@ -63,7 +64,7 @@ const SLIDES = {
       btn2: { label: 'සේවාවන් බලන්න', path: '/services'     },
     },
     {
-      img:    '/branding/hero2.jpeg',
+      img:    '/branding/hero2.webp',
       accent: 'පළාත පුරා සංවර්ධනය සම්බන්ධීකරණය',
       line1:  'ඉලක්කයක් සහිතව',
       line2:  'අංශ 03 හරහා',
@@ -73,7 +74,7 @@ const SLIDES = {
       btn2: { label: 'ලේඛන බලන්න', path: '/documents'  },
     },
     {
-      img:    '/branding/hero3.jpeg',
+      img:    '/branding/hero3.webp',
       accent: 'සෑම ප්‍රජාවක්ම සවිබලගන්වමින්',
       line1:  'ජනතාව',
       line2:  '2,600,000 කට අධිකව',
@@ -85,7 +86,7 @@ const SLIDES = {
   ],
   ta: [
     {
-      img:    '/branding/hero.jpeg',
+      img:    '/branding/hero.webp',
       accent: 'வளமான தென் மாகாணத்தை நோக்கி',
       line1:  'திட்டமிடல்',
       line2:  'நிலையான வளர்ச்சி',
@@ -95,7 +96,7 @@ const SLIDES = {
       btn2: { label: 'சேவைகளை காண்க',   path: '/services'    },
     },
     {
-      img:    '/branding/hero2.jpeg',
+      img:    '/branding/hero2.webp',
       accent: 'மாகாணம் முழுவதும் வளர்ச்சியை ஒருங்கிணைத்தல்',
       line1:  'நோக்கத்துடன்',
       line2:  'நிர்வகித்தல்',
@@ -105,7 +106,7 @@ const SLIDES = {
       btn2: { label: 'மேலும் பார்க்க',   path: '/documents'   },
     },
     {
-      img:    '/branding/hero3.jpeg',
+      img:    '/branding/hero3.webp',
       accent: 'ஒவ்வொரு சமுதாயத்தையும் வலுப்படுத்துதல்',
       line1:  '2,600,000 க்கும் அதிகமான',
       line2:  'குடிமக்களுக்கு',
@@ -172,9 +173,38 @@ const eyebrowVariants = {
 
 const countUpEasing = (t, b, c, d) => c * (1 - Math.pow(2, -10 * t / d)) + b
 
+/* Transform CMS heroSlides (array of trilingual slide objects) into the
+   per-language slide-array shape this component already renders with. */
+function transformHeroSlides(heroSlides) {
+  if (!Array.isArray(heroSlides) || !heroSlides.length) return null
+  const byLang = { en: [], si: [], ta: [] }
+  for (const slide of heroSlides) {
+    for (const lang of ['en', 'si', 'ta']) {
+      byLang[lang].push({
+        img:    slide.image,
+        accent: slide.accent?.[lang]   || slide.accent?.en   || '',
+        line1:  slide.line1?.[lang]    || slide.line1?.en    || '',
+        line2:  slide.line2?.[lang]    || slide.line2?.en    || '',
+        line3:  slide.line3?.[lang]    || slide.line3?.en    || '',
+        body:   slide.body?.[lang]     || slide.body?.en     || '',
+        btn1: {
+          label: slide.btn1?.label?.[lang] || slide.btn1?.label?.en || '',
+          path:  slide.btn1?.path || '/departments',
+        },
+        btn2: {
+          label: slide.btn2?.label?.[lang] || slide.btn2?.label?.en || '',
+          path:  slide.btn2?.path || '/services',
+        },
+      })
+    }
+  }
+  return byLang
+}
+
 /* ── Home ────────────────────────────────────────────────────────────────── */
 export default function Home() {
   const [lang, setLang] = useState(() => localStorage.getItem('lang') || 'en')
+  const [slidesByLang, setSlidesByLang] = useState(SLIDES_FALLBACK)
 
   useEffect(() => {
     const h = (e) => setLang(e.detail || 'en')
@@ -182,8 +212,21 @@ export default function Home() {
     return () => window.removeEventListener('langChange', h)
   }, [])
 
-  const meta   = LANG_META[lang] || LANG_META.en
-  const slides = SLIDES[lang]    || SLIDES.en
+  // ── silently fetch live hero slides, swap in once resolved (no flash/shift) ──
+  useEffect(() => {
+    let cancelled = false
+    homeContentApi.get()
+      .then(({ data }) => {
+        if (cancelled) return
+        const transformed = transformHeroSlides(data?.heroSlides)
+        if (transformed) setSlidesByLang(transformed)
+      })
+      .catch((err) => console.error('Home: failed to load hero slides', err))
+    return () => { cancelled = true }
+  }, [])
+
+  const meta   = LANG_META[lang]     || LANG_META.en
+  const slides = slidesByLang[lang]  || slidesByLang.en
 
   return (
     <>

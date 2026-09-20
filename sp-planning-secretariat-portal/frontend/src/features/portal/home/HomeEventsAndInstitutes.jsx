@@ -65,12 +65,12 @@ const DUMMY_EVENTS = []
 
 /* ── Affiliated institutes data ──────────────────────────────────────────── */
 const INSTITUTES = [
-  { id: 1, name: 'Southern Development Authority',    url: 'https://www.southern.gov.lk',      logo: '/branding/af1.png' },
-  { id: 2, name: 'Provincial Planning Unit',          url: 'https://www.southern.gov.lk',      logo: '/branding/af2.png' },
-  { id: 3, name: 'Education Development Center',      url: 'https://www.moe.gov.lk',            logo: '/branding/af3.png' },
-  { id: 4, name: 'Infrastructure Division',           url: 'https://www.southern.gov.lk',      logo: '/branding/af4.png' },
-  { id: 5, name: 'Agriculture Planning Board',        url: 'https://www.doa.gov.lk',            logo: '/branding/af5.png' },
-  { id: 6, name: 'Affiliated Institute',              url: 'https://www.southern.gov.lk',      logo: '/branding/af6.png' },
+  { id: 1, name: 'Southern Development Authority',    url: 'https://www.southern.gov.lk',      logo: '/branding/af1.webp' },
+  { id: 2, name: 'Provincial Planning Unit',          url: 'https://www.southern.gov.lk',      logo: '/branding/af2.webp' },
+  { id: 3, name: 'Education Development Center',      url: 'https://www.moe.gov.lk',            logo: '/branding/af3.webp' },
+  { id: 4, name: 'Infrastructure Division',           url: 'https://www.southern.gov.lk',      logo: '/branding/af4.webp' },
+  { id: 5, name: 'Agriculture Planning Board',        url: 'https://www.doa.gov.lk',            logo: '/branding/af5.webp' },
+  { id: 6, name: 'Affiliated Institute',              url: 'https://www.southern.gov.lk',      logo: '/branding/af6.webp' },
 ]
 
 /* ── Helpers ─────────────────────────────────────────────────────────────── */
