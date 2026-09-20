@@ -17,9 +17,11 @@ import {
   Bell,
 } from 'lucide-react'
 import { FaBars, FaTimes, FaChevronDown } from 'react-icons/fa'
+import { staffApi, siteSettingsApi } from '@/features/cms/cmsContentApi'
+import { resolveUploadUrl } from '@/shared/utils/resolveUploadUrl'
 import './Navbar.css'
 
-const SITE_LOGO_PATH = '/branding/logo.png'
+const SITE_LOGO_PATH = '/branding/logo.webp'
 
 const ABOUT_US_MENU = [
   {
@@ -80,7 +82,7 @@ const ABOUT_US_MENU = [
   },
 ]
 
-const FEATURED_OFFICIALS = [
+const FEATURED_OFFICIALS_FALLBACK = [
   {
     role: {
       en: 'Deputy Chief Secretary – Planning',
@@ -89,7 +91,7 @@ const FEATURED_OFFICIALS = [
     },
     name: 'Mr. M.K.G.S.P.K. Jayasekara',
     path: '/about-deputy-secretary',
-    photo: '/branding/sec-prof.png',
+    photo: '/branding/sec-prof.webp',
   },
   {
     role: {
@@ -99,7 +101,7 @@ const FEATURED_OFFICIALS = [
     },
     name: 'Mrs. K.S. Weerawardhane',
     path: '/about/director-planning',
-    photo: '/branding/dir.png',
+    photo: '/branding/dir.webp',
   },
 ]
 
@@ -148,7 +150,7 @@ const NEWS_MENU = [
   },
 ]
 
-const CONTACT_DETAILS = {
+const CONTACT_DETAILS_FALLBACK = {
   address: '153B, S.H. Dahanayaka Mawatha, Galle, Sri Lanka',
   phone:   '+94 912234503',
   email:   'spdcsp@gmail.com',
@@ -269,7 +271,7 @@ function OfficialAvatar({ photo, name }) {
   if (!err) {
     return (
       <img
-        src={photo}
+        src={resolveUploadUrl(photo)}
         alt={name}
         className="w-full h-full object-cover object-top"
         onError={() => setErr(true)}
@@ -326,7 +328,7 @@ function SiteLogo() {
 
 // ─── Desktop Nav Item ─────────────────────────────────────────────────────────
 
-function DesktopNavItem({ item, lang, isActive, activeDropdown, onEnter, onLeave, onToggle }) {
+function DesktopNavItem({ item, lang, isActive, activeDropdown, onEnter, onLeave, onToggle, contactDetails }) {
   const dropOpen    = activeDropdown === item.id
   const fontFamily  = LANG_FONT[lang]
   const isDisabled  = item.disabled === true
@@ -563,17 +565,17 @@ function DesktopNavItem({ item, lang, isActive, activeDropdown, onEnter, onLeave
                     <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full border border-gold/60 text-gold mt-0.5" aria-hidden="true">
                       <MapPin size={14} strokeWidth={2} />
                     </span>
-                    <span className="text-[12.5px] text-white/85 leading-snug">{CONTACT_DETAILS.address}</span>
+                    <span className="text-[12.5px] text-white/85 leading-snug">{contactDetails.address}</span>
                   </div>
                   <div className="flex items-center gap-3">
                     <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full border border-gold/60 text-gold" aria-hidden="true">
                       <Phone size={14} strokeWidth={2} />
                     </span>
                     <a
-                      href={`tel:${CONTACT_DETAILS.phone.replace(/\s/g, '')}`}
+                      href={`tel:${contactDetails.phone.replace(/\s/g, '')}`}
                       className="text-[12.5px] text-white/85 hover:text-gold transition-colors duration-150 focus-visible:outline-none focus-visible:text-gold"
                     >
-                      {CONTACT_DETAILS.phone}
+                      {contactDetails.phone}
                     </a>
                   </div>
                   <div className="flex items-center gap-3">
@@ -581,10 +583,10 @@ function DesktopNavItem({ item, lang, isActive, activeDropdown, onEnter, onLeave
                       <Mail size={14} strokeWidth={2} />
                     </span>
                     <a
-                      href={`mailto:${CONTACT_DETAILS.email}`}
+                      href={`mailto:${contactDetails.email}`}
                       className="text-[12.5px] text-white/85 hover:text-gold transition-colors duration-150 focus-visible:outline-none focus-visible:text-gold"
                     >
-                      {CONTACT_DETAILS.email}
+                      {contactDetails.email}
                     </a>
                   </div>
                   <div className="flex items-center gap-3">
@@ -592,7 +594,7 @@ function DesktopNavItem({ item, lang, isActive, activeDropdown, onEnter, onLeave
                       <Clock size={14} strokeWidth={2} />
                     </span>
                     <span className="text-[12.5px] text-white/85" style={{ fontFamily: LANG_FONT[lang] }}>
-                      {CONTACT_DETAILS.hours[lang] || CONTACT_DETAILS.hours.en}
+                      {contactDetails.hours[lang] || contactDetails.hours.en}
                     </span>
                   </div>
                 </div>
@@ -792,10 +794,50 @@ export default function Navbar() {
   const [activeLang,     setActiveLang]     = useState(
     () => (typeof window !== 'undefined' ? localStorage.getItem('lang') : null) || 'en'
   )
+  const [officials,      setOfficials]      = useState(FEATURED_OFFICIALS_FALLBACK)
+  const [contactDetails, setContactDetails] = useState(CONTACT_DETAILS_FALLBACK)
 
   const location     = useLocation()
   const headerRef    = useRef(null)
   const dropTimerRef = useRef(null)
+
+  // ── silently fetch live staff/site-settings data, swap in once resolved ──
+  useEffect(() => {
+    let cancelled = false
+
+    staffApi.list()
+      .then(({ data }) => {
+        if (cancelled || !Array.isArray(data)) return
+        const featured = data
+          .filter((s) => s.featured === true)
+          .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+          .slice(0, FEATURED_OFFICIALS_FALLBACK.length)
+          .map((s) => ({
+            role:  s.position,
+            name:  s.name?.en || '',
+            path:  s.tier === 'deputy-secretary' ? '/about-deputy-secretary' : `/about/${s.slug}`,
+            photo: s.photo,
+          }))
+        if (featured.length) setOfficials(featured)
+      })
+      .catch((err) => console.error('Navbar: failed to load featured staff', err))
+
+    siteSettingsApi.get()
+      .then(({ data }) => {
+        if (cancelled || !data) return
+        setContactDetails({
+          address: data.address || CONTACT_DETAILS_FALLBACK.address,
+          phone:   data.phone   || CONTACT_DETAILS_FALLBACK.phone,
+          email:   data.email   || CONTACT_DETAILS_FALLBACK.email,
+          hours:   data.hours && (data.hours.en || data.hours.si || data.hours.ta)
+            ? data.hours
+            : CONTACT_DETAILS_FALLBACK.hours,
+        })
+      })
+      .catch((err) => console.error('Navbar: failed to load site settings', err))
+
+    return () => { cancelled = true }
+  }, [])
 
   const navItems       = NAV_TRANSLATIONS[activeLang] || NAV_TRANSLATIONS.en
   const activeMegaItem = navItems.find((item) => item.id === activeDropdown && item.megaMenu)
@@ -950,6 +992,7 @@ export default function Navbar() {
                       onEnter={handleDropEnter}
                       onLeave={handleDropLeave}
                       onToggle={handleDropToggle}
+                      contactDetails={contactDetails}
                     />
                   ))}
                 </ul>
@@ -1038,7 +1081,7 @@ export default function Navbar() {
                       {(NAVBAR_UI[activeLang] || NAVBAR_UI.en).keyOfficials}
                     </p>
 
-                    {FEATURED_OFFICIALS.map((official) => (
+                    {officials.map((official) => (
                       <Link
                         key={official.path}
                         to={official.path}

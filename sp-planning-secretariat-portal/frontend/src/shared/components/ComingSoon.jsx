@@ -129,7 +129,7 @@ about:       'About Us',
           <img
             src="/branding/logo.svg"
             alt="Southern Province Planning Secretariat"
-            onError={(e) => { e.currentTarget.src = '/branding/logo.png' }}
+            onError={(e) => { e.currentTarget.src = '/branding/logo.webp' }}
             style={{ width: 520, height: 'auto', objectFit: 'contain' }}
           />
         </motion.div>

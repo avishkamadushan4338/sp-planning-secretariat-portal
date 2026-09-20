@@ -2,7 +2,13 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { FiMail, FiPhone, FiMapPin, FiChevronRight } from 'react-icons/fi'
 import { FaFacebookF, FaYoutube, FaLinkedinIn } from 'react-icons/fa'
+import { siteSettingsApi } from '@/features/cms/cmsContentApi'
 import './Footer.css'
+
+const CONTACT_FALLBACK = {
+  phone: '+94 912234503',
+  email: 'spdcsp@gmail.com',
+}
 
 /* ── Translations ────────────────────────────────────────────────────────── */
 const FOOTER_T = {
@@ -91,12 +97,27 @@ const FOOTER_T = {
 /* ── Footer ──────────────────────────────────────────────────────────────── */
 export default function Footer() {
   const [lang, setLang] = useState(() => localStorage.getItem('lang') || 'en')
+  const [contact, setContact] = useState(CONTACT_FALLBACK)
   const year = new Date().getFullYear()
 
   useEffect(() => {
     const h = (e) => setLang(e.detail || 'en')
     window.addEventListener('langChange', h)
     return () => window.removeEventListener('langChange', h)
+  }, [])
+
+  useEffect(() => {
+    let cancelled = false
+    siteSettingsApi.get()
+      .then(({ data }) => {
+        if (cancelled || !data) return
+        setContact({
+          phone: data.phone || CONTACT_FALLBACK.phone,
+          email: data.email || CONTACT_FALLBACK.email,
+        })
+      })
+      .catch((err) => console.error('Footer: failed to load site settings', err))
+    return () => { cancelled = true }
   }, [])
 
   const t  = FOOTER_T[lang] || FOOTER_T.en
@@ -119,7 +140,7 @@ export default function Footer() {
                   src="/branding/f-logo.svg"
                   alt="Planning Secretariat – Southern Province, Sri Lanka"
                   className="footer-logo"
-                  onError={(e) => { e.currentTarget.src = '/branding/logo.png' }}
+                  onError={(e) => { e.currentTarget.src = '/branding/logo.webp' }}
                 />
               </div>
 
@@ -130,11 +151,11 @@ export default function Footer() {
                 </li>
                 <li className="footer-contact-item">
                   <span className="footer-contact-icon-wrap"><FiPhone size={15} /></span>
-                  <span className="footer-contact-text">+94 912234503</span>
+                  <span className="footer-contact-text">{contact.phone}</span>
                 </li>
                 <li className="footer-contact-item">
                   <span className="footer-contact-icon-wrap"><FiMail size={15} /></span>
-                  <span className="footer-contact-text">spdcsp@gmail.com</span>
+                  <span className="footer-contact-text">{contact.email}</span>
                 </li>
               </ul>
 

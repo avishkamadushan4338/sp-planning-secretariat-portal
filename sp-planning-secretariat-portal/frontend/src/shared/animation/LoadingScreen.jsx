@@ -15,7 +15,7 @@ import { useEffect, useRef, useState } from 'react'
 import { motion, AnimatePresence }     from 'framer-motion'
 import { useReducedMotion }            from '@/shared/hooks/useReducedMotion'
 
-const LOGO_PATH = '/branding/logo.png'
+const LOGO_PATH = '/branding/logo.webp'
 
 /* Government emblem fallback */
 function EmblemFallback() {
