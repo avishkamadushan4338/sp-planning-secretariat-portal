@@ -3,7 +3,7 @@
    Complete About section: Overview, Topic pages, Official profile pages.
    Light theme · Futuristic 2050 government UI
 ───────────────────────────────────────────────────────────────────────────── */
-import { useState, useEffect, useMemo, memo, useCallback } from 'react'
+import { useState, useEffect, useMemo, useContext, createContext, memo, useCallback } from 'react'
 import { Link, useLocation, useParams, Route, Routes, Navigate } from 'react-router-dom'
 import { SeoHead } from '@/shared/seo'
 import { usePageHold } from '@/shared/hooks/usePageHold'
@@ -29,14 +29,74 @@ import {
 } from 'react-icons/hi'
 import './About.css'
 import '../departments/Departments.css'
-import {
-  ABOUT_TOPICS,
-  KEY_OFFICIALS,
-  DEPUTY_DIRECTORS,
-  ALL_QUICK_LINKS,
-} from './aboutData'
+import { ABOUT_TOPICS } from './aboutData'
+import { staffApi, aboutOverviewApi, aboutFunctionsApi } from '@/features/cms/cmsContentApi'
+import { resolveUploadUrl } from '@/shared/utils/resolveUploadUrl'
 import OrganizationStructureChart from './OrganizationStructureChart'
 import HistoryPage from './History'
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Staff → About-page-shape adapters
+   Key Officials (tier: deputy-secretary, director) and Deputy Directors
+   (tier: deputy-director) used to be hardcoded KEY_OFFICIALS/DEPUTY_DIRECTORS
+   arrays in aboutData.js. They now come from staffApi.list() and are mapped
+   into the same shape the route-generation and profile pages below expect
+   (id/path/label/name/position/photo/responsibilities/contact/...).
+───────────────────────────────────────────────────────────────────────────── */
+function staffToOfficial(s) {
+  return {
+    id: s.id,
+    path: `/about/${s.id}`,
+    label: s.position?.en || '',
+    labelSi: s.position?.si || '',
+    labelTa: s.position?.ta || '',
+    name: s.name?.en || '',
+    position: s.position?.en || '',
+    department: 'Planning Secretariat, Southern Province',
+    positionRank: s.positionRank || s.position?.en || '',
+    photo: resolveUploadUrl(s.photo),
+    heroTitle: s.position?.en || '',
+    heroSub: '',
+    icon: s.tier === 'deputy-secretary' ? 'deputy-sec' : 'director',
+    responsibilities: (s.responsibilities?.en?.length ? s.responsibilities.en : []),
+    contact: {
+      phone: s.phone || '',
+      email: s.email || '',
+      office: s.office || 'Planning Secretariat, Southern Province',
+    },
+  }
+}
+
+function staffToDeputyDirector(s, index) {
+  // Route id/path segment mirrors the legacy DEPUTY_DIRECTORS array ('1'..'6'
+  // by list position), NOT positionNumber (which is a Roman numeral label).
+  const routeId = String(index + 1)
+  return {
+    id: routeId,
+    path: `/about/deputy-directors/${routeId}`,
+    label: `Deputy Director ${s.positionNumber || ''}`.trim(),
+    name: s.name?.en || '',
+    position: s.position?.en || '',
+    positionNumber: s.positionNumber || '',
+    department: `Planning Division – ${s.positionNumber || ''}`.trim(),
+    photo: resolveUploadUrl(s.photo),
+    heroTitle: s.position?.en || '',
+    heroSub: 'Deputy Director of the Southern Province Planning Secretariat.',
+    responsibilities: (s.responsibilities?.en?.length ? s.responsibilities.en : []),
+    contact: {
+      phone: s.phone || '',
+      email: s.email || '',
+      office: s.office || 'Planning Secretariat, Southern Province',
+    },
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   AboutStaffContext — fetched once at the About() root, consumed by
+   AboutLayout's sidebar/quick-link components and the route generation below
+   without threading props through every call site.
+───────────────────────────────────────────────────────────────────────────── */
+const AboutStaffContext = createContext({ keyOfficials: [], deputyDirectors: [] })
 
 /* ─────────────────────────────────────────────────────────────────────────────
    Helpers
@@ -163,9 +223,37 @@ const AboutHero = memo(function AboutHero({ title, sub }) {
 })
 
 /* ─────────────────────────────────────────────────────────────────────────────
+   useAllQuickLinks — builds the ALL_QUICK_LINKS-shaped sidebar data from the
+   fetched staff context (replaces the old hardcoded aboutData.js export).
+───────────────────────────────────────────────────────────────────────────── */
+function useAllQuickLinks() {
+  const { keyOfficials } = useContext(AboutStaffContext)
+  return useMemo(() => [
+    { group: 'About', items: ABOUT_TOPICS },
+    {
+      group: 'Key Officials',
+      items: [
+        ...keyOfficials,
+        {
+          id: 'deputy-directors',
+          path: '/about/deputy-directors',
+          label: 'Deputy Directors',
+          labelSi: 'නියෝජ්‍ය අධ්‍යක්ෂවරු',
+          labelTa: 'துணை இயக்குநர்கள்',
+          heroTitle: 'Deputy Directors',
+          heroSub: 'Planning team deputy directors of the Southern Province Planning Secretariat.',
+          icon: 'team',
+        },
+      ],
+    },
+  ], [keyOfficials])
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
    AboutQuickLinks — Sidebar (desktop)
 ───────────────────────────────────────────────────────────────────────────── */
 const AboutQuickLinks = memo(function AboutQuickLinks({ activePath }) {
+  const allQuickLinks = useAllQuickLinks()
   return (
     <aside className="ab-sidebar" aria-label="About quick links">
       <div className="ab-sidebar__inner">
@@ -174,7 +262,7 @@ const AboutQuickLinks = memo(function AboutQuickLinks({ activePath }) {
           <span className="ab-sidebar__header-title">Quick Links</span>
         </div>
 
-        {ALL_QUICK_LINKS.map((group) => (
+        {allQuickLinks.map((group) => (
           <div key={group.group} className="ab-sidebar__group">
             <p className="ab-sidebar__group-label" aria-hidden="true">{group.group}</p>
             {group.items.map((item) => {
@@ -204,11 +292,12 @@ const AboutQuickLinks = memo(function AboutQuickLinks({ activePath }) {
 ───────────────────────────────────────────────────────────────────────────── */
 const AboutQuickLinksMobile = memo(function AboutQuickLinksMobile({ activePath }) {
   const [open, setOpen] = useState(false)
+  const allQuickLinks = useAllQuickLinks()
 
   const toggle = useCallback(() => setOpen(v => !v), [])
 
   const activeLabel = useMemo(() => {
-    for (const g of ALL_QUICK_LINKS) {
+    for (const g of allQuickLinks) {
       for (const item of g.items) {
         if (activePath === item.path ||
           (item.path === '/about/deputy-directors' && activePath.startsWith('/about/deputy-directors'))) {
@@ -217,7 +306,7 @@ const AboutQuickLinksMobile = memo(function AboutQuickLinksMobile({ activePath }
       }
     }
     return 'Quick Links'
-  }, [activePath])
+  }, [activePath, allQuickLinks])
 
   return (
     <nav className="ab-quicklinks-mobile" aria-label="About navigation (mobile)">
@@ -244,7 +333,7 @@ const AboutQuickLinksMobile = memo(function AboutQuickLinksMobile({ activePath }
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.26, ease: [0.16, 1, 0.3, 1] }}
           >
-            {ALL_QUICK_LINKS.map((group) => (
+            {allQuickLinks.map((group) => (
               <div key={group.group}>
                 <p className="ab-quicklinks-mobile__group-label" aria-hidden="true">{group.group}</p>
                 {group.items.map((item) => {
@@ -276,7 +365,8 @@ const AboutQuickLinksMobile = memo(function AboutQuickLinksMobile({ activePath }
    AboutQuickLinksTablet — horizontal scrolling pills (tablet)
 ───────────────────────────────────────────────────────────────────────────── */
 const AboutQuickLinksTablet = memo(function AboutQuickLinksTablet({ activePath }) {
-  const allItems = useMemo(() => ALL_QUICK_LINKS.flatMap(g => g.items), [])
+  const allQuickLinks = useAllQuickLinks()
+  const allItems = useMemo(() => allQuickLinks.flatMap(g => g.items), [allQuickLinks])
   return (
     <nav className="ab-quicklinks-tablet" aria-label="About navigation (tablet)">
       {allItems.map((item) => {
@@ -328,71 +418,9 @@ const FD_ICON_COMPONENTS = [
   FiAlignLeft, FiTrendingUp,
 ]
 
-const FD_DATA = {
-  en: {
-    sectionLabel: 'Functions & Duties',
-    intro: 'The Planning Secretariat performs key responsibilities in development planning, coordination, monitoring, evaluation, reporting, and policy guidance.',
-    duties: [
-      'Obtaining estimates related to the development plan for the coming year from the 05 Provincial Ministries and submitting them to the Finance Commission.',
-      'Obtaining the allocations allocated to each ministry for the coming year from the Finance Commission and preparing the development plan accordingly.',
-      'Evaluating the projects included in the development plan for the coming year prepared and submitted by the ministries and discussing them with the Finance Commission.',
-      'Submitting the prepared development plan for the coming year for approval from the Finance Commission.',
-      'Giving approval to the relevant ministries for implementation after obtaining the approval of the Finance Commission for the development plan.',
-      'Preparing the provincial development plan and district development plans related to the year and submitting them to the relevant institutions.',
-      'Monitoring and following up on the projects implemented by the ministries, departments and other affiliated institutions.',
-      'Monthly physical and financial progress review of the ongoing annual development plan and holding progress review meetings.',
-      'Preparing quarterly progress reports and submitting them to the relevant institutions.',
-      'Collecting information on bills and pending projects at the end of the year (as of December 31).',
-      'Identifying development objectives, strategies, methodologies and formulating policy recommendations.',
-      'Preparing appropriate medium and long-term investment programs for the Southern Province through coordination with national level policy-making departments and obtaining technical advice.',
-      'Studying, analyzing and compiling information on the socio-economic conditions, resource potential, problems and needs in the province.',
-      'Coordinating with the planning units of the Divisional Secretariats and Local Government Institutions in preparing the Provincial Development Plan and providing necessary guidance.',
-    ],
-    font: "'Plus Jakarta Sans', sans-serif",
-  },
-  si: {
-    sectionLabel: 'කාර්යයන්',
-    intro: 'සැලසුම් ලේකම් කාර්යාලය සංවර්ධන සැලසුම් කිරීම, සම්බන්ධීකරණය, අධීක්‍ෂණය, ඇගයීම, වාර්තා කිරීම සහ ප්‍රතිපත්ති මාර්ගෝපදේශ ක්ෂේත්‍රවල ප්‍රධාන වගකීම් ඉටු කරයි.',
-    duties: [
-      'ඉදිරි වර්ෂය සඳහා සංවර්ධන සැලැස්මට අදාල ඇස්තමේන්තු පළාත් අමාත්‍යාංශ 05 මගින් ගෙන්වා ගැනීම හා මුදල් කොමිෂන් සභාව වෙත ඉදිරිපත් කිරිම.',
-      'ඉදිරි වර්ෂය සඳහා එක් එක් අමාත්‍යාංශ වෙත වෙන් කරන ලද ප්‍රතිපාදන මුදල් කොමිෂන් සභාව මගින් ගෙන්වා ගැනීම හා ඒ අනුව සංවර්ධන සැලැස්ම සකස් කිරිම.',
-      'අමාත්‍යාංශ මගින් සකස් කර යොමු කරනු ලබන ඉදිරි වර්ෂයේ සංවර්ධන සැලැස්මේ ඇතුලත් ව්‍යාපෘති සම්බන්ධව ඇගයුම් කිරීම හා මුදල් කොමිෂන් සභාව සමඟ සාකච්ඡා කිරීම.',
-      'සකස් කරන ලද ඉදිරි වර්ෂයේ සංවර්ධන සැලැස්ම සඳහා මුදල් කොමිෂන් සභාවේ එකඟතාවය ලබා ගැනීම සඳහා යොමු කිරීම.',
-      'සංවර්ධන සැලැස්ම සඳහා මුදල් කොම්ෂන් සභාවේ එකඟතාවය ලැබිමෙන් අනතුරුව ක්‍රියාත්මක කිරීම සඳහා අදාල අමාත්‍යාංශ වලට අනුමැතිය ලබා දීම.',
-      'වර්ෂයට අදාල පළාත් සංවර්ධන සැලැස්ම, දිස්ත්‍රික් සංවර්ධන සැලසුම් පිළියෙල කර අදාල ආයතන වෙත යොමු කිරීම.',
-      'අමාත්‍යාංශ අංශ හා අනෙකුත් අනුබද්ධිත ආයතන මගින් ක්‍රියාත්මක ව්‍යාපෘති අධීක්ෂණය හා පසු විපරම් කිරිම.',
-      'ක්‍රියාත්මක වාර්ෂික සංවර්ධන සැලැස්මේ භෞතික හා මුල්‍ය ප්‍රගතිය මාසිකව ගෙන්වා ගැනීම හා ප්‍රගති සමාලෝචන රැස්වීම් පැවැත්වීම.',
-      'කාර්තුමය ප්‍රගති වාර්තා සකස් කිරිම හා අදාල ආයතන වෙත යොමු කිරිම.',
-      'වර්ෂ අවසානයේ දී (දෙසැම්බර් 31 දිනට) අතැති බිල් හා අවිච්ඡේද ව්‍යාපෘති පිළිබඳ තොරතුරු රැස් කිරීම.',
-      'සංවර්ධන අරමුණු, උපායමාර්ග, ක්‍රමවේද හඳුනා ගැනිම හා ප්‍රතිපත්ති නිර්දේශ සම්පාදනය.',
-      'ජාතික මට්ටමේ ප්‍රතිපත්ති සම්පාදන අංශ සමඟ සම්බන්ධිකරණය හා තාක්ෂණික උපදෙස් ලබාගැනිම තුළින් දකුණු පළාත සඳහා උචිත මධ්‍ය කාලින හා දිර්ඝ කාලින ආයෝජන වැඩසටහන් පිළියෙළ කිරිම.',
-      'පළාත තුළ පවතින සමාජ ආර්ථික තත්ත්වයන් සම්පත් විභවතාවයන්, ගැටළු හා අවශ්‍යතාවයන් අධ්‍යනය කිරිම, විශ්ලේෂණය කිරිම හා තොරතුරු සම්පාදනය කිරිම.',
-      'පළාත් සංවර්ධන සැලැස්ම සකස් කිරීමේදී, ප්‍රාදේශිය ලේකම් කාර්යාල සහ පළාත් පාලන ආයතන සැලසුම් ඒකක සම්බන්ධීකරණය හා අවශ්‍ය මාර්ගෝපදේශකත්වය සැපයීම.',
-    ],
-    font: "'Noto Sans Sinhala', sans-serif",
-  },
-  ta: {
-    sectionLabel: 'பணிகள்',
-    intro: 'திட்டமிடல் செயலகம் வளர்ச்சித் திட்டமிடல், ஒருங்கிணைப்பு, கண்காணிப்பு, மதிப்பீடு, அறிக்கையிடல் மற்றும் கொள்கை வழிகாட்டுதல் ஆகிய முக்கிய பொறுப்புகளை நிறைவேற்றுகிறது.',
-    duties: [
-      'வரும் ஆண்டிற்கான வளர்ச்சித் திட்டம் தொடர்பான மதிப்பீடுகளை 05 மாகாண அமைச்சகங்களிடமிருந்து பெற்று, அவற்றை நிதி ஆணையத்திடம் சமர்ப்பித்தல்.',
-      'வரும் ஆண்டிற்காக ஒவ்வொரு அமைச்சகத்திற்கும் ஒதுக்கப்பட்ட நிதி ஒதுக்கீடுகளை நிதி ஆணையத்திடமிருந்து பெற்று, அதற்கேற்ப வளர்ச்சித் திட்டத்தைத் தயாரித்தல்.',
-      'அமைச்சகங்களால் தயாரிக்கப்பட்டு சமர்ப்பிக்கப்பட்ட, வரும் ஆண்டிற்கான வளர்ச்சித் திட்டத்தில் உள்ள திட்டங்களை மதிப்பீடு செய்து, நிதி ஆணையத்துடன் விவாதித்தல்.',
-      'தயாரிக்கப்பட்ட, வரும் ஆண்டிற்கான வளர்ச்சித் திட்டத்தை நிதி ஆணையத்தின் ஒப்புதலுக்காகச் சமர்ப்பித்தல்.',
-      'வளர்ச்சித் திட்டத்திற்கு நிதி ஆணையத்தின் ஒப்புதலைப் பெற்ற பிறகு, அதனைச் செயல்படுத்துவதற்காக சம்பந்தப்பட்ட அமைச்சகங்களுக்கு ஒப்புதல் அளித்தல்.',
-      'அந்த ஆண்டிற்கான மாகாண வளர்ச்சித் திட்டம் மற்றும் மாவட்ட வளர்ச்சித் திட்டங்களைத் தயாரித்து, அவற்றை சம்பந்தப்பட்ட நிறுவனங்களுக்குச் சமர்ப்பித்தல்.',
-      'அமைச்சகங்கள், துறைகள் மற்றும் பிற இணைக்கப்பட்ட நிறுவனங்களால் செயல்படுத்தப்படும் திட்டங்களைக் கண்காணித்து, பின்தொடர்தல்.',
-      'நடைபெற்று வரும் ஆண்டு வளர்ச்சித் திட்டத்தின் மாதாந்திர கள மற்றும் நிதி முன்னேற்றத்தைக் கண்காணித்து, முன்னேற்ற ஆய்வுக் கூட்டங்களை நடத்துதல்.',
-      'காலாண்டு முன்னேற்ற அறிக்கைகளைத் தயாரித்து, அவற்றை சம்பந்தப்பட்ட நிறுவனங்களுக்குச் சமர்ப்பித்தல்.',
-      'ஆண்டின் இறுதியில் (டிசம்பர் 31 நிலவரப்படி) மசோதாக்கள் மற்றும் நிலுவையில் உள்ள திட்டங்கள் குறித்த தகவல்களைச் சேகரித்தல்.',
-      'வளர்ச்சி நோக்கங்கள், உத்திகள், வழிமுறைகளைக் கண்டறிந்து, கொள்கைப் பரிந்துரைகளை உருவாக்குதல்.',
-      'தேசிய அளவிலான கொள்கை வகுக்கும் துறைகளுடன் ஒருங்கிணைந்து மற்றும் தொழில்நுட்ப ஆலோசனைகளைப் பெற்று, தெற்கு மாகாணத்திற்கான பொருத்தமான நடுத்தர மற்றும் நீண்ட கால முதலீட்டுத் திட்டங்களைத் தயாரித்தல்.',
-      'மாகாணத்தின் சமூக-பொருளாதார நிலைமைகள், வள ஆற்றல், பிரச்சினைகள் மற்றும் தேவைகள் குறித்த தகவல்களை ஆய்வு செய்தல், பகுப்பாய்வு செய்தல் மற்றும் தொகுத்தல்.',
-      'மாகாண வளர்ச்சித் திட்டத்தைத் தயாரிப்பதில் பிரதேச செயலகங்கள் மற்றும் உள்ளாட்சி நிறுவனங்களின் திட்டமிடல் பிரிவுகளுடன் ஒருங்கிணைந்து, தேவையான வழிகாட்டுதலை வழங்குதல்.',
-    ],
-    font: "'Noto Sans Tamil', sans-serif",
-  },
-}
+/* Functions & Duties content now comes from aboutFunctionsApi.get() (see
+   FunctionsDutiesPage below) — replaces the previously hardcoded FD_DATA
+   module constant. */
 
 /* ─────────────────────────────────────────────────────────────────────────────
    useLang — reads localStorage 'lang' key (same system as other pages)
@@ -424,7 +452,19 @@ function useLang() {
 ───────────────────────────────────────────────────────────────────────────── */
 function FunctionsDutiesPage({ topic }) {
   const lang = useLang()
-  const t = FD_DATA[lang] ?? FD_DATA.en
+  const [data, setData] = useState(null)
+
+  useEffect(() => {
+    let cancelled = false
+    aboutFunctionsApi.get()
+      .then(({ data }) => { if (!cancelled) setData(data) })
+      .catch((err) => console.error('FunctionsDutiesPage: failed to load functions', err))
+    return () => { cancelled = true }
+  }, [])
+
+  if (!data) return null
+
+  const t = data[lang] ?? data.en
   const isNonLatin = lang === 'si' || lang === 'ta'
 
   return (
@@ -801,7 +841,8 @@ function DeputyDirectorProfilePageWrapper() {
 
 function DeputyDirectorProfilePage() {
   const { id } = useParams()
-  const dd = useMemo(() => DEPUTY_DIRECTORS.find(d => d.id === id), [id])
+  const { deputyDirectors } = useContext(AboutStaffContext)
+  const dd = useMemo(() => deputyDirectors.find(d => d.id === id), [id, deputyDirectors])
 
   if (!dd) {
     return <Navigate to="/about/deputy-directors" replace />
@@ -920,6 +961,7 @@ function DeputyDirectorProfilePage() {
    DeputyDirectorsListPage — grid of all 6 DDs
 ───────────────────────────────────────────────────────────────────────────── */
 function DeputyDirectorsListPage() {
+  const { deputyDirectors } = useContext(AboutStaffContext)
   return (
     <AboutLayout
       heroTitle="Deputy Directors – Planning"
@@ -945,7 +987,7 @@ function DeputyDirectorsListPage() {
           role="list"
           aria-label="Deputy Directors"
         >
-          {DEPUTY_DIRECTORS.map((dd) => (
+          {deputyDirectors.map((dd) => (
             <motion.div key={dd.id} variants={fadeUp} role="listitem">
               <Link
                 to={dd.path}
@@ -990,128 +1032,15 @@ const VALUE_ICONS = [
   FiStar, FiShield, FiFlag, FiLink,
 ]
 
-const overviewValues = {
-  en: {
-    sectionLabel: 'Values',
-    items: [
-      'Compassion',
-      'Working with integrity',
-      'Teamwork',
-      'Impartiality',
-      'Respect',
-      'Responsibility',
-      'Leadership',
-      'Integrity',
-    ],
-  },
-  si: {
-    sectionLabel: 'අගයන්',
-    items: [
-      'සායානුකම්පාව',
-      'අවංකව වැඩ කිරීම',
-      'සාමුහිකව කටයුතු කිරීම',
-      'අපක්ෂපාතීත්වය',
-      'ගරු කිරීම',
-      'වගවීම',
-      'නායකත්වය',
-      'අඛණ්ඩතාවය',
-    ],
-  },
-  ta: {
-    sectionLabel: 'விழுமியங்கள்',
-    items: [
-      'கருணை',
-      'நேர்மையுடன் பணியாற்றுதல்',
-      'குழுப்பணி',
-      'பாரபட்சமின்மை',
-      'மரியாதை',
-      'பொறுப்பு',
-      'தலைமைத்துவம்',
-      'ஒருங்கிணைப்பு',
-    ],
-  },
-}
-
-/* ─────────────────────────────────────────────────────────────────────────────
-   Objectives — multilingual data
-───────────────────────────────────────────────────────────────────────────── */
-const overviewObjectives = {
-  en: {
-    sectionLabel: 'Objectives',
-    items: [
-      'To control the provincial planning process in line with the national policies and guidelines of the Finance Commission.',
-      'To maintain a systematic operational and reporting process.',
-      'To coordinate the planning values of provincial ministries, departments, other institutions as well as the planning departments and line ministries of other provincial councils.',
-      'To develop the human resource capacity of the Planning and Accounting Office with the aim of providing solutions to the pressing problems of the province and especially in the neglected areas.',
-    ],
-  },
-  si: {
-    sectionLabel: 'අරමුණු',
-    items: [
-      'මුදල් කොමිසමේ ජාතික ප්‍රතිපත්ති හා මගපෙන්වීම් වලට අනුගත වෙමින් පළාත් සැලසුම් ක්‍රියාවලිය පාලනය කිරීම.',
-      'විධිමත් මෙහෙයුම් හා අහයුම් ක්‍රියාවලියක් පවත්වාගෙන යාම.',
-      'පළාත් අමාත්‍යාශ, අංශ, අනෙකුත් ආයතනවල මෙන්ම අනෙකුත් පළාත් සභාවල සැලසුම් අංශ හා රේඛීය අමාත්‍යංශවල සැලසුම් අගයන් සම්බන්ධීකරණය.',
-      'පළාතේ සහ විශේෂයෙන්ම අවධානයට ලක් නොවූ ප්‍රදේශවල දැවෙන ගැටළු සඳහා විසඳුම් සැපයීමේ අරමුණෙන් සැලසුම් හා ගිණුම් කාර්යාලයේ මානව සම්පත් ධාරිතාව සංවර්ධනය කිරීම.',
-    ],
-  },
-  ta: {
-    sectionLabel: 'நோக்கங்கள்',
-    items: [
-      'தேசியக் கொள்கைகள் மற்றும் நிதி ஆணையத்தின் வழிகாட்டுதல்களுக்கு இணங்க மாகாணத் திட்டமிடல் செயல்முறையைக் கட்டுப்படுத்துதல்.',
-      'ஒரு முறையான செயல்பாட்டு மற்றும் அறிக்கையிடல் செயல்முறையைப் பராமரித்தல்.',
-      'மாகாண அமைச்சகங்கள், துறைகள், பிற நிறுவனங்கள் மற்றும் பிற மாகாண சபைகளின் திட்டமிடல் துறைகள் மற்றும் தொடர்புடைய அமைச்சகங்களின் திட்டமிடல் மதிப்புகளை ஒருங்கிணைத்தல்.',
-      'மாகாணத்தின், குறிப்பாகப் புறக்கணிக்கப்பட்ட பகுதிகளின், அவசரப் பிரச்சினைகளுக்குத் தீர்வு காணும் நோக்கில் திட்டமிடல் மற்றும் கணக்குப்பதிவு அலுவலகத்தின் மனிதவளத் திறனை மேம்படுத்துதல்.',
-    ],
-  },
-}
-
-/* ─────────────────────────────────────────────────────────────────────────────
-   Awards — static data (multilingual labels + placeholder images)
-───────────────────────────────────────────────────────────────────────────── */
-const overviewAwards = {
-  sectionLabel: { en: 'Our Awards', si: 'අපගේ සම්මාන', ta: 'எங்கள் විருதுகள்' },
-  items: [
-    {
-      id: 'award-1',
-      img: '/branding/tp1.png',
-      title: { en: 'National Productivity Award 2020', si: 'ජාතික ඵලදායිතා සම්මානය 2020', ta: 'தேசிய உற்பத்தித்திறன் விருது 2020' },
-      year: '2020',
-      desc: {
-        en: 'Inter Departments Special Commendation',
-        si: 'අන්තර් දෙපාර්තමේන්තු විශේෂ ප්‍රශංසා සම්මානය',
-        ta: 'துறைகளுக்கிடையிலான சிறப்பு பாராட்டு',
-      },
-    },
-    {
-      id: 'award-2',
-      img: '/branding/tp2.png',
-      title: { en: 'Best Annual Reports and Accounts - 2022', si: 'හොඳම වාර්ෂික වාර්තා සහ ගිණුම් - 2022', ta: 'சிறந்த வருடாந்திர அறிக்கைகள் மற்றும் கணக்குகள் - 2022' },
-      year: '2022',
-      desc: {
-        en: 'Best Annual Reports and Accounts - 2022',
-        si: 'හොඳම වාර්ෂික වාර්තා සහ ගිණුම් - 2022',
-        ta: 'சிறந்த வருடாந்திர அறிக்கைகள் மற்றும் கணக்குகள் - 2022',
-      },
-    },
-    {
-      id: 'award-3',
-      img: '/branding/tp3.png',
-      title: { en: 'Unmodified Audit Opinion - 2022', si: 'අකෙලෙස් විගණන මතය - 2022', ta: 'மாற்றப்படாத தணிக்கை கருத்து - 2022' },
-      year: '2022',
-      desc: {
-        en: 'Unmodified Audit Opinion for Financial Statement of the year 2022 from National Audit Office',
-        si: '2022 වර්ෂයේ මූල්‍ය ප්‍රකාශය සඳහා ජාතික විගණන කාර්යාලයෙන් ලැබූ අකෙලෙස් විගණන මතය',
-        ta: '2022 ஆண்டின் நிதி அறிக்கைக்கான தேசிய தணிக்கை அலுவலகத்திடமிருந்து மாற்றப்படாத தணிக்கை கருத்து',
-      },
-    },
-  ],
-}
+/* Values, Objectives, and Awards content now come from aboutOverviewApi.get()
+   (see AboutOverviewDashboard below) — replaces the previously hardcoded
+   overviewValues / overviewObjectives / overviewAwards module constants. */
 
 /* ─────────────────────────────────────────────────────────────────────────────
    OverviewValues — animated glassmorphism value cards grid
 ───────────────────────────────────────────────────────────────────────────── */
-function OverviewValues({ lang }) {
-  const t = overviewValues[lang] ?? overviewValues.en
+function OverviewValues({ lang, data }) {
+  const t = data[lang] ?? data.en
   const fontFamily = lang === 'si'
     ? "'Noto Sans Sinhala', sans-serif"
     : lang === 'ta'
@@ -1169,8 +1098,8 @@ function OverviewValues({ lang }) {
 ───────────────────────────────────────────────────────────────────────────── */
 const OBJ_ICONS = [FiCompass, FiClipboard, FiLink, FiZap]
 
-function OverviewObjectives({ lang }) {
-  const t = overviewObjectives[lang] ?? overviewObjectives.en
+function OverviewObjectives({ lang, data }) {
+  const t = data[lang] ?? data.en
   const fontFamily = lang === 'si'
     ? "'Noto Sans Sinhala', sans-serif"
     : lang === 'ta'
@@ -1294,8 +1223,8 @@ function AwardCard({ award, lang }) {
   )
 }
 
-function OverviewAwards({ lang }) {
-  const sectionLabel = overviewAwards.sectionLabel[lang] ?? overviewAwards.sectionLabel.en
+function OverviewAwards({ lang, data }) {
+  const sectionLabel = data.sectionLabel[lang] ?? data.sectionLabel.en
 
   return (
     <motion.section
@@ -1315,7 +1244,7 @@ function OverviewAwards({ lang }) {
         role="list"
         aria-label={sectionLabel}
       >
-        {overviewAwards.items.map((award) => (
+        {data.items.map((award) => (
           <div key={award.id} role="listitem">
             <AwardCard award={award} lang={lang} />
           </div>
@@ -1326,75 +1255,22 @@ function OverviewAwards({ lang }) {
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────
-   Overview multilingual content
+   Overview multilingual content now comes from aboutOverviewApi.get() (see
+   AboutOverviewDashboard below) — replaces the previously hardcoded
+   overviewContent module constant.
 ───────────────────────────────────────────────────────────────────────────── */
-const overviewContent = {
-  en: {
-    introLabel: 'Introduction',
-    introTitle: 'Planning Secretariat of the Southern Province',
-    introParagraphs: [
-      'The Planning Secretariat of the Southern Province serves as the key provincial institution responsible for the development planning, policy coordination and the strategic management of public investment across the districts of Galle, Matara, and Hambantota. The Secretariat, established under the 13th Amendment of the Constitution which was the Provincial Councils Act, plays a leading role in guiding the socio-economic development of the Southern Province through integrated planning, evidence-based policy formulation, and effective resource allocation throughout the province.',
-      'The Secretariat works in close collaboration with provincial ministries, national government agencies, district and divisional administrative bodies, and development partners to formulate, implement, monitor, and evaluate development programs and projects that address the needs and aspirations of the people of the province. Its core responsibilities include the preparation of provincial development plans, appraisal of development proposals, coordination of annual and medium-term investment programs, monitoring project progress, and ensuring alignment with national development priorities and sustainable development goals.',
-      'With a multidisciplinary team of professional planners, statisticians, and technical staff, the Planning Secretariat promotes data-driven decision-making approaches and direction for efficient utilization of public resources. The institution also facilitates inter-agency coordination, policy integration, and development research to strengthen good governance and improve service delivery within the province.',
-      'Over the years, the Planning Secretariat has made significant contributions to regional development by supporting infrastructure improvement, rural development initiatives, climate adaptation planning, livelihood enhancement programmes, and environmentally sustainable projects. The Secretariat has also played a key role in introducing modern planning approaches, and strengthening project monitoring and evaluation systems.',
-      'Committed to transparency, sustainability, and inclusive growth, the Planning Secretariat continues to work towards building a resilient, prosperous, and people-centered province for future generations.',
-    ],
-    visionLabel: 'Vision',
-    visionText: 'Towards a prosperous Southern Province through balanced development.',
-    missionLabel: 'Mission',
-    missionText: 'To provide support and guidance to the institutions operating in the province to achieve sustainable development by optimally utilizing the limited resources available in the province.',
-    imageAlt: 'Southern Province Planning Secretariat office building',
-    officialGovt: 'Official Government Content',
-    officialGovtSub: 'Official portal for provincial development planning, policy coordination, and institutional oversight.',
-  },
-  si: {
-    introLabel: 'හැඳින්වීම',
-    introTitle: 'දකුණු පළාතේ සැලසුම් ලේකම් කාර්යාලය',
-    introParagraphs: [
-      'දකුණු පළාතේ සැලසුම් ලේකම් කාර්යාලය, ගාල්ල, මාතර සහ හම්බන්තොට යන දිස්ත්‍රික් තුන හරහා සංවර්ධන සැලසුම් කිරීම, ප්‍රතිපත්ති සම්බන්ධීකරණය සහ රාජ්‍ය ආයෝජන කළමනාකරණය සඳහා වගකිව යුතු ප්‍රධාන පළාත් ආයතනය ලෙස සේවය කරයි. ව්‍යවස්ථාවේ 13 වැනි සංශෝධනය වන පළාත් සභා පනත යටතේ ස්ථාපිත කරන ලද මෙම ලේකම් කාර්යාලය, ඒකාබද්ධ සැලසුම් කිරීම, සාක්ෂි මත පදනම් වූ ප්‍රතිපත්ති සකස් කිරීම සහ ඵලදායී සම්පත් වෙන් කිරීම හරහා දකුණු පළාතේ සමාජ-ආර්ථික සංවර්ධනය මෙහෙයවීමේ ප්‍රමුඛ භූමිකාවක් ඉටු කරයි.',
-      'ලේකම් කාර්යාලය, පළාත් අමාත්‍යාංශ, ජාතික රජයේ ආයතන, දිස්ත්‍රික් හා ප්‍රාදේශීය පරිපාලන ආයතන සහ සංවර්ධන හවුල්කරුවන් සමඟ සමීප සහයෝගිතාවෙන් ක්‍රියා කරමින් පළාතේ ජනතාගේ අවශ්‍යතා හා අභිලාෂයන් සපුරාලන සංවර්ධන වැඩසටහන් හා ව්‍යාපෘති සකස් කිරීම, ක්‍රියාත්මක කිරීම, අධීක්ෂණය කිරීම සහ ඇගයීම සිදු කරයි. එහි මූලික වගකීම් අතර පළාත් සංවර්ධන සැලසුම් සකස් කිරීම, සංවර්ධන යෝජනා ඇගයීම, වාර්ෂික හා මධ්‍යකාලීන ආයෝජන වැඩසටහන් සම්බන්ධීකරණය, ව්‍යාපෘති ප්‍රගතිය අධීක්ෂණය කිරීම සහ ජාතික සංවර්ධන ප්‍රමුඛතා හා තිරසාර සංවර්ධන ඉලක්ක සමඟ සමතුලිතතාව සහතික කිරීම ඇතුළත් වේ.',
-      'වෘත්තීය සැලසුම්කරුවන්, සංඛ්‍යාන විශේෂඥයන් සහ තාක්ෂණික කාර්ය මණ්ඩලයෙන් සමන්විත බහු-විෂය අධ්‍යයන කණ්ඩායමක් සහිතව, සැලසුම් ලේකම් කාර්යාලය රාජ්‍ය සම්පත් ඵලදායිව භාවිතා කිරීම සඳහා දත්ත-ක්‍රමවේදයන් හා දිශාවන් ප්‍රවර්ධනය කරයි. මෙම ආයතනය ද ඒජන්සි අතර සම්බන්ධීකරණය, ප්‍රතිපත්ති ඒකාබද්ධ කිරීම සහ සංවර්ධන පර්යේෂණ සඳහා පහසුකම් සපයමින් පළාත තුළ යහ පාලනය ශක්තිමත් කිරීමට හා සේවා ලබාදීම වැඩිදියුණු කිරීමට ද දායක වේ.',
-      'වසර ගණනාවක් පුරා, සැලසුම් ලේකම් කාර්යාලය යටිතල පහසුකම් වැඩිදියුණු කිරීමට, ග්‍රාමීය සංවර්ධන මුලපිරීම්, දේශගුණ අනුවර්තනය සැලසුම් කිරීම, ජීවන ශක්තිය ඉහළ නැංවීමේ වැඩසටහන් සහ පරිසර හිතකාමී ව්‍යාපෘති සඳහා සහාය ලබා දෙමින් ප්‍රාදේශීය සංවර්ධනයට සැලකිය යුතු දායකත්වයක් ලබා දී ඇත. නූතන සැලසුම් ක්‍රමවේද හඳුන්වාදීමේදී සහ ව්‍යාපෘති අධීක්ෂණ හා ඇගයීම් ක්‍රමවේද ශක්තිමත් කිරීමේදී ද ලේකම් කාර්යාලය ප්‍රධාන භූමිකාවක් ඉටු කර ඇත.',
-      'විනිවිදභාවය, තිරසාරභාවය සහ ඇතුළත් සංවර්ධනය කෙරෙහි කැපවූ සැලසුම් ලේකම් කාර්යාලය, අනාගත පරම්පරාවන් සඳහා ශක්තිමත්, සෞභාග්‍යමත් සහ ජනතා-කේන්ද්‍රීය පළාතක් ගොඩ නැංවීම සඳහා කටයුතු කිරීම ඉදිරියටත් සිදු කරයි.',
-    ],
-    visionLabel: 'දැක්ම',
-    visionText: 'තුලිත සංවර්ධනය තුළින් සෞභාග්‍යමත් දකුණක් කරා.',
-    missionLabel: 'මෙහෙවර',
-    missionText: 'පළාතේ ඇති සීමිත සම්පත් ප්‍රශස්ත ලෙස භාවිතා කිරීමෙන් තිරසාර සංවර්ධනයක් අත්කර ගැනීම සඳහා පළාතේ ක්‍රියාත්මක ආයතනවලට සහය ලබා දීම සහ මග පෙන්වීම.',
-    imageAlt: 'දකුණු පළාත් සැලසුම් ලේකම් කාර්යාල ගොඩනැගිල්ල',
-    officialGovt: 'නිල රජයේ අන්තර්ගතය',
-    officialGovtSub: 'පළාත් සංවර්ධන සැලසුම් කිරීම, ප්‍රතිපත්ති සම්බන්ධීකරණය සහ ආයතනික අධීක්ෂණය සඳහා නිල ද්වාරය.',
-  },
-  ta: {
-    introLabel: 'அறிமுகம்',
-    introTitle: 'தென் மாகாண திட்டமிடல் செயலகம்',
-    introParagraphs: [
-      'தென் மாகாண திட்டமிடல் செயலகம், காலி, மாத்தறை மற்றும் ஹம்பாந்தோட்டை என்ற மூன்று மாவட்டங்கள் முழுவதும் வளர்ச்சித் திட்டமிடல், கொள்கை ஒருங்கிணைப்பு மற்றும் பொது முதலீட்டின் மூலோபாய மேலாண்மைக்கு பொறுப்பான முக்கிய மாகாண நிறுவனமாக செயல்படுகிறது. அரசியலமைப்பின் 13ஆவது திருத்தமாகிய மாகாண சபைகள் சட்டத்தின் கீழ் நிறுவப்பட்ட இந்த செயலகம், ஒருங்கிணைந்த திட்டமிடல், சான்று சார்ந்த கொள்கை உருவாக்கம் மற்றும் பயனுள்ள வள ஒதுக்கீடு மூலம் தென் மாகாணத்தின் சமூக-பொருளாதார வளர்ச்சியை வழிநடத்துவதில் முன்னணி பங்கு வகிக்கிறது.',
-      'செயலகம், மாகாண அமைச்சகங்கள், தேசிய அரசு நிறுவனங்கள், மாவட்ட மற்றும் பிரிவு நிர்வாக அமைப்புகள் மற்றும் வளர்ச்சி கூட்டாளிகளுடன் நெருங்கிய ஒத்துழைப்புடன் செயல்பட்டு, மாகாண மக்களின் தேவைகள் மற்றும் அபிலாஷைகளை நிறைவேற்றும் வளர்ச்சித் திட்டங்கள் மற்றும் திட்டப்பணிகளை உருவாக்கவும், செயல்படுத்தவும், கண்காணிக்கவும் மற்றும் மதிப்பீடு செய்யவும் பணியாற்றுகிறது. மாகாண வளர்ச்சித் திட்டங்களை தயாரித்தல், வளர்ச்சி முன்மொழிவுகளை மதிப்பீடு செய்தல், வாரிய மற்றும் நடுத்தர கால முதலீட்டு திட்டங்களை ஒருங்கிணைத்தல், திட்டப்பணி முன்னேற்றத்தை கண்காணித்தல் மற்றும் தேசிய வளர்ச்சி முன்னுரிமைகள் மற்றும் நிலையான வளர்ச்சி இலக்குகளுடன் இணைவை உறுதி செய்தல் ஆகியவை இதன் முக்கிய பொறுப்புகளில் அடங்கும்.',
-      'தொழில்முறை திட்டமிடல் வல்லுநர்கள், புள்ளியியல் நிபுணர்கள் மற்றும் தொழில்நுட்ப ஊழியர்களை உள்ளடக்கிய பல்துறை குழுவுடன், திட்டமிடல் செயலகம் பொது வளங்களை திறமையாகப் பயன்படுத்துவதற்கான தரவு சார்ந்த முடிவெடுத்தல் அணுகுமுறைகளை மேம்படுத்துகிறது. இந்த நிறுவனம் நிறுவனங்களுக்கிடையிலான ஒருங்கிணைப்பு, கொள்கை ஒருங்கிணைப்பு மற்றும் வளர்ச்சி ஆராய்ச்சிக்கும் வசதிகளை வழங்கி, மாகாணத்தில் நல்லாட்சியை வலுப்படுத்தவும் சேவை வழங்கலை மேம்படுத்தவும் உதவுகிறது.',
-      'பல ஆண்டுகளாக, திட்டமிடல் செயலகம் உள்கட்டமைப்பு மேம்பாடு, கிராமப்புற வளர்ச்சி முன்முயற்சிகள், காலநிலை தகவமைப்பு திட்டமிடல், வாழ்வாதார மேம்பாட்டு திட்டங்கள் மற்றும் சுற்றுச்சூழல் நிலையான திட்டப்பணிகளை ஆதரிப்பதன் மூலம் பிராந்திய வளர்ச்சிக்கு குறிப்பிடத்தக்க பங்களிப்புகளை வழங்கியுள்ளது. நவீன திட்டமிடல் அணுகுமுறைகளை அறிமுகப்படுத்துவதிலும், திட்டப்பணி கண்காணிப்பு மற்றும் மதிப்பீட்டு முறைமைகளை வலுப்படுத்துவதிலும் செயலகம் முக்கிய பங்கு வகித்துள்ளது.',
-      'வெளிப்படைத்தன்மை, நிலைத்தன்மை மற்றும் உள்ளடக்கிய வளர்ச்சிக்கு அர்ப்பணிக்கப்பட்ட திட்டமிடல் செயலகம், எதிர்கால தலைமுறைகளுக்கு ஒரு நெகிழ்திறன் மிக்க, வளமான மற்றும் மக்கள் மையமான மாகாணத்தை கட்டியெழுப்புவதற்காக தொடர்ந்து பணியாற்றுகிறது.',
-    ],
-    visionLabel: 'பார்வை',
-    visionText: 'சமச்சீரான வளர்ச்சியின் மூலம் ஒரு வளமான தென்பகுதியை நோக்கி.',
-    missionLabel: 'நோக்கம்',
-    missionText: 'மாகாணத்தில் உள்ள வரையறுக்கப்பட்ட வளங்களை உகந்த முறையில் பயன்படுத்தி, நிலையான வளர்ச்சியை அடைவதற்கு, மாகாணத்தில் செயல்படும் நிறுவனங்களுக்கு ஆதரவும் வழிகாட்டுதலும் வழங்குதல்.',
-    imageAlt: 'தென் மாகாண திட்டமிடல் செயலக அலுவலக கட்டிடம்',
-    officialGovt: 'அரசு உத்தியோகபூர்வ உள்ளடக்கம்',
-    officialGovtSub: 'மாகாண வளர்ச்சித் திட்டமிடல், கொள்கை ஒருங்கிணைப்பு மற்றும் நிறுவன மேற்பார்வைக்கான உத்தியோகபூர்வ போர்டல்.',
-  },
-}
 
 /* ─────────────────────────────────────────────────────────────────────────────
    OverviewIntro — Image + text two-column introduction
 ───────────────────────────────────────────────────────────────────────────── */
-function OverviewIntro({ t, lang }) {
+function OverviewIntro({ t, lang, image, establishedBadge }) {
   const [imgError, setImgError] = useState(false)
   const fontFamily = lang === 'si'
     ? "'Noto Sans Sinhala', sans-serif"
     : lang === 'ta'
       ? "'Noto Sans Tamil', sans-serif"
       : 'inherit'
+  const imgSrc = resolveUploadUrl(image)
 
   return (
     <motion.section
@@ -1409,7 +1285,7 @@ function OverviewIntro({ t, lang }) {
       <div className="ab-ov-intro__img-col">
         <div className="ab-ov-intro__img-frame" aria-label={t.imageAlt} role="img">
           <img
-            src="/branding/office.png"
+            src={imgSrc}
             alt={t.imageAlt}
             className="ab-ov-intro__img"
             onError={e => { e.currentTarget.style.display = 'none'; setImgError(true) }}
@@ -1425,7 +1301,7 @@ function OverviewIntro({ t, lang }) {
           )}
           <div className="ab-ov-intro__img-badge" aria-hidden="true">
             <FiAward className="ab-ov-intro__img-badge-icon" />
-            <span>Est. 1978</span>
+            <span>{establishedBadge}</span>
           </div>
         </div>
       </div>
@@ -1569,7 +1445,21 @@ function OrganizationStructurePage({ topic }) {
 ───────────────────────────────────────────────────────────────────────────── */
 function AboutOverviewDashboard() {
   const lang = useLang()
-  const t = overviewContent[lang] ?? overviewContent.en
+  const [data, setData] = useState(null)
+  const { keyOfficials, deputyDirectors } = useContext(AboutStaffContext)
+
+  useEffect(() => {
+    let cancelled = false
+    aboutOverviewApi.get()
+      .then(({ data }) => { if (!cancelled) setData(data) })
+      .catch((err) => console.error('AboutOverviewDashboard: failed to load overview', err))
+    return () => { cancelled = true }
+  }, [])
+
+  if (!data) return null
+
+  const t = data.intro[lang] ?? data.intro.en
+  const establishedBadge = data.establishedBadge[lang] ?? data.establishedBadge.en
 
   return (
     <AboutLayout
@@ -1583,19 +1473,19 @@ function AboutOverviewDashboard() {
         variants={stagger(0.09)}
       >
         {/* ── Introduction section ── */}
-        <OverviewIntro t={t} lang={lang} />
+        <OverviewIntro t={t} lang={lang} image={data.image} establishedBadge={establishedBadge} />
 
         {/* ── Vision & Mission cards ── */}
         <VisionMissionCards t={t} lang={lang} />
 
         {/* ── Values ── */}
-        <OverviewValues lang={lang} />
+        <OverviewValues lang={lang} data={data.values} />
 
         {/* ── Awards ── */}
-        <OverviewAwards lang={lang} />
+        <OverviewAwards lang={lang} data={data.awards} />
 
         {/* ── Objectives ── */}
-        <OverviewObjectives lang={lang} />
+        <OverviewObjectives lang={lang} data={data.objectives} />
 
         {/* ── Key Officials — mobile + tablet only (hidden on desktop) ── */}
         <motion.section
@@ -1613,7 +1503,7 @@ function AboutOverviewDashboard() {
 
           {/* Senior officials row */}
           <motion.div className="ab-ov-officials__row" variants={stagger(0.07)}>
-            {KEY_OFFICIALS.map((official) => (
+            {keyOfficials.map((official) => (
               <motion.div key={official.id} variants={fadeUp}>
                 <Link
                   to={official.path}
@@ -1637,7 +1527,7 @@ function AboutOverviewDashboard() {
           <motion.div className="ab-ov-dd-block" variants={fadeUp}>
             <p className="ab-ov-section-label ab-ov-section-label--sub">Planning Team — Deputy Directors</p>
             <div className="ab-ov-dd-grid" role="list" aria-label="Deputy Directors">
-              {DEPUTY_DIRECTORS.map((dd) => (
+              {deputyDirectors.map((dd) => (
                 <div key={dd.id} role="listitem">
                   <Link
                     to={dd.path}
@@ -1692,10 +1582,35 @@ function SubHold({ holdKey, pageKey, children }) {
 
 export default function About() {
   const held = usePageHold('about')
+  const [keyOfficials, setKeyOfficials]         = useState([])
+  const [deputyDirectors, setDeputyDirectors]   = useState([])
+
+  useEffect(() => {
+    let cancelled = false
+    staffApi.list()
+      .then(({ data }) => {
+        if (cancelled || !Array.isArray(data)) return
+        const officials = data
+          .filter((s) => s.tier === 'deputy-secretary' || s.tier === 'director')
+          .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+          .map(staffToOfficial)
+        const deputies = data
+          .filter((s) => s.tier === 'deputy-director')
+          .sort((a, b) => (a.order ?? 0) - (b.order ?? 0) || String(a.positionNumber).localeCompare(String(b.positionNumber)))
+          .map(staffToDeputyDirector)
+        setKeyOfficials(officials)
+        setDeputyDirectors(deputies)
+      })
+      .catch((err) => console.error('About: failed to load staff', err))
+    return () => { cancelled = true }
+  }, [])
+
   if (held) return <ComingSoon pageKey="about" />
 
+  const staffContextValue = { keyOfficials, deputyDirectors }
+
   return (
-    <>
+    <AboutStaffContext.Provider value={staffContextValue}>
       <SeoHead page="about" />
       <Routes>
       {/* Overview dashboard */}
@@ -1727,7 +1642,7 @@ export default function About() {
       })}
 
       {/* Key Officials */}
-      {KEY_OFFICIALS.map((official) => (
+      {keyOfficials.map((official) => (
         <Route key={official.id} path={official.id} element={
           <SubHold holdKey={`about__${official.id}`} pageKey="about">
             <OfficialProfilePage official={official} />
@@ -1752,6 +1667,6 @@ export default function About() {
       {/* Fallback */}
       <Route path="*" element={<Navigate to="/about" replace />} />
     </Routes>
-    </>
+    </AboutStaffContext.Provider>
   )
 }

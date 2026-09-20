@@ -4,6 +4,8 @@ import { Link } from 'react-router-dom'
 import { FiUser, FiPhone, FiMail, FiMapPin, FiChevronLeft, FiChevronRight, FiBriefcase } from 'react-icons/fi'
 import { usePageHold } from '@/shared/hooks/usePageHold'
 import ComingSoon from '@/shared/components/ComingSoon'
+import { staffApi } from '@/features/cms/cmsContentApi'
+import { resolveUploadUrl } from '@/shared/utils/resolveUploadUrl'
 import '../departments/Departments.css'
 import './AboutDeputySecretary.css'
 
@@ -140,6 +142,7 @@ export default function AboutDeputySecretary() {
   const held = usePageHold('about-deputy-secretary')
   const [lang, setLang] = useState(() => localStorage.getItem('lang') || 'en')
   const [imgOk, setImgOk] = useState(true)
+  const [staff, setStaff] = useState(null)
 
   useEffect(() => {
     const h = () => setLang(localStorage.getItem('lang') || 'en')
@@ -147,8 +150,37 @@ export default function AboutDeputySecretary() {
     return () => window.removeEventListener('langChange', h)
   }, [])
 
+  useEffect(() => {
+    let cancelled = false
+    staffApi.list()
+      .then(({ data }) => {
+        if (cancelled || !Array.isArray(data)) return
+        const found = data.find((s) => s.tier === 'deputy-secretary')
+        if (found) setStaff(found)
+      })
+      .catch((err) => console.error('AboutDeputySecretary: failed to load staff', err))
+    return () => { cancelled = true }
+  }, [])
+
   const meta = LANG_META[lang] || LANG_META.en
-  const t    = T[lang]         || T.en
+  const fallback = T[lang] || T.en
+  const t = staff
+    ? {
+        ...fallback,
+        badge:            staff.position?.[lang]   || staff.position?.en   || fallback.badge,
+        name:             staff.name?.[lang]        || staff.name?.en       || fallback.name,
+        position:         staff.position?.[lang]    || staff.position?.en   || fallback.position,
+        experience:       staff.experience?.[lang]  || staff.experience?.en || fallback.experience,
+        description:      staff.bio?.[lang]          || staff.bio?.en        || fallback.description,
+        responsibilities: (staff.responsibilities?.[lang]?.length ? staff.responsibilities[lang] : null)
+                            || (staff.responsibilities?.en?.length ? staff.responsibilities.en : null)
+                            || fallback.responsibilities,
+        phone:            staff.phone  || fallback.phone,
+        email:            staff.email  || fallback.email,
+        office:           staff.office || fallback.office,
+      }
+    : fallback
+  const photoSrc = resolveUploadUrl(staff?.photo || '/branding/sec-prof.webp')
 
   const staggerV = { hidden: {}, visible: { transition: { staggerChildren: 0.09 } } }
   const itemV    = { hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0, transition: { duration: 0.55, ease: [0.16, 1, 0.3, 1] } } }
@@ -175,7 +207,7 @@ export default function AboutDeputySecretary() {
           <motion.div initial="hidden" animate="visible" variants={imgV} style={{ display: 'flex', justifyContent: 'center' }}>
             <div className="dprof__img-frame" role="img" aria-label={t.name}>
               {imgOk
-                ? <img src="/branding/sec-prof.png" alt={t.name} className="dprof__img" onError={() => setImgOk(false)} />
+                ? <img src={photoSrc} alt={t.name} className="dprof__img" onError={() => setImgOk(false)} />
                 : <div className="dprof__img-placeholder" aria-hidden="true"><FiUser size={48} /></div>
               }
             </div>

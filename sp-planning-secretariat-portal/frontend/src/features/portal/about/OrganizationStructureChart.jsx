@@ -3,7 +3,7 @@
    Southern Province Planning Secretariat — exact hierarchy from official image
    Premium 2050 government UI · responsive 320px → 4K
 ───────────────────────────────────────────────────────────────────────────── */
-import { useState, useEffect, useCallback, useRef, memo } from 'react'
+import { useState, useEffect, useMemo, useCallback, useRef, memo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   FiZoomIn, FiZoomOut, FiMaximize2, FiMinimize2,
@@ -11,6 +11,7 @@ import {
   FiUsers, FiUser, FiGrid, FiLayers,
 } from 'react-icons/fi'
 import { HiOutlineChartBar, HiOutlineOfficeBuilding } from 'react-icons/hi'
+import { orgStructureApi } from '@/features/cms/cmsContentApi'
 
 /* ── Motion variants ─────────────────────────────────────────────────────── */
 const fadeUp = {
@@ -42,136 +43,41 @@ const stagger = (d = 0.07) => ({ hidden: {}, visible: { transition: { staggerChi
    [drv4] රියදුරු-4   [oa4] කාර්යාල කාර්යය සහායක-4
 ═══════════════════════════════════════════════════════════════════════════ */
 
-/* Flat node list used by both desktop & mobile renderers */
-const NODES = {
-  apex: {
-    id: 'apex', tier: 'apex',
-    si: 'නියෝජ්‍ය ප්‍රධාන ලේකම්',
-    siSub: 'සැලසුම් හා මෙහෙයුම්',
-    en: 'Deputy Chief Secretary',
-    enSub: 'Planning & Operations',
-  },
-  dir: {
-    id: 'dir', tier: 'director',
-    si: 'අධ්‍යක්‍ෂ',
-    siSub: 'සැලසුම්',
-    en: 'Director',
-    enSub: 'Planning',
-  },
-  dev: {
-    id: 'dev', tier: 'division',
-    si: 'සංවර්ධන අංශය',
-    en: 'Development Division',
-  },
-  fin: {
-    id: 'fin', tier: 'division',
-    si: 'ගිණුම් සහ පිළිතුරීම් ශාඛාව',
-    en: 'Finance & Accounts Branch',
-  },
-  dd8: {
-    id: 'dd8', tier: 'dd',
-    si: 'නියෝජ්‍ය අධ්‍යක්‍ෂ',
-    siSub: 'ක්‍රමසම්පාදන',
-    siCount: '— 08',
-    en: 'Deputy Director',
-    enSub: 'Planning (Programme)',
-    enCount: '— 08',
-  },
-  stat: {
-    id: 'stat', tier: 'stat',
-    si: 'සංඛ්‍යාලේඛනය',
-    en: 'Statistics',
-  },
-  dn22: {
-    id: 'dn22', tier: 'officer',
-    si: 'සංවර්ධන නිලධාරී',
-    siCount: '— 22',
-    en: 'Development Officer',
-    enCount: '— 22',
-  },
-  da50: {
-    id: 'da50', tier: 'officer',
-    si: 'සංවර්ධන සහකාර (සැලසුම්) / සංවර්ධන නිලධාරී',
-    siCount: '— 50',
-    en: 'Dev. Assistant (Planning) / Dev. Officer',
-    enCount: '— 50',
-  },
-  drv: {
-    id: 'drv', tier: 'support',
-    si: 'රියදුරු',
-    siCount: '— 04',
-    en: 'Driver',
-    enCount: '— 04',
-  },
-  oa: {
-    id: 'oa', tier: 'support',
-    si: 'කාර්යාල කාර්යය සහායක',
-    siCount: '— 04',
-    en: 'Office Aid',
-    enCount: '— 04',
-  },
-  adm: {
-    id: 'adm', tier: 'admin',
-    si: 'පරිපාලන නිලධාරී',
-    en: 'Administrative Officer',
-  },
-  chief: {
-    id: 'chief', tier: 'admin',
-    si: 'ප්‍රධාන කළමනාකරණ සේවා නිලධාරී',
-    en: 'Chief Mgmt. Service Officer',
-  },
-  ms10: {
-    id: 'ms10', tier: 'support',
-    si: 'කළමනාකරණ සේවා නිලධාරී',
-    siCount: '— 10',
-    en: 'Mgmt. Service Officer',
-    enCount: '— 10',
-  },
+/* Flat node list (13 nodes) and the mobile nested tree now come from
+   orgStructureApi.get() (see OrganizationStructureChart root export below)
+   — replaces the previously hardcoded NODES / MOBILE_TREE module constants.
+
+   nodesById is built via useMemo from the fetched `nodes` array:
+     Object.fromEntries(nodes.map(n => [n.id, n]))
+
+   buildTree() below reconstructs the same nested shape MOBILE_TREE used to
+   have (each node gets a `children` array), driven by each node's
+   `parentId` / `order` fields instead of being hand-nested. */
+
+/**
+ * Recursively attaches a `children` array to `node`, populated by every node
+ * in `nodes` whose `parentId` matches `node.id`, sorted by `order`. Matches
+ * the shape the old hardcoded MOBILE_TREE had (`{ ...node, children: [...] }`).
+ * A node with no children ends up with `children: []`.
+ */
+function attachChildren(nodes, node) {
+  const children = nodes
+    .filter((n) => n.parentId === node.id)
+    .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+    .map((n) => attachChildren(nodes, n))
+  return { ...node, children }
 }
 
-/* ── Mobile tree structure (nested) ─────────────────────────────────────── */
-const MOBILE_TREE = {
-  ...NODES.apex,
-  children: [{
-    ...NODES.dir,
-    children: [
-      {
-        ...NODES.dev,
-        children: [
-          {
-            ...NODES.dd8,
-            children: [
-              { ...NODES.dn22, children: [] },
-              {
-                ...NODES.da50,
-                children: [
-                  { ...NODES.drv, children: [] },
-                  { ...NODES.oa,  children: [] },
-                ],
-              },
-            ],
-          },
-          { ...NODES.stat, children: [] },
-        ],
-      },
-      {
-        ...NODES.fin,
-        children: [
-          {
-            ...NODES.adm,
-            children: [
-              {
-                ...NODES.chief,
-                children: [
-                  { ...NODES.ms10, children: [] },
-                ],
-              },
-            ],
-          },
-        ],
-      },
-    ],
-  }],
+/**
+ * Builds the nested mobile tree from the flat `nodes` array, starting at the
+ * node whose `parentId` equals `rootId` (pass `null` to find the top-level
+ * root, e.g. 'apex'). Returns null if no such root node exists yet (e.g.
+ * before the fetch resolves, or in the unexpected case no root is found).
+ */
+function buildTree(nodes, rootId) {
+  const root = nodes.find((n) => n.parentId === rootId)
+  if (!root) return null
+  return attachChildren(nodes, root)
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -193,12 +99,14 @@ const TIER_CFG = {
 ═══════════════════════════════════════════════════════════════════════════ */
 const OrgNode = memo(function OrgNode({ node, lang, compact = false }) {
   const cfg   = TIER_CFG[node.tier] ?? TIER_CFG.support
-  const title = lang === 'si' ? node.si  : node.en
-  const sub   = lang === 'si' ? node.siSub  : node.enSub
-  const count = lang === 'si' ? node.siCount : node.enCount
-  const altLang = lang === 'si'
-    ? (node.en  ? `${node.en}${node.enSub  ? ` (${node.enSub})` : ''}${node.enCount  ? ` ${node.enCount}` : ''}` : null)
-    : (node.si  ? `${node.si}${node.siSub  ? ` — ${node.siSub}` : ''}${node.siCount  ? ` ${node.siCount}` : ''}` : null)
+  const title = node.title?.[lang] ?? node.title?.en
+  const sub   = node.sub?.[lang] ?? node.sub?.en
+  const count = node.count?.[lang] ?? node.count?.en
+  // English alt-language line shown alongside a non-English title (mirrors
+  // the previous EN/SI behaviour; for Tamil, the alt line is also English).
+  const altLang = lang !== 'en' && node.title?.en
+    ? `${node.title.en}${node.sub?.en ? ` (${node.sub.en})` : ''}${node.count?.en ? ` ${node.count.en}` : ''}`
+    : null
 
   return (
     <div
@@ -215,7 +123,7 @@ const OrgNode = memo(function OrgNode({ node, lang, compact = false }) {
           {count && <span className="osc-node__count"> {count}</span>}
         </span>
         {altLang && altLang !== `${title}${sub ? ` (${sub})` : ''}${count ? ` ${count}` : ''}` && (
-          <span className="osc-node__alt" lang={lang === 'si' ? 'en' : 'si'}>{altLang}</span>
+          <span className="osc-node__alt" lang="en">{altLang}</span>
         )}
       </div>
     </div>
@@ -232,8 +140,14 @@ const OrgNode = memo(function OrgNode({ node, lang, compact = false }) {
      R4  [dn22] [da50]           [chief]
      R5          [drv] [oa]      [ms10]
 ═══════════════════════════════════════════════════════════════════════════ */
-function DesktopChart({ lang }) {
-  const N = NODES
+/**
+ * NOTE: this is a hand-positioned layout, not a generic tree renderer — it
+ * assumes the fetched `nodesById` lookup contains exactly these 13 node ids:
+ * apex, dir, dev, fin, dd8, stat, dn22, da50, drv, oa, adm, chief, ms10.
+ * If a future CMS edit renames/removes one of these ids, this component will
+ * need a matching manual update (accepted, known limitation — see task notes).
+ */
+function DesktopChart({ lang, nodesById: N }) {
   return (
     <div
       className="osc-chart"
@@ -243,7 +157,7 @@ function DesktopChart({ lang }) {
 
       {/* ════ ROW 0 — Apex ════ */}
       <div className="osc-r osc-r--apex">
-        <OrgNode node={N.apex} lang={lang} />
+        <OrgNode node={N['apex']} lang={lang} />
       </div>
 
       {/* stem apex → dir */}
@@ -251,7 +165,7 @@ function DesktopChart({ lang }) {
 
       {/* ════ ROW 1 — Director ════ */}
       <div className="osc-r osc-r--dir">
-        <OrgNode node={N.dir} lang={lang} />
+        <OrgNode node={N['dir']} lang={lang} />
       </div>
 
       {/* stem dir → horiz bar */}
@@ -265,7 +179,7 @@ function DesktopChart({ lang }) {
         {/* ── LEFT: Development Division sub-tree ── */}
         <div className="osc-col osc-col--dev">
           <div className="osc-vstem" aria-hidden="true" />
-          <OrgNode node={N.dev} lang={lang} />
+          <OrgNode node={N['dev']} lang={lang} />
 
           {/* stem dev → horiz bar for dd8 + stat */}
           <div className="osc-vstem" aria-hidden="true" />
@@ -277,7 +191,7 @@ function DesktopChart({ lang }) {
             {/* DD8 sub-tree */}
             <div className="osc-col osc-col--dd8">
               <div className="osc-vstem" aria-hidden="true" />
-              <OrgNode node={N.dd8} lang={lang} />
+              <OrgNode node={N['dd8']} lang={lang} />
 
               {/* stem dd8 → dn22 + da50 */}
               <div className="osc-vstem" aria-hidden="true" />
@@ -287,23 +201,23 @@ function DesktopChart({ lang }) {
                 {/* dn22 */}
                 <div className="osc-col osc-col--officer">
                   <div className="osc-vstem" aria-hidden="true" />
-                  <OrgNode node={N.dn22} lang={lang} />
+                  <OrgNode node={N['dn22']} lang={lang} />
                 </div>
 
                 {/* da50 → drv + oa */}
                 <div className="osc-col osc-col--da50">
                   <div className="osc-vstem" aria-hidden="true" />
-                  <OrgNode node={N.da50} lang={lang} />
+                  <OrgNode node={N['da50']} lang={lang} />
                   <div className="osc-vstem" aria-hidden="true" />
                   <div className="osc-hbar osc-hbar--ground" aria-hidden="true" />
                   <div className="osc-r osc-r--ground">
                     <div className="osc-col osc-col--support">
                       <div className="osc-vstem" aria-hidden="true" />
-                      <OrgNode node={N.drv} lang={lang} compact />
+                      <OrgNode node={N['drv']} lang={lang} compact />
                     </div>
                     <div className="osc-col osc-col--support">
                       <div className="osc-vstem" aria-hidden="true" />
-                      <OrgNode node={N.oa} lang={lang} compact />
+                      <OrgNode node={N['oa']} lang={lang} compact />
                     </div>
                   </div>
                 </div>
@@ -313,7 +227,7 @@ function DesktopChart({ lang }) {
             {/* Stat — right side */}
             <div className="osc-col osc-col--stat">
               <div className="osc-vstem" aria-hidden="true" />
-              <OrgNode node={N.stat} lang={lang} />
+              <OrgNode node={N['stat']} lang={lang} />
             </div>
 
           </div>
@@ -322,17 +236,17 @@ function DesktopChart({ lang }) {
         {/* ── RIGHT: Finance Branch sub-tree ── */}
         <div className="osc-col osc-col--fin">
           <div className="osc-vstem" aria-hidden="true" />
-          <OrgNode node={N.fin} lang={lang} />
+          <OrgNode node={N['fin']} lang={lang} />
           <div className="osc-vstem" aria-hidden="true" />
 
           {/* Dashed connector hint — matches image dashed lines */}
           <div className="osc-dashed-hint" aria-hidden="true" />
 
-          <OrgNode node={N.adm} lang={lang} />
+          <OrgNode node={N['adm']} lang={lang} />
           <div className="osc-vstem" aria-hidden="true" />
-          <OrgNode node={N.chief} lang={lang} />
+          <OrgNode node={N['chief']} lang={lang} />
           <div className="osc-vstem" aria-hidden="true" />
-          <OrgNode node={N.ms10} lang={lang} />
+          <OrgNode node={N['ms10']} lang={lang} />
         </div>
 
       </div>{/* end osc-r--l2 */}
@@ -348,9 +262,9 @@ function MobileNode({ node, lang, depth = 0 }) {
   const [open, setOpen] = useState(depth < 2)
   const cfg = TIER_CFG[node.tier] ?? TIER_CFG.support
   const hasChildren = (node.children ?? []).length > 0
-  const title = lang === 'si' ? node.si  : node.en
-  const sub   = lang === 'si' ? node.siSub  : node.enSub
-  const count = lang === 'si' ? node.siCount : node.enCount
+  const title = node.title?.[lang] ?? node.title?.en
+  const sub   = node.sub?.[lang] ?? node.sub?.en
+  const count = node.count?.[lang] ?? node.count?.en
 
   return (
     <div className={`osc-m-node osc-m-node--d${Math.min(depth, 5)}`}>
@@ -430,7 +344,16 @@ export default function OrganizationStructureChart({ lang = 'en' }) {
   const [isFullSize, setFullSize] = useState(false)
   const [isMobile,   setMobile]   = useState(false)
   const [imgError,   setImgError] = useState(false)
+  const [data,       setData]     = useState(null)
   const scrollRef = useRef(null)
+
+  useEffect(() => {
+    let cancelled = false
+    orgStructureApi.get()
+      .then(({ data }) => { if (!cancelled) setData(data) })
+      .catch((err) => console.error('OrganizationStructureChart: failed to load org structure', err))
+    return () => { cancelled = true }
+  }, [])
 
   useEffect(() => {
     const check = () => {
@@ -453,6 +376,24 @@ export default function OrganizationStructureChart({ lang = 'en' }) {
   const zoomOut   = useCallback(() => setZoom(z => [...ZOOM_STEPS].reverse().find(s => s < z) ?? z), [])
   const toggleFit = useCallback(() => { setFullSize(v => !v); setZoom(0.9) }, [])
 
+  const nodes = useMemo(() => data?.nodes ?? [], [data])
+
+  const nodesById = useMemo(
+    () => Object.fromEntries(nodes.map((n) => [n.id, n])),
+    [nodes]
+  )
+
+  const mobileTree = useMemo(() => buildTree(nodes, null), [nodes])
+
+  if (!data) return null
+
+  const ui = data.ui
+  const intro       = ui.intro[lang]       ?? ui.intro.en
+  const cardHeader  = ui.cardHeader[lang]  ?? ui.cardHeader.en
+  const scrollHints = ui.scrollHints[lang] ?? ui.scrollHints.en
+  const legend       = ui.legend[lang]       ?? ui.legend.en
+  const footer        = ui.footer[lang]        ?? ui.footer.en
+  const imgFallbackLabel = ui.imgFallbackLabel[lang] ?? ui.imgFallbackLabel.en
 
   return (
     <motion.div className="osc-shell" initial="hidden" animate="visible" variants={stagger(0.08)}>
@@ -462,12 +403,10 @@ export default function OrganizationStructureChart({ lang = 'en' }) {
         <div className="osc-intro__icon" aria-hidden="true"><HiOutlineChartBar /></div>
         <div className="osc-intro__body">
           <h2 className="osc-intro__title">
-            {lang === 'si' ? 'සංවිධාන ව්‍යූහය' : 'Organization Structure'}
+            {intro.title}
           </h2>
           <p className="osc-intro__text">
-            {lang === 'si'
-              ? 'සැලසුම් ලේකම් කාර්යාලයේ සංවිධාන ව්‍යූහය නායකත්වය, පරිපාලන අංශ, සැලසුම් ඒකක සහ පළාත් සංවර්ධන ක්‍රියාකාරකම් සම්බන්ධීකරණය කරන සහාය කාර්ය මණ්ඩල භූමිකාවන් නිදර්ශනය කරයි.'
-              : 'The organizational structure of the Planning Secretariat illustrates the leadership, administrative divisions, planning units, and supporting staff roles that coordinate provincial development activities.'}
+            {intro.text}
           </p>
         </div>
       </motion.div>
@@ -484,10 +423,10 @@ export default function OrganizationStructureChart({ lang = 'en' }) {
             <HiOutlineChartBar className="osc-card__header-icon" aria-hidden="true" />
             <div>
               <h3 className="osc-card__header-title">
-                {lang === 'si' ? 'සැලසුම් ලේකම් කාර්යාලය' : 'Planning Secretariat'}
+                {cardHeader.title}
               </h3>
               <p className="osc-card__header-sub">
-                {lang === 'si' ? 'දකුණු පළාත' : 'Southern Province'}
+                {cardHeader.sub}
               </p>
             </div>
           </div>
@@ -505,21 +444,21 @@ export default function OrganizationStructureChart({ lang = 'en' }) {
         {isMobile ? (
           <>
             <p className="osc-scroll-hint osc-scroll-hint--mobile" aria-hidden="true">
-              ↕ Scroll to view · Tap nodes to expand
+              {scrollHints.mobile}
             </p>
             <div className="osc-mobile-scroll">
               <div className="osc-mobile-tree" role="tree" aria-label="Organization Structure Chart">
-                <MobileNode node={MOBILE_TREE} lang={lang} depth={0} />
+                {mobileTree && <MobileNode node={mobileTree} lang={lang} depth={0} />}
               </div>
             </div>
             <p className="osc-scroll-hint osc-scroll-hint--mobile-bottom" aria-hidden="true">
-              ← Swipe left / right to see more →
+              {scrollHints.mobileBottom}
             </p>
           </>
         ) : (
           <>
             <p className="osc-scroll-hint osc-scroll-hint--desktop" aria-hidden="true">
-              ← Scroll left / right · ↕ Scroll up / down →
+              {scrollHints.desktop}
             </p>
             <div
               className="osc-scroll-wrap"
@@ -531,7 +470,7 @@ export default function OrganizationStructureChart({ lang = 'en' }) {
                 className="osc-scale-wrap"
                 style={{ transform: `scale(${zoom})`, transformOrigin: 'top center' }}
               >
-                <DesktopChart lang={lang} />
+                <DesktopChart lang={lang} nodesById={nodesById} />
               </div>
             </div>
           </>
@@ -541,7 +480,7 @@ export default function OrganizationStructureChart({ lang = 'en' }) {
         {!imgError && (
           <div className="osc-img-fallback-wrap">
             <p className="osc-img-fallback-label" aria-hidden="true">
-              {lang === 'si' ? 'නිල සංවිධාන රූප සටහන' : 'Official Organization Chart Reference'}
+              {imgFallbackLabel}
             </p>
             <img
               src="/branding/organization-structure.png"
@@ -557,15 +496,15 @@ export default function OrganizationStructureChart({ lang = 'en' }) {
       {/* ── Legend ── */}
       <motion.div className="osc-legend" variants={fadeUp} role="list" aria-label="Chart legend">
         {[
-          { cls: 'osc-legend__dot--apex',     label: lang === 'si' ? 'නියෝජ්‍ය ප්‍රධාන ලේකම්'   : 'Deputy Chief Secretary' },
-          { cls: 'osc-legend__dot--director', label: lang === 'si' ? 'අධ්‍යක්‍ෂ'                 : 'Director' },
-          { cls: 'osc-legend__dot--division', label: lang === 'si' ? 'අංශය / ශාඛාව'              : 'Division / Branch' },
-          { cls: 'osc-legend__dot--dd',       label: lang === 'si' ? 'නියෝජ්‍ය අධ්‍යක්‍ෂ'        : 'Deputy Director' },
-          { cls: 'osc-legend__dot--officer',  label: lang === 'si' ? 'නිලධාරී'                   : 'Officer' },
-          { cls: 'osc-legend__dot--admin',    label: lang === 'si' ? 'පරිපාලන / කළමනාකරණ'       : 'Admin / Management' },
-          { cls: 'osc-legend__dot--support',  label: lang === 'si' ? 'සහාය කාර්ය'               : 'Support Staff' },
-        ].map((item) => (
-          <div key={item.label} className="osc-legend__item" role="listitem">
+          { cls: 'osc-legend__dot--apex',     label: legend[0] },
+          { cls: 'osc-legend__dot--director', label: legend[1] },
+          { cls: 'osc-legend__dot--division', label: legend[2] },
+          { cls: 'osc-legend__dot--dd',       label: legend[3] },
+          { cls: 'osc-legend__dot--officer',  label: legend[4] },
+          { cls: 'osc-legend__dot--admin',    label: legend[5] },
+          { cls: 'osc-legend__dot--support',  label: legend[6] },
+        ].map((item, i) => (
+          <div key={i} className="osc-legend__item" role="listitem">
             <span className={`osc-legend__dot ${item.cls}`} aria-hidden="true" />
             <span className="osc-legend__label">{item.label}</span>
           </div>
@@ -577,12 +516,10 @@ export default function OrganizationStructureChart({ lang = 'en' }) {
         <div className="ab-glass-accent__icon" aria-hidden="true"><FiShield /></div>
         <div className="ab-glass-accent__content">
           <div className="ab-glass-accent__title">
-            {lang === 'si' ? 'නිල රජයේ ව්‍යූහය' : 'Official Government Structure'}
+            {footer.title}
           </div>
           <div className="ab-glass-accent__sub">
-            {lang === 'si'
-              ? 'මෙම සංවිධාන ව්‍යූහය දකුණු පළාත් සැලසුම් ලේකම් කාර්යාලය විසින් නිකුත් කරන ලද නිල තොරතුරු මත පදනම් වේ.'
-              : 'This organizational structure is based on official information issued by the Southern Province Planning Secretariat and is subject to periodic review.'}
+            {footer.sub}
           </div>
         </div>
       </motion.div>
