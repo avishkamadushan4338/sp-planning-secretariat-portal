@@ -8,6 +8,8 @@ import {
   Phone, Mail, MapPin, UserCircle2, ClipboardList,
   ArrowRight, Building2, Briefcase
 } from 'lucide-react'
+import { staffApi } from '@/features/cms/cmsContentApi'
+import { resolveUploadUrl } from '@/shared/utils/resolveUploadUrl'
 import './Departments.css'
 
 /* ─── Constants ──────────────────────────────────────────────────── */
@@ -38,127 +40,11 @@ const NAV_T = {
   ta: { navAccounts: 'கணக்குகள்',navAdmin: 'நிர்வாகம்',    navDev: 'வளர்ச்சி',    navHeadAdmin: 'நிர்வாக தலைவர்',         navHeadAcc: 'கணக்கு தலைவர்', quickNav: 'விரைவு வழிசெலுத்தல்' },
 }
 
-/* ─── Profile data ───────────────────────────────────────────────── */
-
-const PROFILES = {
-  'head-administration': {
-    imgSrc:   '/branding/ao.png',
-    deptPath: '/departments/administration',
-    badge: {
-      en: 'Administrative Officer',
-      si: 'පරිපාලන නිලධාරී',
-      ta: 'நிர்வாக அலுவலர்',
-    },
-    name: {
-      en: 'Mrs. K.K.G. Chandrika',
-      si: 'කේ.ජී. චන්ද්‍රිකා මහත්මිය',
-      ta: 'திருமதி. கே.கே.ஜி. சந்திரிகா',
-    },
-    position: {
-      en: 'Administrative Officer',
-      si: 'පරිපාලන නිලධාරී',
-      ta: 'நிர்வாக அலுவலர்',
-    },
-    responsibilities: {
-      en: [
-        'Overall administration and institutional management of the Secretariat',
-        'Strategic human resource planning and staff development',
-        'Policy implementation and compliance oversight',
-        'Budget coordination and resource management for the department',
-        'Stakeholder liaison and inter-departmental coordination',
-        'Performance management and appraisal systems',
-        'Ensuring adherence to government service procedures and regulations',
-      ],
-      si: [
-        'ලේකම් කාර්යාලයේ සමස්ත පරිපාලනය සහ ආයතනික කළමනාකරණය',
-        'උපායමාර්ගික මානව සම්පත් සැලසුම් සහ කාර්ය මණ්ඩල සංවර්ධනය',
-        'ප්‍රතිපත්ති ක්‍රියාත්මක කිරීම සහ අනුකූලතා අධීක්ෂණය',
-        'අංශය සඳහා අයවැය සම්බන්ධීකරණය සහ සම්පත් කළමනාකරණය',
-        'මූලධාරා ස්ථාවරධාරියන් සම්බන්ධ කිරීම සහ අංශ අතර සම්බන්ධීකරණය',
-        'ක්‍රියාකාරිත්ව කළමනාකරණය සහ ඇගයීම් පද්ධති',
-        'රාජ්‍ය සේවා ක්‍රියා පටිපාටි සහ නීති රීතිවලට අනුකූලව සිටීම සහතික',
-      ],
-      ta: [
-        'செயலகத்தின் ஒட்டுமொத்த நிர்வாகம் மற்றும் நிறுவன மேலாண்மை',
-        'மூலோபாய மனிதவள திட்டமிடல் மற்றும் ஊழியர் மேம்பாடு',
-        'கொள்கை செயல்படுத்தல் மற்றும் இணக்கம் மேற்பார்வை',
-        'துறைக்கான பட்ஜெட் ஒருங்கிணைப்பு மற்றும் வள மேலாண்மை',
-        'பங்குதாரர் தொடர்பு மற்றும் துறைகளுக்கிடையேயான ஒருங்கிணைப்பு',
-        'செயல்திறன் மேலாண்மை மற்றும் மதிப்பீட்டு அமைப்புகள்',
-        'அரசாங்க சேவை நடைமுறைகள் மற்றும் விதிமுறைகளை கடைப்பிடிப்பதை உறுதி செய்தல்',
-      ],
-    },
-    contact: {
-      phone:    '+94 91 223 1943',
-      email:    'spdcsp@gmail.com',
-      location: 'Administration Wing, Planning Secretariat, Galle',
-    },
-    dept: {
-      en: 'Administration Division',
-      si: 'පරිපාලන අංශය',
-      ta: 'நிர்வாகத் துறை',
-    },
-  },
-
-  'head-accounts': {
-    imgSrc:   '/staff/head-accounts.jpg',
-    deptPath: '/departments/accounts',
-    badge: {
-      en: 'Accountant (Acting)',
-      si: 'ගණකාධිකාරී (වැඩබලන)',
-      ta: 'கணக்காளர் (பொ.)',
-    },
-    name: {
-      en: 'Mrs. D.V. Dishani',
-      si: 'ඩී.වී. දිශානි මහත්මිය',
-      ta: 'திருமதி. டி.வி. திஷானி',
-    },
-    position: {
-      en: 'Accountant (Acting)',
-      si: 'ගණකාධිකාරී (වැඩබලන)',
-      ta: 'கணக்காளர் (பொ.)',
-    },
-    responsibilities: {
-      en: [
-        'Overall financial management and budget oversight of the Secretariat',
-        'Ensuring timely and accurate preparation of all financial statements',
-        'Coordination with the Auditor General and Treasury officials',
-        'Implementation of government financial regulations and Treasury circulars',
-        'Management of all accounts staff and capacity development',
-        'Preparation and submission of annual budget estimates',
-        'Supervision of advances, imprest accounts, and deposits management',
-      ],
-      si: [
-        'ලේකම් කාර්යාලයේ සමස්ත මූල්‍ය කළමනාකරණය සහ අයවැය අධීක්ෂණය',
-        'සියලු මූල්‍ය ප්‍රකාශ කාලෝචිත හා නිවැරදිව සකස් කිරීම සහතික',
-        'ශ්‍රේෂ්ඨාධිකාරී සහ භාණ්ඩාගාර නිලධාරීන් සමඟ සම්බන්ධීකරණය',
-        'රාජ්‍ය මූල්‍ය නියාමන සහ භාණ්ඩාගාර චක්‍ර ලේඛ ක්‍රියාත්මක කිරීම',
-        'සියලු ගිණුම් කාර්ය මණ්ඩල කළමනාකරණය සහ ධාරිතා සංවර්ධනය',
-        'වාර්ෂික අයවැය ඇස්තමේන්තු සකස් කිරීම සහ ඉදිරිපත් කිරීම',
-        'අත්තිකාරම්, ඉම්ප්‍රෙස්ට් ගිණුම් සහ තැන්පතු කළමනාකරණය අධීක්ෂණය',
-      ],
-      ta: [
-        'செயலகத்தின் ஒட்டுமொத்த நிதி மேலாண்மை மற்றும் பட்ஜெட் மேற்பார்வை',
-        'அனைத்து நிதி அறிக்கைகளும் சரியான நேரத்தில் துல்லியமாக தயாரிக்கப்படுவதை உறுதி செய்தல்',
-        'தணிக்கையாளர் நாயகம் மற்றும் கருவூல அதிகாரிகளுடன் ஒருங்கிணைப்பு',
-        'அரசாங்க நிதி விதிமுறைகள் மற்றும் கருவூல சுற்றறிக்கைகளை செயல்படுத்துதல்',
-        'அனைத்து கணக்கு ஊழியர்களை நிர்வகித்தல் மற்றும் திறன் மேம்பாடு',
-        'ஆண்டு பட்ஜெட் மதிப்பீடுகளை தயாரித்தல் மற்றும் சமர்ப்பித்தல்',
-        'முன்பணங்கள், இம்ப்ரெஸ்ட் கணக்குகள் மற்றும் வைப்பு மேலாண்மையை மேற்பார்வையிடுதல்',
-      ],
-    },
-    contact: {
-      phone:    '+94 91 212 1317',
-      email:    'spdcsp@gmail.com',
-      location: 'Planning Secretariat, Galle',
-    },
-    dept: {
-      en: 'Accounts Division',
-      si: 'ගිණුම් අංශය',
-      ta: 'கணக்குத் துறை',
-    },
-  },
-}
+/* ─── Profile data ───────────────────────────────────────────────
+   Fetched from staffApi.list() (tier === 'department-head') and matched
+   against the current route's :slug param via each staff record's `slug`
+   field (e.g. "departments/head-administration") — see
+   DepartmentProfile() below. Replaces the old hardcoded PROFILES map. ──── */
 
 /* ─── UI Translations ────────────────────────────────────────────── */
 
@@ -471,7 +357,7 @@ function ProfileMainContent({ profile, lang, meta, ui }) {
           variants={staggerV}
           role="list"
         >
-          {profile.responsibilities[lang].map((r, i) => (
+          {(profile.responsibilities[lang]?.length ? profile.responsibilities[lang] : profile.responsibilities.en).map((r, i) => (
             <motion.li key={i} style={{ fontFamily: meta.font }} variants={itemV}>
               {r}
             </motion.li>
@@ -509,11 +395,41 @@ function ProfileMainContent({ profile, lang, meta, ui }) {
 
 /* ─── Main export ────────────────────────────────────────────────── */
 
+/* departmentId -> department route key + trilingual label, needed because
+   the department-head staff record only stores a departmentId FK, while
+   this page's breadcrumb/sidebar need the department's path and name. */
+const DEPARTMENT_BY_ID = {
+  'dept-administration': { path: '/departments/administration', dept: { en: 'Administration Division', si: 'පරිපාලන අංශය', ta: 'நிர்வாகத் துறை' } },
+  'dept-accounts':       { path: '/departments/accounts',       dept: { en: 'Accounts Division',       si: 'ගිණුම් අංශය',   ta: 'கணக்குத் துறை' } },
+  'dept-development':    { path: '/departments/development',    dept: { en: 'Development Division',    si: 'සංවර්ධන අංශය',  ta: 'வளர்ச்சித் துறை' } },
+}
+
+function staffToProfile(s) {
+  const deptMeta = DEPARTMENT_BY_ID[s.departmentId] || { path: '/departments', dept: { en: '', si: '', ta: '' } }
+  return {
+    imgSrc:   resolveUploadUrl(s.photo),
+    deptPath: deptMeta.path,
+    badge:    s.position,
+    name:     s.name,
+    position: s.position,
+    responsibilities: s.responsibilities,
+    experience: s.experience?.en ? s.experience : null,
+    contact: {
+      phone:    s.phone || '',
+      email:    s.email || '',
+      location: s.office || '',
+    },
+    dept: deptMeta.dept,
+  }
+}
+
 export default function DepartmentProfile() {
   const heldParent = usePageHold('departments')
   const { slug: profileKey } = useParams()
   const heldSub = usePageHold(`departments__${profileKey}`)
   const [lang, setLang] = useState(() => localStorage.getItem('lang') || 'en')
+  const [profile, setProfile] = useState(null)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const h = (e) => setLang(e.detail || 'en')
@@ -521,12 +437,29 @@ export default function DepartmentProfile() {
     return () => window.removeEventListener('langChange', h)
   }, [])
 
-  const meta    = useMemo(() => LANG_META[lang] || LANG_META.en, [lang])
-  const ui      = useMemo(() => UI[lang]        || UI.en,        [lang])
-  const profile = PROFILES[profileKey]
+  useEffect(() => {
+    let cancelled = false
+    setLoading(true)
+    setProfile(null)
+    staffApi.list()
+      .then(({ data }) => {
+        if (cancelled || !Array.isArray(data)) return
+        const found = data.find(
+          (s) => s.tier === 'department-head' && s.slug && s.slug.endsWith(`/${profileKey}`)
+        )
+        if (found) setProfile(staffToProfile(found))
+      })
+      .catch((err) => console.error('DepartmentProfile: failed to load staff', err))
+      .finally(() => { if (!cancelled) setLoading(false) })
+    return () => { cancelled = true }
+  }, [profileKey])
+
+  const meta = useMemo(() => LANG_META[lang] || LANG_META.en, [lang])
+  const ui   = useMemo(() => UI[lang]        || UI.en,        [lang])
 
   if (heldParent || heldSub) return <ComingSoon pageKey="departments" />
-  if (!profile) return <Navigate to="/departments" replace />
+  if (!loading && !profile) return <Navigate to="/departments" replace />
+  if (!profile) return null
 
   const activePath = `/departments/${profileKey}`
 

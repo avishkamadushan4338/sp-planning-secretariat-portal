@@ -6,9 +6,17 @@ import { SeoHead } from '@/shared/seo'
 import { motion } from 'framer-motion'
 import {
   BookOpen, Settings, TrendingUp, Users,
-  ClipboardList, ArrowRight
+  ClipboardList, ArrowRight, Building2
 } from 'lucide-react'
+import { departmentsApi } from '@/features/cms/cmsContentApi'
 import './Departments.css'
+
+/* Icon name (string, from CMS) → lucide-react component lookup.
+   Seeded icon names are BookOpen / Settings / TrendingUp (see
+   backend/src/db/seedData.js -> departmentsSeed); Building2 is the fallback
+   for any future department whose icon name isn't in this map. */
+const ICON_MAP = { BookOpen, Settings, TrendingUp, Users, ClipboardList }
+const DEFAULT_ICON = Building2
 
 /* ─── Constants ─────────────────────────────────────────────────────── */
 
@@ -84,51 +92,8 @@ const T = {
 }
 
 /* ─── Department data ────────────────────────────────────────────────── */
-
-const DEPARTMENTS = [
-  {
-    key:   'accounts',
-    path:  '/departments/accounts',
-    icon:  BookOpen,
-    color: '#C79A2B',
-    staff: '7',
-    label: { en: 'Accounts Division', si: 'ගිණුම් අංශය', ta: 'கணக்குத் துறை' },
-    desc:  {
-      en: 'Handles budgeting, financial reporting, accounting coordination, and expenditure monitoring across the Province.',
-      si: 'පළාත් පුරා අයවැය, මූල්‍ය වාර්තාකරණය, ගිණුම්කරණ සම්බන්ධීකරණය සහ වියදම් නිරීක්ෂණය සිදු කරයි.',
-      ta: 'மாகாணம் முழுவதும் பட்ஜெட், நிதி அறிக்கையிடல், கணக்கியல் ஒருங்கிணைப்பு மற்றும் செலவு கண்காணிப்பு கையாளுகிறது.',
-    },
-    shortLabel: { en: 'Accounts', si: 'ගිණුම්', ta: 'கணக்குகள்' },
-  },
-  {
-    key:   'administration',
-    path:  '/departments/administration',
-    icon:  Settings,
-    color: '#4A0918',
-    staff: '8+',
-    label: { en: 'Administration Division', si: 'පරිපාලන අංශය', ta: 'நிர்வாகத் துறை' },
-    desc:  {
-      en: 'Responsible for administration, HR coordination, office operations, and institutional management of the Secretariat.',
-      si: 'ලේකම් කාර්යාලයේ පරිපාලනය, HR සම්බන්ධීකරණය, කාර්යාල ක්‍රියාකාරිත්වය සහ ආයතනික කළමනාකරණය සඳහා වගකිව යුතු වේ.',
-      ta: 'செயலகத்தின் நிர்வாகம், HR ஒருங்கிணைப்பு, அலுவலக நடவடிக்கைகள் மற்றும் நிறுவன மேலாண்மைக்கு பொறுப்பாகும்.',
-    },
-    shortLabel: { en: 'Administration', si: 'පරිපාලන', ta: 'நிர்வாகம்' },
-  },
-  {
-    key:   'development',
-    path:  '/departments/development',
-    icon:  TrendingUp,
-    color: '#2E6830',
-    staff: '30+',
-    label: { en: 'Development Division', si: 'සංවර්ධන අංශය', ta: 'வளர்ச்சித் துறை' },
-    desc:  {
-      en: 'Coordinates development planning, monitoring, evaluation, and project implementation activities in the Southern Province.',
-      si: 'දකුණු පළාතේ සංවර්ධන සැලසුම්, අධීක්ෂණය, ඇගයීම සහ ව්‍යාපෘති ක්‍රියාත්මක කිරීමේ කාර්යයන් සම්බන්ධ කරයි.',
-      ta: 'தென் மாகாணத்தில் வளர்ச்சி திட்டமிடல், கண்காணிப்பு, மதிப்பீடு மற்றும் திட்ட செயல்படுத்தல் நடவடிக்கைகளை ஒருங்கிணைக்கிறது.',
-    },
-    shortLabel: { en: 'Development', si: 'සංවර්ධන', ta: 'வளர்ச்சி' },
-  },
-]
+/* Fetched from departmentsApi.list() — see Departments() below. Each record's
+   `icon` is a string name (e.g. "BookOpen") resolved via ICON_MAP above. */
 
 const QUICK_LINKS = [
   { key: 'accounts',       pathKey: '/departments/accounts',        icon: BookOpen,      labelKey: 'navAccounts'  },
@@ -327,7 +292,7 @@ function clamp(min, val, max) { return Math.min(max, Math.max(min, val)) }
 
 /* ─── Cards Section ─────────────────────────────────────────────────── */
 
-function DepartmentsSection({ lang, meta, t }) {
+function DepartmentsSection({ lang, meta, t, departments, loading }) {
   return (
     <section className="dep-cards-section" aria-labelledby="dep-cards-heading">
       <div className="dep-cards-section__inner">
@@ -360,7 +325,7 @@ function DepartmentsSection({ lang, meta, t }) {
           viewport={{ once: true, margin: '-40px' }}
           variants={cardContV}
         >
-          {DEPARTMENTS.map((dept, i) => (
+          {loading ? null : departments.map((dept, i) => (
             <DepartmentCard
               key={dept.key}
               dept={dept}
@@ -381,11 +346,38 @@ function DepartmentsSection({ lang, meta, t }) {
 export default function Departments() {
   const held = usePageHold('departments')
   const [lang, setLang] = useState(() => localStorage.getItem('lang') || 'en')
+  const [departments, setDepartments] = useState([])
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const h = (e) => setLang(e.detail || 'en')
     window.addEventListener('langChange', h)
     return () => window.removeEventListener('langChange', h)
+  }, [])
+
+  useEffect(() => {
+    let cancelled = false
+    setLoading(true)
+    departmentsApi.list()
+      .then(({ data }) => {
+        if (cancelled || !Array.isArray(data)) return
+        const normalized = [...data]
+          .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+          .map((d) => ({
+            key:        d.key,
+            path:       `/departments/${d.key}`,
+            icon:       ICON_MAP[d.icon] || DEFAULT_ICON,
+            color:      d.accentColor,
+            staff:      d.staffCount,
+            label:      d.label,
+            desc:       d.desc,
+            shortLabel: d.shortLabel,
+          }))
+        setDepartments(normalized)
+      })
+      .catch((err) => console.error('Departments: failed to load departments', err))
+      .finally(() => { if (!cancelled) setLoading(false) })
+    return () => { cancelled = true }
   }, [])
 
   const meta = useMemo(() => LANG_META[lang] || LANG_META.en, [lang])
@@ -399,7 +391,7 @@ export default function Departments() {
       <div style={{ background: CREAM, minHeight: '100vh' }}>
         <PageHero t={t} meta={meta} />
         <QuickNav t={t} meta={meta} activePath="/departments" />
-        <DepartmentsSection lang={lang} meta={meta} t={t} />
+        <DepartmentsSection lang={lang} meta={meta} t={t} departments={departments} loading={loading} />
       </div>
     </>
   )
