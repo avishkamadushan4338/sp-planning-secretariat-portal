@@ -10,6 +10,17 @@ const TABLES = {
   reservations: 'smp_reservations',
   disposals:    'smp_disposals',
   audit_logs:   'smp_audit_logs',
+
+  staff:         'cms_staff',
+  faqs:          'cms_faqs',
+  home_content:  'cms_home_content',
+  departments:   'cms_departments',
+  site_settings: 'cms_site_settings',
+
+  about_overview:  'cms_about_overview',
+  about_functions: 'cms_about_functions',
+  org_structure:   'cms_org_structure',
+  about_history:   'cms_about_history',
 }
 
 async function ensureDatabase(mysql) {
