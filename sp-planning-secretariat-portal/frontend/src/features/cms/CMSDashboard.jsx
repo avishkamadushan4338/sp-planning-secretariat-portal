@@ -4,7 +4,18 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { toast, Toaster } from 'sonner'
 import CMSHomeNewsBar from './CMSHomeNewsBar'
 import { useSitePublish } from '@/shared/contexts/useSitePublish'
+import { resolveUploadUrl } from '@/shared/utils/resolveUploadUrl'
+import { uploadImage } from './cmsApi'
 import CMSHomeEvents  from './CMSHomeEvents'
+import CMSStaff        from './CMSStaff'
+import CMSFaqs          from './CMSFaqs'
+import CMSHomeContent   from './CMSHomeContent'
+import CMSDepartments   from './CMSDepartments'
+import CMSSiteSettings  from './CMSSiteSettings'
+import CMSAboutOverview  from './CMSAboutOverview'
+import CMSAboutFunctions from './CMSAboutFunctions'
+import CMSOrgStructure   from './CMSOrgStructure'
+import CMSAboutHistory   from './CMSAboutHistory'
 import {
   FiGrid, FiFileText, FiBell, FiDownload, FiImage,
   FiLogOut, FiPlus, FiEdit2, FiTrash2,
@@ -13,7 +24,7 @@ import {
   FiChevronsLeft, FiHome, FiX, FiSettings, FiUser, FiLock, FiShield, FiAlertCircle, FiTag,
   FiRadio, FiMessageSquare, FiRefreshCw, FiMail, FiPhone, FiBookOpen,
   FiLayout, FiToggleLeft, FiToggleRight, FiGlobe, FiZap, FiAlertTriangle, FiExternalLink,
-  FiInbox, FiBarChart2, FiTrendingUp, FiPackage,
+  FiInbox, FiBarChart2, FiTrendingUp, FiPackage, FiHelpCircle,
 } from 'react-icons/fi'
 import { changeUsername, changePassword, getCredentials } from './cmsAuth'
 
@@ -48,6 +59,14 @@ const NAV_GROUPS = [
       { id: 'homenewsbar',   label: 'Home News Bar',   icon: FiRadio    },
       { id: 'homeevents',    label: 'Home Events',     icon: FiCalendar },
       { id: 'notices',       label: 'Notices',         icon: FiBell     },
+      { id: 'staff',         label: 'Staff Directory', icon: FiUser     },
+      { id: 'faqs',          label: 'FAQs',            icon: FiHelpCircle },
+      { id: 'homecontent',   label: 'Home Content',    icon: FiHome     },
+      { id: 'departments',   label: 'Departments',     icon: FiPackage  },
+      { id: 'aboutoverview',  label: 'About: Overview',        icon: FiGrid },
+      { id: 'aboutfunctions', label: 'About: Functions & Duties', icon: FiFileText },
+      { id: 'orgstructure',   label: 'About: Org Structure',   icon: FiActivity },
+      { id: 'abouthistory',   label: 'About: History',         icon: FiClock },
     ],
   },
   {
@@ -72,9 +91,10 @@ const NAV_GROUPS = [
   {
     label: 'System',
     items: [
-      { id: 'publish',  label: 'Publish Site',           icon: FiGlobe    },
-      { id: 'settings', label: 'Settings',              icon: FiSettings  },
-      { id: 'policy',   label: 'Policy & Privacy',      icon: FiBookOpen  },
+      { id: 'publish',      label: 'Publish Site',       icon: FiGlobe    },
+      { id: 'sitesettings', label: 'Site Contact Info',  icon: FiUser     },
+      { id: 'settings',     label: 'Settings',           icon: FiSettings  },
+      { id: 'policy',       label: 'Policy & Privacy',   icon: FiBookOpen  },
     ],
   },
 ]
@@ -833,6 +853,33 @@ export default function CMSDashboard() {
                 )}
                 {active === 'homeevents' && (
                   <CMSHomeEvents search={search} setSearch={setSearch} />
+                )}
+                {active === 'staff' && (
+                  <CMSStaff search={search} setSearch={setSearch} />
+                )}
+                {active === 'faqs' && (
+                  <CMSFaqs search={search} setSearch={setSearch} />
+                )}
+                {active === 'homecontent' && (
+                  <CMSHomeContent />
+                )}
+                {active === 'departments' && (
+                  <CMSDepartments search={search} setSearch={setSearch} />
+                )}
+                {active === 'sitesettings' && (
+                  <CMSSiteSettings />
+                )}
+                {active === 'aboutoverview' && (
+                  <CMSAboutOverview />
+                )}
+                {active === 'aboutfunctions' && (
+                  <CMSAboutFunctions />
+                )}
+                {active === 'orgstructure' && (
+                  <CMSOrgStructure />
+                )}
+                {active === 'abouthistory' && (
+                  <CMSAboutHistory />
                 )}
                 {active === 'notices' && (
                   <ContentSection
@@ -1786,7 +1833,7 @@ function GallerySection({ rows, onDelete, onAdd, onEdit, onView }) {
             {/* Cover image area */}
             <div style={{ height: 158, background: PALETTE[i % PALETTE.length], display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden' }}>
               {album.imageUrl
-                ? <img src={album.imageUrl} alt={album.title} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
+                ? <img src={resolveUploadUrl(album.imageUrl)} alt={album.title} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
                 : (
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, opacity: 0.5 }}>
                     <FiImage size={36} color={MAROON} />
@@ -1894,6 +1941,7 @@ function NewsFormModal({ onClose, onSave, initialData = null }) {
   const [error,    setError]    = useState('')
   const [saving,   setSaving]   = useState(false)
   const [dragOver, setDragOver] = useState(false)
+  const [uploading, setUploading] = useState(false)
   const fileRef = useRef(null)
 
   useEffect(() => {
@@ -1902,11 +1950,17 @@ function NewsFormModal({ onClose, onSave, initialData = null }) {
     return () => window.removeEventListener('keydown', h)
   }, [onClose])
 
-  const readFile = (file) => {
+  const readFile = async (file) => {
     if (!file || !file.type.startsWith('image/')) return
-    const reader = new FileReader()
-    reader.onload = (ev) => setImageUrl(ev.target.result)
-    reader.readAsDataURL(file)
+    setUploading(true)
+    try {
+      const res = await uploadImage(file)
+      setImageUrl(res.data.url)
+    } catch (err) {
+      toast.error(err.response?.data?.error || 'Failed to upload image. Please try again.')
+    } finally {
+      setUploading(false)
+    }
   }
 
   const handleFiles = (e) => {
@@ -1925,11 +1979,12 @@ function NewsFormModal({ onClose, onSave, initialData = null }) {
   const handleSubmit = useCallback((e) => {
     e.preventDefault()
     if (!title.trim()) { setError('Title is required.'); return }
+    if (uploading) { setError('Please wait for the image to finish uploading.'); return }
     setSaving(true)
     setTimeout(() => {
       onSave({ title: title.trim(), titleSi: titleSi.trim(), titleTa: titleTa.trim(), category, status, excerpt: excerpt.trim(), imageUrl, featured })
     }, 280)
-  }, [title, titleSi, titleTa, category, status, excerpt, imageUrl, featured, onSave])
+  }, [title, titleSi, titleTa, category, status, excerpt, imageUrl, featured, uploading, onSave])
 
   const selectStyle = {
     width: '100%', padding: '9px 12px',
@@ -1993,9 +2048,14 @@ function NewsFormModal({ onClose, onSave, initialData = null }) {
           </Field>
 
           <Field label="Cover Image">
-            {imageUrl ? (
+            {uploading ? (
+              <div style={{ borderRadius: 10, height: 100, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 7, background: 'rgba(74,9,24,0.03)' }}>
+                <FiRefreshCw size={20} color={GOLD} style={{ animation: 'spin 0.9s linear infinite' }} />
+                <span style={{ fontSize: '0.78rem', color: 'rgba(74,9,24,0.5)', fontWeight: 500 }}>Uploading image…</span>
+              </div>
+            ) : imageUrl ? (
               <div style={{ position: 'relative', borderRadius: 10, overflow: 'hidden', height: 130 }}>
-                <img src={imageUrl} alt="cover preview" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                <img src={resolveUploadUrl(imageUrl)} alt="cover preview" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
                 <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.45) 0%, transparent 55%)' }} />
                 <div style={{ position: 'absolute', bottom: 8, left: 10, right: 10, display: 'flex', gap: 6 }}>
                   <button
@@ -2033,7 +2093,7 @@ function NewsFormModal({ onClose, onSave, initialData = null }) {
                   Click or drag &amp; drop an image
                 </span>
                 <span style={{ fontSize: '0.67rem', color: 'rgba(74,9,24,0.28)', pointerEvents: 'none' }}>
-                  JPG, PNG, WebP, GIF
+                  JPG, PNG, WebP, GIF — converted to WebP automatically
                 </span>
               </div>
             )}
@@ -2085,10 +2145,10 @@ function NewsFormModal({ onClose, onSave, initialData = null }) {
               onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
               Cancel
             </button>
-            <motion.button type="submit" disabled={saving}
-              whileHover={!saving ? { y: -1, boxShadow: '0 6px 20px rgba(74,9,24,0.34)' } : {}}
-              whileTap={!saving ? { scale: 0.97 } : {}}
-              style={{ padding: '9px 22px', borderRadius: 10, border: 'none', background: saving ? 'rgba(74,9,24,0.4)' : `linear-gradient(135deg, ${MAROON} 0%, #6E1528 100%)`, color: '#fff', fontSize: '0.83rem', cursor: saving ? 'default' : 'pointer', fontFamily: 'Inter, sans-serif', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 7, boxShadow: '0 3px 12px rgba(74,9,24,0.28)', transition: 'background 0.15s' }}>
+            <motion.button type="submit" disabled={saving || uploading}
+              whileHover={!saving && !uploading ? { y: -1, boxShadow: '0 6px 20px rgba(74,9,24,0.34)' } : {}}
+              whileTap={!saving && !uploading ? { scale: 0.97 } : {}}
+              style={{ padding: '9px 22px', borderRadius: 10, border: 'none', background: (saving || uploading) ? 'rgba(74,9,24,0.4)' : `linear-gradient(135deg, ${MAROON} 0%, #6E1528 100%)`, color: '#fff', fontSize: '0.83rem', cursor: (saving || uploading) ? 'default' : 'pointer', fontFamily: 'Inter, sans-serif', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 7, boxShadow: '0 3px 12px rgba(74,9,24,0.28)', transition: 'background 0.15s' }}>
               <FiFileText size={13} />
               {saving ? 'Saving…' : isEdit ? 'Save Changes' : 'Add Article'}
             </motion.button>
@@ -2127,7 +2187,7 @@ function ViewNewsModal({ article, onClose, onEdit }) {
 
         {article.imageUrl && (
           <div style={{ height: 160, overflow: 'hidden', flexShrink: 0, position: 'relative' }}>
-            <img src={article.imageUrl} alt={article.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            <img src={resolveUploadUrl(article.imageUrl)} alt={article.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.5) 0%, transparent 60%)' }} />
           </div>
         )}
@@ -2760,7 +2820,7 @@ function ViewAlbumModal({ album, onClose, onEdit }) {
         }}>
           {hasImages && (
             <img
-              src={images[0]}
+              src={resolveUploadUrl(images[0])}
               alt={album.title}
               style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: 0.55 }}
             />
@@ -2862,7 +2922,7 @@ function ViewAlbumModal({ album, onClose, onEdit }) {
                     }}
                   >
                     <img
-                      src={src} alt={`Photo ${idx + 1}`}
+                      src={resolveUploadUrl(src)} alt={`Photo ${idx + 1}`}
                       style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
                     />
                     {idx === 0 && (
@@ -2934,7 +2994,7 @@ function ViewAlbumModal({ album, onClose, onEdit }) {
               <AnimatePresence mode="wait">
                 <motion.img
                   key={lightIdx}
-                  src={images[lightIdx]}
+                  src={resolveUploadUrl(images[lightIdx])}
                   alt={`Photo ${lightIdx + 1}`}
                   initial={{ opacity: 0, scale: 1.04 }}
                   animate={{ opacity: 1, scale: 1 }}
@@ -3078,19 +3138,25 @@ function NewAlbumModal({ onClose, onSave, initialData = null }) {
   })
   const [error,    setError]    = useState('')
   const [saving,   setSaving]   = useState(false)
+  const [uploading, setUploading] = useState(false)
   const fileRef = useRef(null)
 
   const remaining = MAX_IMAGES - images.length
 
-  const readFiles = (files) => {
-    const toRead = files.slice(0, remaining)
-    toRead.forEach(file => {
-      const reader = new FileReader()
-      reader.onload = (ev) => {
-        setImages(prev => prev.length < MAX_IMAGES ? [...prev, ev.target.result] : prev)
-      }
-      reader.readAsDataURL(file)
-    })
+  const readFiles = async (files) => {
+    const toUpload = files.slice(0, remaining)
+    if (!toUpload.length) return
+    setUploading(true)
+    const results = await Promise.allSettled(toUpload.map(file => uploadImage(file)))
+    const uploaded = results.filter(r => r.status === 'fulfilled').map(r => r.value.data.url)
+    const failedCount = results.length - uploaded.length
+    if (uploaded.length) {
+      setImages(prev => [...prev, ...uploaded].slice(0, MAX_IMAGES))
+    }
+    if (failedCount > 0) {
+      toast.error(`${failedCount} photo${failedCount !== 1 ? 's' : ''} failed to upload.`)
+    }
+    setUploading(false)
   }
 
   const handleFiles = (e) => {
@@ -3112,6 +3178,10 @@ function NewAlbumModal({ onClose, onSave, initialData = null }) {
     e.preventDefault()
     if (!titleEn.trim() && !titleSi.trim() && !titleTa.trim()) {
       setError('Please enter a topic title in at least one language.')
+      return
+    }
+    if (uploading) {
+      setError('Please wait for photos to finish uploading.')
       return
     }
     setSaving(true)
@@ -3194,24 +3264,35 @@ function NewAlbumModal({ onClose, onSave, initialData = null }) {
             {remaining > 0 && (
               <div
                 onDragOver={e => e.preventDefault()}
-                onDrop={handleDrop}
-                onClick={() => fileRef.current?.click()}
+                onDrop={uploading ? undefined : handleDrop}
+                onClick={() => !uploading && fileRef.current?.click()}
                 style={{
                   border: `2px dashed ${images.length > 0 ? 'rgba(74,9,24,0.15)' : 'rgba(74,9,24,0.2)'}`,
                   borderRadius: 12, height: images.length > 0 ? 60 : 90,
                   display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
-                  cursor: 'pointer', background: 'rgba(74,9,24,0.015)', transition: 'all 0.18s',
+                  cursor: uploading ? 'default' : 'pointer', background: 'rgba(74,9,24,0.015)', transition: 'all 0.18s',
                   marginBottom: images.length > 0 ? '0.75rem' : 0,
                 }}
-                onMouseEnter={e => e.currentTarget.style.background = 'rgba(74,9,24,0.035)'}
-                onMouseLeave={e => e.currentTarget.style.background = 'rgba(74,9,24,0.015)'}
+                onMouseEnter={e => { if (!uploading) e.currentTarget.style.background = 'rgba(74,9,24,0.035)' }}
+                onMouseLeave={e => { if (!uploading) e.currentTarget.style.background = 'rgba(74,9,24,0.015)' }}
               >
-                <FiPlus size={16} color="rgba(74,9,24,0.35)" />
-                <span style={{ fontSize: '0.78rem', color: 'rgba(74,9,24,0.42)', fontWeight: 500, pointerEvents: 'none' }}>
-                  {images.length === 0
-                    ? `Click or drag to add photos (up to ${MAX_IMAGES})`
-                    : `Add more — ${remaining} slot${remaining !== 1 ? 's' : ''} left`}
-                </span>
+                {uploading ? (
+                  <>
+                    <FiRefreshCw size={16} color={GOLD} style={{ animation: 'spin 0.9s linear infinite' }} />
+                    <span style={{ fontSize: '0.78rem', color: 'rgba(74,9,24,0.5)', fontWeight: 500, pointerEvents: 'none' }}>
+                      Uploading photos…
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <FiPlus size={16} color="rgba(74,9,24,0.35)" />
+                    <span style={{ fontSize: '0.78rem', color: 'rgba(74,9,24,0.42)', fontWeight: 500, pointerEvents: 'none' }}>
+                      {images.length === 0
+                        ? `Click or drag to add photos (up to ${MAX_IMAGES})`
+                        : `Add more — ${remaining} slot${remaining !== 1 ? 's' : ''} left`}
+                    </span>
+                  </>
+                )}
               </div>
             )}
             <input
@@ -3229,7 +3310,7 @@ function NewAlbumModal({ onClose, onSave, initialData = null }) {
                 {images.map((src, idx) => (
                   <div key={idx} style={{ position: 'relative', aspectRatio: '1', borderRadius: 10, overflow: 'hidden' }}>
                     <img
-                      src={src} alt={`photo ${idx + 1}`}
+                      src={resolveUploadUrl(src)} alt={`photo ${idx + 1}`}
                       style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
                     />
                     {/* Cover badge on first image */}
@@ -3319,15 +3400,15 @@ function NewAlbumModal({ onClose, onSave, initialData = null }) {
             </button>
             <motion.button
               type="submit"
-              disabled={saving}
-              whileHover={!saving ? { y: -1, boxShadow: '0 6px 20px rgba(74,9,24,0.34)' } : {}}
-              whileTap={!saving ? { scale: 0.97 } : {}}
+              disabled={saving || uploading}
+              whileHover={!saving && !uploading ? { y: -1, boxShadow: '0 6px 20px rgba(74,9,24,0.34)' } : {}}
+              whileTap={!saving && !uploading ? { scale: 0.97 } : {}}
               style={{
                 padding: '9px 22px', borderRadius: 10, border: 'none',
-                background: saving
+                background: (saving || uploading)
                   ? 'rgba(74,9,24,0.4)'
                   : `linear-gradient(135deg, ${MAROON} 0%, #6E1528 100%)`,
-                color: '#fff', fontSize: '0.83rem', cursor: saving ? 'default' : 'pointer',
+                color: '#fff', fontSize: '0.83rem', cursor: (saving || uploading) ? 'default' : 'pointer',
                 fontFamily: 'Inter, sans-serif', fontWeight: 600,
                 display: 'flex', alignItems: 'center', gap: 7,
                 boxShadow: '0 3px 12px rgba(74,9,24,0.28)',
@@ -5027,13 +5108,13 @@ const POLICY_SECTIONS = [
   {
     n: '3',
     title: 'Mandatory Approval Requirement',
-    highlight: 'All website updates, developments, modifications, maintenance activities, or system changes must receive prior written or official approval from the Deputy Chief Secretary (Planning) before any development or modification process begins. No developer, maintainer, or technical officer is permitted to perform any modification without official approval.',
+    highlight: 'All website updates, developments, modifications, maintenance activities, or system changes must receive prior written or official approval from the Deputy Chief Secretary – (Planning & Monitoring) before any development or modification process begins. No developer, maintainer, or technical officer is permitted to perform any modification without official approval.',
   },
   {
     n: '4',
     title: 'Development and Modification Procedures',
     steps: [
-      { label: 'Step 1 — Approval', text: 'Developer submits the requested modification details. Approval must be obtained from the Deputy Chief Secretary (Planning).' },
+      { label: 'Step 1 — Approval', text: 'Developer submits the requested modification details. Approval must be obtained from the Deputy Chief Secretary – (Planning & Monitoring).' },
       { label: 'Step 2 — Development Process', text: 'Changes must be implemented only within the authorized development environment. Direct modifications to the live/public website are strictly prohibited.' },
       { label: 'Step 3 — Change Recording', text: 'All updates must be individually recorded: date & time, developer name, description, affected sections, version details, and approval reference. Records must be securely maintained for auditing.' },
     ],
@@ -5048,7 +5129,7 @@ const POLICY_SECTIONS = [
   {
     n: '6',
     title: 'Final Approval and Public Release',
-    body: 'The website or modification can only be published after all testing processes are successfully completed, testing reports are reviewed, and final approval is granted by the Deputy Chief Secretary (Planning). Without final approval, no system, update, or modification may be released to the public environment.',
+    body: 'The website or modification can only be published after all testing processes are successfully completed, testing reports are reviewed, and final approval is granted by the Deputy Chief Secretary – (Planning & Monitoring). Without final approval, no system, update, or modification may be released to the public environment.',
   },
   {
     n: '7',
@@ -5240,7 +5321,7 @@ const HOLDABLE_PAGES = [
       { key: 'about__organization-structure',  label: 'Organization Structure',     path: '/about/organization-structure' },
       { key: 'about__functions-duties',        label: 'Functions & Duties',         path: '/about/functions-duties' },
       { key: 'about__history',                 label: 'History',                    path: '/about/history' },
-      { key: 'about__deputy-secretary-planning', label: 'Deputy Chief Secretary – Planning', path: '/about/deputy-secretary-planning' },
+      { key: 'about__deputy-secretary-planning', label: 'Deputy Chief Secretary – (Planning & Monitoring)', path: '/about/deputy-secretary-planning' },
       { key: 'about__director-planning',       label: 'Director – Planning',        path: '/about/director-planning' },
       {
         key: 'about__deputy-directors', label: 'Deputy Directors', path: '/about/deputy-directors',
