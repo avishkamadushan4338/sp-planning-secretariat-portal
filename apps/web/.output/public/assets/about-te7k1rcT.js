@@ -1,0 +1,1 @@
+import{t as e}from"./About-BuPG3buE.js";var t=e;export{t as component};

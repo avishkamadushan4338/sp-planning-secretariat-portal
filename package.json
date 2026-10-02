@@ -1,0 +1,28 @@
+{
+  "name": "sp-planning-secretariat-portal",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "type": "module",
+  "scripts": {
+    "dev": "docker compose up -d postgres && bun run --filter web dev",
+    "build": "bun run --filter \"@sp-planning/*\" build && bun run --filter web build",
+    "check-types": "bun run --filter \"@sp-planning/*\" check-types && bun run --filter web check-types",
+    "db:start": "docker compose up -d postgres",
+    "db:stop": "docker compose stop postgres",
+    "db:down": "docker compose down",
+    "db:push": "bun run --filter @sp-planning/db db:push",
+    "db:generate": "bun run --filter @sp-planning/db db:generate",
+    "db:migrate": "bun run --filter @sp-planning/db db:migrate",
+    "db:studio": "bun run --filter @sp-planning/db db:studio",
+    "seed": "bun run --filter @sp-planning/db seed"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "typescript": "^5.7.2"
+  },
+  "packageManager": "bun@1.4.0"
+}

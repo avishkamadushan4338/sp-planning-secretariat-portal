@@ -1,0 +1,1 @@
+import{r as e}from"./react-router-dom-shim-C_dp7Xqw.js";import{m as t}from"./index-IHbHzuhm.js";var n=t();function r(){return(0,n.jsx)(e,{to:`/news?tab=gallery`,replace:!0})}var i=r;export{i as component};

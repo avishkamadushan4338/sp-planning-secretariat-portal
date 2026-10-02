@@ -1,0 +1,1 @@
+function e(e){return typeof e!=`string`||!e.startsWith(`/uploads/`)?e:`${e}`}export{e as t};

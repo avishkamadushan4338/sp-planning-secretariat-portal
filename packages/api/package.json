@@ -1,0 +1,29 @@
+{
+  "name": "@sp-planning/api",
+  "version": "1.0.0",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./context": "./src/context.ts",
+    "./routers/*": "./src/routers/*.ts",
+    "./schemas/*": "./src/schemas/*.ts"
+  },
+  "scripts": {
+    "build": "tsc -b",
+    "check-types": "tsc -b"
+  },
+  "dependencies": {
+    "@orpc/client": "^1.15.0",
+    "@orpc/openapi": "^1.15.0",
+    "@orpc/server": "^1.15.0",
+    "@orpc/zod": "^1.15.0",
+    "@sp-planning/auth": "workspace:*",
+    "@sp-planning/db": "workspace:*",
+    "drizzle-orm": "^0.38.3",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@sp-planning/config": "workspace:*",
+    "typescript": "^5.7.2"
+  }
+}

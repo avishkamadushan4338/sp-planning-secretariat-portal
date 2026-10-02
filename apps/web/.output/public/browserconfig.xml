@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  browserconfig.xml — Windows tile configuration
+  Provincial Planning Secretariat – Southern Province
+  Place this file at the website root: https://www.planningsec.sp.gov.lk/browserconfig.xml
+-->
+<browserconfig>
+  <msapplication>
+    <tile>
+      <square70x70logo src="/assets/icons/mstile-70x70.png" />
+      <square150x150logo src="/assets/icons/mstile-150x150.png" />
+      <square310x310logo src="/assets/icons/mstile-310x310.png" />
+      <wide310x150logo src="/assets/icons/mstile-310x150.png" />
+      <TileColor>#006633</TileColor>
+      <TileImage src="/assets/icons/mstile-144x144.png" />
+    </tile>
+    <notification>
+      <polling-uri src="https://www.planningsec.sp.gov.lk/api/live-tile/" />
+      <frequency>30</frequency>
+      <cycle>1</cycle>
+    </notification>
+  </msapplication>
+</browserconfig>
