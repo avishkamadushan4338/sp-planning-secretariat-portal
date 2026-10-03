@@ -1,1 +1,16 @@
 node_modules
+
+# Compiled output from packages/{db,api,auth} (tsc outDir: ".")
+packages/db/*.js
+packages/db/*.d.ts
+packages/db/schema/*.js
+packages/db/schema/*.d.ts
+packages/api/*.js
+packages/api/*.d.ts
+packages/api/routers/
+packages/auth/*.js
+packages/auth/*.d.ts
+*.tsbuildinfo
+
+# Stray local archive, not part of the source tree
+frontend/public.zip

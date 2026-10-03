@@ -1,13 +1,12 @@
 const router = require('express').Router()
-const db = require('../../../db')
+const { appRouter, callPortal } = require('../../../services')
 
-const SINGLETON_ID = 'functions'
-
+const { about } = appRouter.portal
 const EMPTY_LANG_BLOCK = { sectionLabel: '', intro: '', duties: [] }
 
 function defaultShape() {
   return {
-    id: SINGLETON_ID,
+    id: 'functions',
     en: { ...EMPTY_LANG_BLOCK },
     si: { ...EMPTY_LANG_BLOCK },
     ta: { ...EMPTY_LANG_BLOCK },
@@ -17,17 +16,14 @@ function defaultShape() {
 
 /* ── GET /api/about-functions ─────────────────────────────────────────────── */
 router.get('/', async (_req, res) => {
-  const row = await db.findById('about_functions', SINGLETON_ID)
+  const row = await callPortal(about.getFunctions, undefined)
   res.json(row || defaultShape())
 })
 
 /* ── PUT /api/about-functions ─────────────────────────────────────────────── */
 router.put('/', async (req, res) => {
-  const patch = { ...(req.body || {}), id: SINGLETON_ID }
-  const existing = await db.findById('about_functions', SINGLETON_ID)
-  const saved = existing
-    ? await db.update('about_functions', SINGLETON_ID, patch)
-    : await db.insert('about_functions', { ...defaultShape(), ...patch, updatedAt: new Date().toISOString() })
+  const existing = await callPortal(about.getFunctions, undefined)
+  const saved = await callPortal(about.saveFunctions, { ...defaultShape(), ...existing, ...req.body })
   res.json(saved)
 })
 

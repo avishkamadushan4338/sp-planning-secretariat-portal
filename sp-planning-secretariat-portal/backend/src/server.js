@@ -20,6 +20,7 @@ const smpItems      = require('./features/smp/routes/smpItems')
 const smpDisposal   = require('./features/smp/routes/smpDisposal')
 const smpReports    = require('./features/smp/routes/smpReports')
 const { startCleanupCron } = require('./utils/cleanup')
+const { bootstrap } = require('./services')
 
 const app  = express()
 const PORT = process.env.PORT || 5000
@@ -57,5 +58,9 @@ app.use('/api/smp/disposal', smpDisposal)
 app.use('/api/smp/reports',  smpReports)
 
 startCleanupCron()
+
+bootstrap()
+  .then(() => console.log('[auth] Bootstrap accounts ensured'))
+  .catch((e) => console.error('[auth] bootstrap warning:', e))
 
 app.listen(PORT, () => console.log(`Backend running on http://localhost:${PORT}`))

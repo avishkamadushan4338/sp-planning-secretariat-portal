@@ -1,0 +1,17 @@
+{
+  "name": "@sp-planning/auth",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc",
+    "check-types": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@sp-planning/db": "*",
+    "better-auth": "1.7.5",
+    "drizzle-orm": "^0.45.2"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.2"
+  }
+}

@@ -1,8 +1,7 @@
 const router = require('express').Router()
-const db = require('../../../db')
+const { appRouter, callPortal } = require('../../../services')
 
-const SINGLETON_ID = 'history'
-
+const { about } = appRouter.portal
 const EMPTY_LANG_BLOCK = {
   introLabel: '', introTitle: '', introPara1: '', introPara2: '',
   tableTitle: '', tableName: '', tableService: '',
@@ -13,7 +12,7 @@ const EMPTY_LANG_BLOCK = {
 
 function defaultShape() {
   return {
-    id: SINGLETON_ID,
+    id: 'history',
     en: { ...EMPTY_LANG_BLOCK },
     si: { ...EMPTY_LANG_BLOCK },
     ta: { ...EMPTY_LANG_BLOCK },
@@ -27,17 +26,14 @@ function defaultShape() {
 
 /* ── GET /api/about-history ───────────────────────────────────────────────── */
 router.get('/', async (_req, res) => {
-  const row = await db.findById('about_history', SINGLETON_ID)
+  const row = await callPortal(about.getHistory, undefined)
   res.json(row || defaultShape())
 })
 
 /* ── PUT /api/about-history ───────────────────────────────────────────────── */
 router.put('/', async (req, res) => {
-  const patch = { ...(req.body || {}), id: SINGLETON_ID }
-  const existing = await db.findById('about_history', SINGLETON_ID)
-  const saved = existing
-    ? await db.update('about_history', SINGLETON_ID, patch)
-    : await db.insert('about_history', { ...defaultShape(), ...patch, updatedAt: new Date().toISOString() })
+  const existing = await callPortal(about.getHistory, undefined)
+  const saved = await callPortal(about.saveHistory, { ...defaultShape(), ...existing, ...req.body })
   res.json(saved)
 })
 

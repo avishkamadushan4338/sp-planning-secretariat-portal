@@ -1,43 +1,38 @@
 const router = require('express').Router()
-const { v4: uuid } = require('uuid')
-const db = require('../../../db')
+const { appRouter, callPortal } = require('../../../services')
+
+const { faqs } = appRouter.portal
 
 /* ── GET /api/faqs ────────────────────────────────────────────────────────── */
 router.get('/', async (_req, res) => {
-  const rows = await db.findAll('faqs')
-  rows.sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
-  res.json(rows)
+  res.json(await callPortal(faqs.list, undefined))
 })
 
 /* ── POST /api/faqs ───────────────────────────────────────────────────────── */
 router.post('/', async (req, res) => {
-  const now = new Date().toISOString()
-  const record = {
-    id:       uuid(),
-    category: req.body?.category || 'general',
-    question: req.body?.question || { en: '', si: '', ta: '' },
-    answer:   req.body?.answer   || { en: '', si: '', ta: '' },
-    featured: req.body?.featured ?? false,
-    order:    req.body?.order    ?? 0,
-    createdAt: now,
-    updatedAt: now,
-  }
-  if (!record.question.en?.trim()) return res.status(400).json({ error: 'English question is required.' })
-  if (!record.answer.en?.trim())   return res.status(400).json({ error: 'English answer is required.' })
-  res.status(201).json(await db.insert('faqs', record))
+  const question = req.body?.question
+  const answer = req.body?.answer
+  if (!question?.en?.trim()) return res.status(400).json({ error: 'English question is required.' })
+  if (!answer?.en?.trim()) return res.status(400).json({ error: 'English answer is required.' })
+  const saved = await callPortal(faqs.save, { ...req.body, id: undefined })
+  res.status(201).json(saved)
 })
 
 /* ── PATCH /api/faqs/:id ──────────────────────────────────────────────────── */
 router.patch('/:id', async (req, res) => {
-  const updated = await db.update('faqs', req.params.id, req.body || {})
-  if (!updated) return res.status(404).json({ error: 'FAQ not found' })
-  res.json(updated)
+  const rows = await callPortal(faqs.list, undefined)
+  const existing = rows.find((r) => r.id === req.params.id)
+  if (!existing) return res.status(404).json({ error: 'FAQ not found' })
+  const saved = await callPortal(faqs.save, { ...existing, ...req.body, id: req.params.id })
+  res.json(saved)
 })
 
 /* ── DELETE /api/faqs/:id ─────────────────────────────────────────────────── */
 router.delete('/:id', async (req, res) => {
-  const ok = await db.remove('faqs', req.params.id)
-  if (!ok) return res.status(404).json({ error: 'FAQ not found' })
+  const rows = await callPortal(faqs.list, undefined)
+  const existing = rows.find((r) => r.id === req.params.id)
+  if (!existing) return res.status(404).json({ error: 'FAQ not found' })
+  await callPortal(faqs.delete, { id: req.params.id })
   res.json({ ok: true })
 })
 

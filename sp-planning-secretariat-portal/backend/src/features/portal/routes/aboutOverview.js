@@ -1,13 +1,12 @@
 const router = require('express').Router()
-const db = require('../../../db')
+const { appRouter, callPortal } = require('../../../services')
 
-const SINGLETON_ID = 'overview'
-
+const { about } = appRouter.portal
 const EMPTY_LANG = { en: '', si: '', ta: '' }
 
 function defaultShape() {
   return {
-    id: SINGLETON_ID,
+    id: 'overview',
     intro: {
       en: { introLabel: '', introTitle: '', introParagraphs: [], visionLabel: '', visionText: '', missionLabel: '', missionText: '', imageAlt: '', officialGovt: '', officialGovtSub: '' },
       si: { introLabel: '', introTitle: '', introParagraphs: [], visionLabel: '', visionText: '', missionLabel: '', missionText: '', imageAlt: '', officialGovt: '', officialGovtSub: '' },
@@ -35,17 +34,14 @@ function defaultShape() {
 
 /* ── GET /api/about-overview ──────────────────────────────────────────────── */
 router.get('/', async (_req, res) => {
-  const row = await db.findById('about_overview', SINGLETON_ID)
+  const row = await callPortal(about.getOverview, undefined)
   res.json(row || defaultShape())
 })
 
 /* ── PUT /api/about-overview ──────────────────────────────────────────────── */
 router.put('/', async (req, res) => {
-  const patch = { ...(req.body || {}), id: SINGLETON_ID }
-  const existing = await db.findById('about_overview', SINGLETON_ID)
-  const saved = existing
-    ? await db.update('about_overview', SINGLETON_ID, patch)
-    : await db.insert('about_overview', { ...defaultShape(), ...patch, updatedAt: new Date().toISOString() })
+  const existing = await callPortal(about.getOverview, undefined)
+  const saved = await callPortal(about.saveOverview, { ...defaultShape(), ...existing, ...req.body })
   res.json(saved)
 })
 
