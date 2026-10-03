@@ -11,6 +11,7 @@
     "dev": "docker compose up -d postgres && bun run --filter web dev",
     "build": "bun run --filter \"@sp-planning/*\" build && bun run --filter web build",
     "check-types": "bun run --filter \"@sp-planning/*\" check-types && bun run --filter web check-types",
+    "test": "bun run --filter @sp-planning/api test",
     "db:start": "docker compose up -d postgres",
     "db:stop": "docker compose stop postgres",
     "db:down": "docker compose down",
@@ -18,6 +19,7 @@
     "db:generate": "bun run --filter @sp-planning/db db:generate",
     "db:migrate": "bun run --filter @sp-planning/db db:migrate",
     "db:studio": "bun run --filter @sp-planning/db db:studio",
+    "db:migrate-content": "bun run --filter @sp-planning/db db:migrate-content",
     "seed": "bun run --filter @sp-planning/db seed"
   },
   "devDependencies": {

@@ -10,7 +10,9 @@
   },
   "scripts": {
     "build": "tsc -b",
-    "check-types": "tsc -b"
+    "check-types": "tsc -b",
+    "test": "bun test",
+    "smoke": "bun scripts/smoke-cms.ts"
   },
   "dependencies": {
     "@orpc/client": "^1.15.0",

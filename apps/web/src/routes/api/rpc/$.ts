@@ -37,11 +37,20 @@ async function handle({ request }: { request: Request }) {
   });
   if (rpcResult.response) return rpcResult.response;
 
-  const apiResult = await apiHandler.handle(request, {
-    prefix: "/api/rpc/api-reference",
-    context,
-  });
-  if (apiResult.response) return apiResult.response;
+  // The OpenAPI reference publishes a full map of every procedure and its
+  // input schema, including all CMS write endpoints. It is a development aid,
+  // so it is only served to authenticated content managers — never to
+  // anonymous visitors.
+  if (process.env.NODE_ENV !== "production") {
+    const role = context.session?.user?.role;
+    if (role === "admin" || role === "secretary") {
+      const apiResult = await apiHandler.handle(request, {
+        prefix: "/api/rpc/api-reference",
+        context,
+      });
+      if (apiResult.response) return apiResult.response;
+    }
+  }
 
   return new Response("Not found", { status: 404 });
 }

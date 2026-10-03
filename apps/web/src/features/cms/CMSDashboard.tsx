@@ -4,6 +4,17 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { toast, Toaster } from 'sonner'
 import CMSHomeNewsBar from './CMSHomeNewsBar'
 import { useSitePublish } from '@/shared/contexts/useSitePublish'
+import {
+  getCollection,
+  loadAllCollections,
+  subscribeCmsStore,
+  addToCollection,
+  updateInCollection,
+  removeFromCollection,
+  savePublishMode,
+  savePageVisibility,
+  type CollectionKey,
+} from './shared/cmsCollectionStore'
 import { resolveUploadUrl } from '@/shared/utils/resolveUploadUrl'
 import { uploadImage } from './cmsApi'
 import CMSHomeEvents  from './CMSHomeEvents'
@@ -99,6 +110,17 @@ const NAV_GROUPS = [
   },
 ]
 
+/**
+ * Maps dashboard section ids onto the DB-backed collection store keys so the
+ * shared delete handler can archive the right content type.
+ */
+const SECTION_TO_STORE_KEY: Record<string, CollectionKey | undefined> = {
+  news:      'news',
+  notices:   'notices',
+  downloads: 'downloads',
+  gallery:   'gallery',
+}
+
 const NOTIFICATIONS = []
 
 function getGreeting() {
@@ -137,21 +159,26 @@ export default function CMSDashboard() {
   const [active,      setActive]      = useState('overview')
   const [collapsed,   setCollapsed]   = useState(false)
   const [search,      setSearch]      = useState('')
-  const [data, setData] = useState(() => {
-    try {
-      const savedNotices   = JSON.parse((typeof window !== "undefined" ? localStorage.getItem('cms_notices') : null)        || '[]')
-      const savedNews      = JSON.parse((typeof window !== "undefined" ? localStorage.getItem('cms_news') : null)           || '[]')
-      const savedDownloads = JSON.parse((typeof window !== "undefined" ? localStorage.getItem('cms_downloads') : null)      || '[]')
-      const savedGallery   = JSON.parse((typeof window !== "undefined" ? localStorage.getItem('cms_gallery_albums') : null) || '[]')
-      return {
-        notices:   savedNotices,
-        news:      savedNews,
-        downloads: savedDownloads,
-        gallery:   savedGallery,
-      }
-    } catch { /* ignore */ }
-    return MOCK
-  })
+  const [data, setData] = useState(() => ({
+    notices:   getCollection('notices'),
+    news:      getCollection('news'),
+    downloads: getCollection('downloads'),
+    gallery:   getCollection('gallery'),
+  }))
+
+  // Load the collections from Postgres and keep local state in sync whenever
+  // the store cache changes (including changes made by other tabs).
+  useEffect(() => {
+    loadAllCollections()
+    return subscribeCmsStore(() => {
+      setData(d => ({
+        notices:   getCollection('notices'),
+        news:      getCollection('news'),
+        downloads: getCollection('downloads'),
+        gallery:   getCollection('gallery'),
+      }))
+    })
+  }, [])
   const [deleteModal,    setDeleteModal]    = useState(null)
   const [albumModal,     setAlbumModal]     = useState(false)
   const [editAlbumData,  setEditAlbumData]  = useState(null)
@@ -195,20 +222,10 @@ export default function CMSDashboard() {
   const executeDelete = () => {
     if (!deleteModal) return
     setData(d => ({ ...d, [deleteModal.section]: d[deleteModal.section].filter(r => r.id !== deleteModal.id) }))
-    if (deleteModal.section === 'gallery') {
-      const stored = JSON.parse((typeof window !== "undefined" ? localStorage.getItem('cms_gallery_albums') : null) || '[]')
-      localStorage.setItem('cms_gallery_albums', JSON.stringify(stored.filter(a => a.id !== deleteModal.id)))
-    }
-    if (deleteModal.section === 'notices') {
-      const stored = JSON.parse((typeof window !== "undefined" ? localStorage.getItem('cms_notices') : null) || '[]')
-      localStorage.setItem('cms_notices', JSON.stringify(stored.filter(n => n.id !== deleteModal.id)))
-      notifyNoticesUpdated()
-    }
-    if (deleteModal.section === 'downloads') {
-      const stored = JSON.parse((typeof window !== "undefined" ? localStorage.getItem('cms_downloads') : null) || '[]')
-      localStorage.setItem('cms_downloads', JSON.stringify(stored.filter(d => d.id !== deleteModal.id)))
-      notifyDownloadsUpdated()
-    }
+    // Archive rather than hard-delete: the record leaves the public site but
+    // its revision history survives so the deletion can be undone.
+    const sectionKey = SECTION_TO_STORE_KEY[deleteModal.section]
+    if (sectionKey) removeFromCollection(sectionKey, deleteModal.id)
     toast.success('Record deleted successfully')
     setDeleteModal(null)
   }
@@ -231,13 +248,7 @@ export default function CMSDashboard() {
       downloadAccess: form.downloadAccess || 'Everyone',
     }
     setData(d => ({ ...d, downloads: [newItem, ...d.downloads] }))
-    try {
-      const stored = JSON.parse((typeof window !== "undefined" ? localStorage.getItem('cms_downloads') : null) || '[]')
-      localStorage.setItem('cms_downloads', JSON.stringify([newItem, ...stored]))
-      notifyDownloadsUpdated()
-    } catch {
-      toast.error('Storage full — saved in session only')
-    }
+    addToCollection('downloads', newItem)
     toast.success('Download item added successfully')
     setDownloadModal(false)
   }
@@ -259,11 +270,7 @@ export default function CMSDashboard() {
       downloadAccess: form.downloadAccess || 'Everyone',
     }
     setData(d => ({ ...d, downloads: d.downloads.map(it => it.id === updated.id ? updated : it) }))
-    try {
-      const stored = JSON.parse((typeof window !== "undefined" ? localStorage.getItem('cms_downloads') : null) || '[]')
-      localStorage.setItem('cms_downloads', JSON.stringify(stored.map(it => it.id === updated.id ? updated : it)))
-      notifyDownloadsUpdated()
-    } catch { /* ignore */ }
+    updateInCollection('downloads', updated)
     toast.success('Download item updated')
     setEditDownloadData(null)
   }
@@ -283,13 +290,8 @@ export default function CMSDashboard() {
       images: form.images,
     }
     setData(d => ({ ...d, gallery: [newAlbum, ...d.gallery] }))
-    try {
-      const stored = JSON.parse((typeof window !== "undefined" ? localStorage.getItem('cms_gallery_albums') : null) || '[]')
-      localStorage.setItem('cms_gallery_albums', JSON.stringify([newAlbum, ...stored]))
-    } catch {
-      toast.error('Storage full — album saved in session only')
-    }
-    toast.success('Album created successfully')
+    addToCollection('gallery', newAlbum)
+    toast.success('Album saved as a draft', { description: 'Publish it to show it on the site.' })
     setAlbumModal(false)
   }
 
@@ -307,15 +309,8 @@ export default function CMSDashboard() {
       images:   form.images,
     }
     setData(d => ({ ...d, gallery: d.gallery.map(a => a.id === updated.id ? updated : a) }))
-    try {
-      const stored = JSON.parse((typeof window !== "undefined" ? localStorage.getItem('cms_gallery_albums') : null) || '[]')
-      localStorage.setItem('cms_gallery_albums', JSON.stringify(
-        stored.map(a => a.id === updated.id ? updated : a)
-      ))
-    } catch {
-      toast.error('Storage full — changes saved in session only')
-    }
-    toast.success('Album updated successfully')
+    updateInCollection('gallery', updated)
+    toast.success('Album draft updated', { description: 'Publish to push changes live.' })
     setEditAlbumData(null)
   }
 
@@ -342,12 +337,9 @@ export default function CMSDashboard() {
       downloadAccess: form.downloadAccess || 'Everyone',
     }
     setData(d => ({ ...d, notices: [newNotice, ...d.notices] }))
-    try {
-      const stored = JSON.parse((typeof window !== "undefined" ? localStorage.getItem('cms_notices') : null) || '[]')
-      localStorage.setItem('cms_notices', JSON.stringify([newNotice, ...stored]))
-      notifyNoticesUpdated()
-    } catch { toast.error('Storage full — notice saved in session only') }
-    toast.success('Notice added successfully')
+    addToCollection('notices', newNotice)
+    notifyNoticesUpdated()
+    toast.success('Notice saved as a draft', { description: 'Publish it to show it on the site.' })
     setNoticeModal(false)
   }
 
@@ -372,14 +364,8 @@ export default function CMSDashboard() {
       downloadAccess: form.downloadAccess || editNoticeData?.downloadAccess || 'Everyone',
     }
     setData(d => ({ ...d, notices: d.notices.map(n => n.id === updated.id ? updated : n) }))
-    try {
-      const stored = JSON.parse((typeof window !== "undefined" ? localStorage.getItem('cms_notices') : null) || '[]')
-      const exists = stored.some(n => n.id === updated.id)
-      localStorage.setItem('cms_notices', JSON.stringify(
-        exists ? stored.map(n => n.id === updated.id ? updated : n) : [updated, ...stored]
-      ))
-      notifyNoticesUpdated()
-    } catch { toast.error('Storage full — changes saved in session only') }
+    updateInCollection('notices', updated)
+    notifyNoticesUpdated()
     toast.success('Notice updated successfully')
     setEditNoticeData(null)
   }
@@ -398,11 +384,8 @@ export default function CMSDashboard() {
       featured:  form.featured  || false,
     }
     setData(d => ({ ...d, news: [newArticle, ...d.news] }))
-    try {
-      const stored = JSON.parse((typeof window !== "undefined" ? localStorage.getItem('cms_news') : null) || '[]')
-      localStorage.setItem('cms_news', JSON.stringify([newArticle, ...stored]))
-    } catch { toast.error('Storage full — article saved in session only') }
-    toast.success('News article added successfully')
+    addToCollection('news', newArticle)
+    toast.success('Article saved as a draft', { description: 'Publish it to show it on the site.' })
     setNewsModal(false)
   }
 
@@ -419,13 +402,7 @@ export default function CMSDashboard() {
       featured: form.featured || false,
     }
     setData(d => ({ ...d, news: d.news.map(a => a.id === updated.id ? updated : a) }))
-    try {
-      const stored = JSON.parse((typeof window !== "undefined" ? localStorage.getItem('cms_news') : null) || '[]')
-      const exists = stored.some(a => a.id === updated.id)
-      localStorage.setItem('cms_news', JSON.stringify(
-        exists ? stored.map(a => a.id === updated.id ? updated : a) : [updated, ...stored]
-      ))
-    } catch { toast.error('Storage full — changes saved in session only') }
+    updateInCollection('news', updated)
     toast.success('News article updated successfully')
     setEditNewsData(null)
   }
@@ -3571,12 +3548,20 @@ function PublishSiteSection() {
     setConfirm(true)
   }
 
-  const executeToggle = () => {
+  const executeToggle = async () => {
     const goLive = pending === 'live'
-    setLive(goLive)
-    toast.success(goLive
-      ? 'Site is now LIVE — visible to the public!'
-      : 'Site set to Coming Soon — portal hidden from public.')
+    // Persist to the database, not just this browser. Previously the flag lived
+    // in localStorage, so "Coming Soon" was only ever seen by the admin whose
+    // machine had it set — every visitor still saw the live site.
+    try {
+      await savePublishMode(goLive)
+      setLive(goLive)
+      toast.success(goLive
+        ? 'Site is now LIVE — visible to the public!'
+        : 'Site set to Coming Soon — portal hidden from public.')
+    } catch {
+      toast.error('Failed to update site visibility. Please try again.')
+    }
     setConfirm(false)
     setPending(null)
   }
@@ -5311,15 +5296,26 @@ function PolicySection() {
   )
 }
 
-// ── Page Hold storage key ─────────────────────────────────────────────────────
+// ── Page visibility ───────────────────────────────────────────────────────────
+//
+// Visibility used to be a `localStorage` map, which meant hiding a page only
+// hid it for the editor's own browser. It is now a CMS singleton so the setting
+// applies to every visitor and is versioned like other content.
 const PAGE_HOLD_KEY = 'cms_page_hold'
 
 function getPageHoldMap() {
-  try { return JSON.parse((typeof window !== "undefined" ? localStorage.getItem(PAGE_HOLD_KEY) : null) || '{}') } catch { return {} }
+  try {
+    const raw = (typeof window !== "undefined" ? localStorage.getItem(PAGE_HOLD_KEY) : null)
+    return raw ? JSON.parse(raw) : {}
+  } catch { return {} }
 }
 
 function savePageHoldMap(map) {
-  localStorage.setItem(PAGE_HOLD_KEY, JSON.stringify(map))
+  // Keep the local copy for synchronous render, and persist authoritatively.
+  try { localStorage.setItem(PAGE_HOLD_KEY, JSON.stringify(map)) } catch { /* ignore */ }
+  savePageVisibility(map).catch(() => {
+    toast.error('Failed to save page visibility settings.')
+  })
   window.dispatchEvent(new Event('cms_page_hold_updated'))
 }
 

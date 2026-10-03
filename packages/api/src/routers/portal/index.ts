@@ -1,4 +1,4 @@
-import { publicProcedure, protectedProcedure } from "../../index";
+import { publicProcedure, protectedProcedure, contentProcedure } from "../../index";
 import * as schema from "@sp-planning/db/schema/index";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
@@ -37,7 +37,7 @@ export const staffRouter = {
       return row ? (row.data as any) : null;
     }),
 
-  save: protectedProcedure
+  save: contentProcedure
     .input(
       z.object({
         id: z.string().optional(),
@@ -93,7 +93,7 @@ export const staffRouter = {
       return record;
     }),
 
-  delete: protectedProcedure
+  delete: contentProcedure
     .input(z.object({ id: z.string() }))
     .handler(async ({ context, input }) => {
       await context.db.delete(schema.cmsStaff).where(eq(schema.cmsStaff.id, input.id));
@@ -142,7 +142,7 @@ export const siteSettingsRouter = {
       .limit(1);
     return row ? (row.data as any) : null;
   }),
-  update: protectedProcedure
+  update: contentProcedure
     .input(z.record(z.any()))
     .handler(async ({ context, input }) => {
       await context.db
@@ -197,7 +197,7 @@ export const newsBarRouter = {
       .limit(1);
     return row ? (row.data as any) : [];
   }),
-  update: protectedProcedure
+  update: contentProcedure
     .input(z.array(z.any()))
     .handler(async ({ context, input }) => {
       const existing = await context.db

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { toast } from 'sonner'
+import { cmsApi } from './cmsContentApi'
 import {
   FiPlus, FiEdit2, FiTrash2,
   FiSearch, FiX, FiCheck, FiCalendar, FiClock,
@@ -9,8 +10,6 @@ import {
 
 const MAROON = '#4A0918'
 const GOLD   = '#C79A2B'
-const LS_KEY = 'cms_home_events'
-
 /* ── BroadcastChannel ────────────────────────────────────────────────────── */
 const _evChannel = typeof BroadcastChannel !== 'undefined'
   ? new BroadcastChannel('cms_home_events')
@@ -21,16 +20,30 @@ function notifyUpdated() {
   _evChannel?.postMessage('updated')
 }
 
-/* ── localStorage helpers ────────────────────────────────────────────────── */
-function loadFromStorage() {
+/* ── Persistence ──────────────────────────────────────────────────────────────
+ *
+ * Home events used to be stored in `localStorage`, so an event created by one
+ * admin was invisible to everyone else and to the public site. They are now CMS
+ * records: saving creates or updates a draft, and publishing is what puts an
+ * event on the homepage.
+ * --------------------------------------------------------------------------- */
+async function loadFromStorage() {
   try {
-    const raw = (typeof window !== "undefined" ? localStorage.getItem(LS_KEY) : null)
-    return raw ? JSON.parse(raw) : []
+    const rows = await cmsApi.list('homeEvent')
+    return rows.map(r => ({ ...(r.data as Record<string, unknown>), id: r.id }))
   } catch { return [] }
 }
 
-function saveToStorage(items) {
-  localStorage.setItem(LS_KEY, JSON.stringify(items))
+async function saveToStorage(items) {
+  // Persist each event as its own record so it gets an independent revision
+  // history and can be published individually.
+  for (const event of items) {
+    await cmsApi.saveDraft({
+      contentType: 'homeEvent',
+      id: String(event.id),
+      data: event as Record<string, unknown>,
+    })
+  }
   notifyUpdated()
 }
 
@@ -53,7 +66,7 @@ export default function CMSHomeEvents({ search = '', setSearch = () => {} }) {
   const [editData,    setEditData]    = useState(null)
   const [deleteModal, setDeleteModal] = useState(null)
 
-  useEffect(() => { setItems(loadFromStorage()) }, [])
+  useEffect(() => { loadFromStorage().then(setItems) }, [])
 
   const persistAndSet = useCallback((updated, msg) => {
     saveToStorage(updated)

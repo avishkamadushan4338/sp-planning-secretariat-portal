@@ -57,3 +57,6 @@ coverage
 .cache
 tmp
 temp
+
+# Runtime CMS upload storage
+apps/web/uploads/

@@ -16,8 +16,17 @@ export interface AuthConfig {
   PRINCIPAL_PASSWORD?: string;
 }
 
-export const createAuth = (env: AuthConfig, database: Database) =>
-  betterAuth({
+export const createAuth = (env: AuthConfig, database: Database) => {
+  // A shared fallback secret means every deployment signs sessions with the
+  // same key, so a cookie from one instance authenticates against another.
+  // Fail loudly in production instead of silently downgrading.
+  if (process.env.NODE_ENV === "production" && !env.BETTER_AUTH_SECRET) {
+    throw new Error(
+      "BETTER_AUTH_SECRET must be set in production. Refusing to start with the development fallback."
+    );
+  }
+
+  return betterAuth({
     database: drizzleAdapter(database, {
       provider: "pg",
       schema,
@@ -41,6 +50,7 @@ export const createAuth = (env: AuthConfig, database: Database) =>
       tanstackStartCookies(),
     ],
   });
+};
 
 export type Auth = ReturnType<typeof createAuth>;
 export { ensureBootstrapUsers } from "./admin";

@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { usePageHold } from '@/shared/hooks/usePageHold'
 import ComingSoon from '@/shared/components/ComingSoon'
 import { SeoHead } from '@/shared/seo'
+import { cmsApi } from '@/features/cms/cmsContentApi'
 import {
   FiDownload, FiSearch, FiFilter, FiFile,
   FiGrid, FiList, FiExternalLink,
@@ -166,13 +167,13 @@ function fmtDate(dateStr) {
 /* ── BroadcastChannel for cross-tab sync ─────────────────────────────────── */
 const _bc = typeof BroadcastChannel !== 'undefined' ? new BroadcastChannel('cms_downloads') : null
 
-/* ── Load downloads from localStorage ────────────────────────────────────── */
-function loadDownloads() {
+/* ── Load published downloads from the CMS database ──────────────────────── */
+// Reads the published copy so the list matches what editors approved, rather
+// than whatever happens to be cached in this visitor's browser.
+async function loadDownloads() {
   try {
-    const raw = (typeof window !== "undefined" ? localStorage.getItem('cms_downloads') : null)
-    if (!raw) return []
-    const parsed = JSON.parse(raw)
-    return Array.isArray(parsed) ? parsed : []
+    const published = await cmsApi.published('download')
+    return Array.isArray(published) ? published : []
   } catch { return [] }
 }
 
@@ -690,7 +691,7 @@ function EmptyState({ hasSearch, t, lm }) {
 export default function Downloads() {
   const held = usePageHold('downloads')
   const [lang, setLang] = useState(() => (typeof window !== "undefined" ? localStorage.getItem('lang') : null) || 'en')
-  const [downloads, setDownloads] = useState([])
+  const [downloads, setDownloads] = useState<Record<string, unknown>[]>([])
   const [search, setSearch] = useState('')
   const [catIdx, setCatIdx] = useState(0)
   const [typeIdx, setTypeIdx] = useState(0)
@@ -708,8 +709,8 @@ export default function Downloads() {
   }, [])
 
   /* ── Load + sync downloads ─────────────────────────────────────────────── */
-  const refresh = useCallback(() => {
-    const items = loadDownloads().filter(d => d.status === 'Active' || d.status === 'Published')
+  const refresh = useCallback(async () => {
+    const items = (await loadDownloads()).filter(d => d.status === 'Active' || d.status === 'Published')
     setDownloads(items)
   }, [])
 

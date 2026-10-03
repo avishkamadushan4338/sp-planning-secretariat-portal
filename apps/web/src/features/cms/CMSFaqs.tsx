@@ -2,8 +2,9 @@ import React, { useState, useEffect, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { toast } from 'sonner'
-import { FiPlus, FiEdit2, FiTrash2, FiSearch, FiX, FiCheck, FiHelpCircle, FiRefreshCw } from 'react-icons/fi'
-import { faqsApi } from './cmsContentApi'
+import { FiPlus, FiEdit2, FiTrash2, FiSearch, FiX, FiCheck, FiHelpCircle, FiRefreshCw, FiGlobe, FiUpload } from 'react-icons/fi'
+import { cmsApi, type CmsEditorItem } from './cmsContentApi'
+import { CmsStatusBadge } from './shared/CmsStatusBadge'
 
 const MAROON = '#4A0918'
 const GOLD   = '#C79A2B'
@@ -18,18 +19,23 @@ const EMPTY_FORM = {
   order: 0,
 }
 
-export default function CMSFaqs({ search = '', setSearch = () => {} }) {
-  const [items,       setItems]       = useState([])
+export default function CMSFaqs({
+  search = '',
+  setSearch = () => {},
+}: {
+  search?: string;
+  setSearch?: (value: string) => void;
+}) {
+  const [items,       setItems]       = useState<CmsEditorItem[]>([])
   const [loading,     setLoading]     = useState(true)
   const [formModal,   setFormModal]   = useState(false)
-  const [editData,    setEditData]    = useState(null)
-  const [deleteModal, setDeleteModal] = useState(null)
+  const [editData,    setEditData]    = useState<CmsEditorItem | null>(null)
+  const [deleteModal, setDeleteModal] = useState<{ id: string; label: string } | null>(null)
 
   const load = useCallback(async () => {
     setLoading(true)
     try {
-      const res = await faqsApi.list()
-      setItems(res.data)
+      setItems((await cmsApi.list('faq')) as CmsEditorItem[])
     } catch {
       toast.error('Failed to load FAQs.')
     } finally {
@@ -41,35 +47,52 @@ export default function CMSFaqs({ search = '', setSearch = () => {} }) {
 
   const addItem = useCallback(async (form) => {
     try {
-      await faqsApi.create(form)
-      toast.success('FAQ added')
+      await cmsApi.saveDraft({ contentType: 'faq', data: form })
+      toast.success('FAQ saved as a draft', { description: 'Publish it to show it on the site.' })
       setFormModal(false)
       load()
-    } catch (err) {
-      toast.error(err.response?.data?.error || 'Failed to add FAQ.')
+    } catch (err: any) {
+      toast.error(err?.response?.data?.error || 'Failed to add FAQ.')
     }
   }, [load])
 
   const updateItem = useCallback(async (form) => {
+    if (!editData) return
     try {
-      await faqsApi.update(editData.id, form)
-      toast.success('FAQ updated')
+      await cmsApi.saveDraft({ contentType: 'faq', id: editData.id, data: form })
+      toast.success('FAQ draft updated', { description: 'Publish to push changes live.' })
       setEditData(null)
       load()
-    } catch (err) {
-      toast.error(err.response?.data?.error || 'Failed to update FAQ.')
+    } catch (err: any) {
+      toast.error(err?.response?.data?.error || 'Failed to update FAQ.')
     }
   }, [editData, load])
 
+  /** Publishes or takes down a single FAQ without opening the edit form. */
+  const togglePublish = useCallback(async (item: CmsEditorItem) => {
+    try {
+      if (item.status === 'published' && !item.hasUnpublishedChanges) {
+        await cmsApi.unpublish(item.id)
+        toast.success('Removed from the live site')
+      } else {
+        await cmsApi.publish(item.id)
+        toast.success('Published to the live site')
+      }
+      load()
+    } catch {
+      toast.error('Failed to change publish state.')
+    }
+  }, [load])
+
   const confirmDelete = (id) => {
     const row = items.find(r => r.id === id)
-    setDeleteModal({ id, question: row?.question?.en || 'this FAQ' })
+    setDeleteModal({ id, question: (row?.data as any)?.question?.en || 'this FAQ' })
   }
 
   const executeDelete = async () => {
     if (!deleteModal) return
     try {
-      await faqsApi.remove(deleteModal.id)
+      await cmsApi.remove(deleteModal.id)
       toast.success('FAQ deleted')
       setDeleteModal(null)
       load()
@@ -79,7 +102,7 @@ export default function CMSFaqs({ search = '', setSearch = () => {} }) {
   }
 
   const q        = (search || '').toLowerCase()
-  const filtered = items.filter(it => !q || (it.question?.en || '').toLowerCase().includes(q))
+  const filtered = items.filter(it => !q || ((it.data as any)?.question?.en || '').toLowerCase().includes(q))
 
   return (
     <div>
@@ -119,26 +142,42 @@ export default function CMSFaqs({ search = '', setSearch = () => {} }) {
             <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 680 }}>
               <thead>
                 <tr style={{ background: 'rgba(74,9,24,0.025)', borderBottom: '1px solid rgba(74,9,24,0.08)' }}>
-                  {['Question', 'Category', 'Featured', 'Actions'].map(h => (
+                  {['Question', 'Category', 'Status', 'Featured', 'Actions'].map(h => (
                     <th key={h} style={{ padding: '11px 14px', textAlign: 'left', fontSize: '0.67rem', fontWeight: 700, color: 'rgba(74,9,24,0.42)', textTransform: 'uppercase', letterSpacing: '0.09em', whiteSpace: 'nowrap' }}>{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
-                {filtered.map((item, i) => (
+                {filtered.map((item, i) => {
+                  const data = item.data as any
+                  return (
                   <motion.tr key={item.id} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }}
                     style={{ borderBottom: i < filtered.length - 1 ? '1px solid rgba(74,9,24,0.05)' : 'none' }}>
-                    <td style={{ padding: '11px 14px', fontSize: '0.82rem', fontWeight: 600, color: MAROON, maxWidth: 340, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.question?.en}</td>
-                    <td style={{ padding: '11px 14px', fontSize: '0.75rem', color: 'rgba(74,9,24,0.55)' }}>{item.category}</td>
-                    <td style={{ padding: '11px 14px' }}>{item.featured && <FiCheck size={13} color="#16a34a" />}</td>
+                    <td style={{ padding: '11px 14px', fontSize: '0.82rem', fontWeight: 600, color: MAROON, maxWidth: 340, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{data.question?.en}</td>
+                    <td style={{ padding: '11px 14px', fontSize: '0.75rem', color: 'rgba(74,9,24,0.55)' }}>{data.category}</td>
+                    <td style={{ padding: '11px 14px' }}><CmsStatusBadge item={item} compact /></td>
+                    <td style={{ padding: '11px 14px' }}>{data.featured && <FiCheck size={13} color="#16a34a" />}</td>
                     <td style={{ padding: '11px 14px' }}>
                       <div style={{ display: 'flex', gap: 6 }}>
+                        <button
+                          onClick={() => togglePublish(item)}
+                          title={item.status === 'published' && !item.hasUnpublishedChanges ? 'Remove from live site' : 'Publish to live site'}
+                          style={{
+                            ...iconBtn,
+                            color: item.status === 'published' ? '#166534' : GOLD,
+                            border: `1px solid ${item.status === 'published' ? 'rgba(22,101,52,0.25)' : `${GOLD}38`}`,
+                            background: item.status === 'published' ? 'rgba(22,101,52,0.07)' : `${GOLD}0e`,
+                          }}
+                        >
+                          {item.status === 'published' ? <FiGlobe size={13} /> : <FiUpload size={13} />}
+                        </button>
                         <button onClick={() => setEditData(item)} title="Edit" style={{ ...iconBtn, color: GOLD, border: `1px solid ${GOLD}38`, background: `${GOLD}0e` }}><FiEdit2 size={13} /></button>
                         <button onClick={() => confirmDelete(item.id)} title="Delete" style={{ ...iconBtn, color: '#DC2626', border: '1px solid rgba(220,38,38,0.22)', background: 'rgba(220,38,38,0.07)' }}><FiTrash2 size={13} /></button>
                       </div>
                     </td>
                   </motion.tr>
-                ))}
+                  )
+                })}
               </tbody>
             </table>
           </div>
@@ -146,7 +185,7 @@ export default function CMSFaqs({ search = '', setSearch = () => {} }) {
       </div>
 
       {createPortal(<AnimatePresence>{formModal && <FaqFormModal onClose={() => setFormModal(false)} onSave={addItem} />}</AnimatePresence>, document.body)}
-      {createPortal(<AnimatePresence>{editData && <FaqFormModal initialData={editData} onClose={() => setEditData(null)} onSave={updateItem} />}</AnimatePresence>, document.body)}
+      {createPortal(<AnimatePresence>{editData && <FaqFormModal initialData={editData.data as any} onClose={() => setEditData(null)} onSave={updateItem} />}</AnimatePresence>, document.body)}
       {createPortal(
         <AnimatePresence>
           {deleteModal && (

@@ -12,24 +12,60 @@ import {
   FiPlus, FiEdit2, FiTrash2, FiEye,
   FiSearch, FiX, FiCheck, FiFileText, FiStar,
 } from 'react-icons/fi'
+import { cmsApi } from './cmsContentApi'
 
 const MAROON   = '#4A0918'
 const GOLD     = '#C79A2B'
 const API_BASE = import.meta.env.VITE_API_URL || ''
 
+/**
+ * Reads every news bar row for the editor, drafts included.
+ *
+ * This used to fetch `/api/news-bar`, an endpoint that was never implemented —
+ * the request 404'd and the section silently showed nothing. It now goes
+ * through the CMS API like every other section.
+ *
+ * The editor's own `Active` / `Draft` field is folded into the CMS publish
+ * status rather than stored separately: an item is "Active" exactly when it is
+ * published. Keeping a second status field would let the two disagree.
+ */
 async function fetchItems() {
-  const res = await fetch(`${API_BASE}/api/news-bar`)
-  if (!res.ok) throw new Error('Failed to load')
-  return res.json()
+  const rows = await cmsApi.list('newsBar')
+  return rows.map((row: any) => ({
+    ...(row.data ?? {}),
+    id: row.id,
+    status: row.status === 'published' ? 'Active' : 'Draft',
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt,
+  }))
 }
 
-async function persistItems(items) {
-  const res = await fetch(`${API_BASE}/api/news-bar`, {
-    method:  'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body:    JSON.stringify(items),
-  })
-  if (!res.ok) throw new Error('Failed to save')
+/**
+ * Writes the working copy, then publishes or unpublishes to match `status`.
+ *
+ * Save and publish are separate operations on purpose: saving must never change
+ * what the public sees. Toggling Active in the UI is an explicit request to
+ * publish, so it does both here rather than making the editor click twice.
+ */
+async function persistItem(item: Record<string, any>) {
+  const { id, status, ...data } = item
+  // saveDraft returns the saved row, including the id the server allocated for
+  // a brand-new item, so no second round trip is needed to find it.
+  const saved: any = id
+    ? await cmsApi.saveDraft({ contentType: 'newsBar', id, data })
+    : await cmsApi.saveDraft({ contentType: 'newsBar', data })
+
+  if (status === 'Active') {
+    await cmsApi.publish(saved.id)
+  } else if (saved.status === 'published') {
+    // Going Draft means taking it off the live ticker, but the draft text is
+    // kept so the editor does not lose their work.
+    await cmsApi.unpublish(saved.id)
+  }
+}
+
+async function removeItem(id: string) {
+  await cmsApi.remove(id)
 }
 
 const EMPTY_FORM = {
@@ -55,45 +91,60 @@ export default function CMSHomeNewsBar({ search = '', setSearch = () => {} }) {
       .catch(() => toast.error('Could not load news bar items'))
   }, [])
 
-  const saveAndSet = useCallback(async (updated, successMsg) => {
-    try {
-      await persistItems(updated)
-      setItems(updated)
-      if (successMsg) toast.success(successMsg)
-    } catch {
-      toast.error('Save failed — check your connection')
-    }
+  /** Reloads from the server so the list reflects true persisted state. */
+  const refresh = useCallback(async () => {
+    setItems(await fetchItems())
   }, [])
 
   const addItem = useCallback(async (form) => {
     const newItem = {
       ...EMPTY_FORM, ...form,
-      id: Date.now(),
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     }
-    await saveAndSet([newItem, ...items], 'News bar item added')
-    setFormModal(false)
-  }, [items, saveAndSet])
+    try {
+      // No id: the server allocates one so the row key and payload agree.
+      await cmsApi.saveDraft({ contentType: 'newsBar', data: newItem })
+      await refresh()
+      toast.success('News bar item saved as a draft', {
+        description: 'Publish it to show it in the home ticker.',
+      })
+      setFormModal(false)
+    } catch {
+      toast.error('Failed to save news bar item.')
+    }
+  }, [refresh])
 
   const updateItem = useCallback(async (form) => {
-    const updated = items.map(it =>
-      it.id === editData.id
-        ? { ...it, ...form, updatedAt: new Date().toISOString() }
-        : it
-    )
-    await saveAndSet(updated, 'News bar item updated')
-    setEditData(null)
-  }, [items, editData, saveAndSet])
+    if (!editData) return
+    try {
+      await persistItem({ ...editData, ...form, updatedAt: new Date().toISOString() })
+      await refresh()
+      toast.success('News bar item updated')
+      setEditData(null)
+    } catch {
+      toast.error('Failed to update news bar item.')
+    }
+  }, [editData, refresh])
 
-  const toggleStatus = useCallback(async (id) => {
-    const updated = items.map(it =>
-      it.id === id
-        ? { ...it, status: it.status === 'Active' ? 'Draft' : 'Active', updatedAt: new Date().toISOString() }
-        : it
-    )
-    await saveAndSet(updated, null)
-  }, [items, saveAndSet])
+  /**
+   * Toggles the item's own status. An item going live is published so it
+   * actually reaches the homepage; an item going dark is unpublished but kept
+   * as a draft so the text is not lost.
+   */
+  const toggleStatus = useCallback(async (it) => {
+    const nextActive = it.status !== 'Active'
+    const updated = { ...it, status: nextActive ? 'Active' : 'Draft' }
+    try {
+      await persistItem(updated)
+      await refresh()
+      toast.success(nextActive
+        ? 'Item published to the home ticker'
+        : 'Item removed from the home ticker')
+    } catch {
+      toast.error('Failed to update item status.')
+    }
+  }, [refresh])
 
   const confirmDelete = (id) => {
     const row = items.find(r => r.id === id)
@@ -103,9 +154,14 @@ export default function CMSHomeNewsBar({ search = '', setSearch = () => {} }) {
 
   const executeDelete = async () => {
     if (!deleteModal) return
-    const updated = items.filter(it => it.id !== deleteModal.id)
-    await saveAndSet(updated, 'Item deleted')
-    setDeleteModal(null)
+    try {
+      await removeItem(String(deleteModal.id))
+      await refresh()
+      toast.success('Item deleted')
+      setDeleteModal(null)
+    } catch {
+      toast.error('Failed to delete news bar item.')
+    }
   }
 
   const q = search.toLowerCase()
@@ -259,7 +315,7 @@ export default function CMSHomeNewsBar({ search = '', setSearch = () => {} }) {
                     {/* status toggle */}
                     <td style={{ padding: '11px 14px' }}>
                       <button
-                        onClick={() => toggleStatus(item.id)}
+                        onClick={() => toggleStatus(item)}
                         title="Click to toggle Active / Draft"
                         style={{
                           display: 'inline-flex', alignItems: 'center', gap: 6,

@@ -4,9 +4,11 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { toast } from 'sonner'
 import {
   FiPlus, FiEdit2, FiTrash2, FiSearch, FiX, FiCheck,
-  FiUser, FiImage, FiRefreshCw,
+  FiUser, FiImage, FiRefreshCw, FiGlobe, FiUpload,
 } from 'react-icons/fi'
-import { staffApi, departmentsApi } from './cmsContentApi'
+import { cmsApi, departmentsApi, type CmsEditorItem } from './cmsContentApi'
+import { CmsPublishBar } from './shared/CmsPublishBar'
+import { CmsStatusBadge } from './shared/CmsStatusBadge'
 import { uploadImage } from './cmsApi'
 import { resolveUploadUrl } from '@/shared/utils/resolveUploadUrl'
 
@@ -40,20 +42,32 @@ const EMPTY_FORM = {
   slug:             '',
 }
 
-export default function CMSStaff({ search = '', setSearch = () => {} }) {
-  const [items,       setItems]       = useState([])
-  const [departments, setDepartments] = useState([])
+export default function CMSStaff({
+  search = '',
+  setSearch = () => {},
+}: {
+  search?: string;
+  setSearch?: (value: string) => void;
+}) {
+  // Editor view: every record including drafts and unpublished edits, so an
+  // editor can see work in progress rather than only what visitors see.
+  const [items,       setItems]       = useState<CmsEditorItem[]>([])
+  const [departments, setDepartments] = useState<Record<string, unknown>[]>([])
   const [loading,     setLoading]     = useState(true)
   const [formModal,   setFormModal]   = useState(false)
-  const [editData,    setEditData]    = useState(null)
-  const [deleteModal, setDeleteModal] = useState(null)
+  const [editData,    setEditData]    = useState<CmsEditorItem | null>(null)
+  const [deleteModal, setDeleteModal] = useState<{ id: string; name: string } | null>(null)
+  const [statusFilter, setStatusFilter] = useState<'all' | 'published' | 'draft'>('all')
 
   const load = useCallback(async () => {
     setLoading(true)
     try {
-      const [staffRes, deptRes] = await Promise.all([staffApi.list(), departmentsApi.list()])
-      setItems(staffRes.data)
-      setDepartments(deptRes.data)
+      const [staffRes, deptRes] = await Promise.all([
+        cmsApi.list('staff'),
+        departmentsApi.list(),
+      ])
+      setItems(staffRes as CmsEditorItem[])
+      setDepartments(deptRes.data as Record<string, unknown>[])
     } catch {
       toast.error('Failed to load staff directory.')
     } finally {
@@ -63,37 +77,64 @@ export default function CMSStaff({ search = '', setSearch = () => {} }) {
 
   useEffect(() => { load() }, [load])
 
-  const addItem = useCallback(async (form) => {
+  /** Creates a new draft record. Not visible publicly until published. */
+  const addItem = useCallback(async (form: Record<string, unknown>) => {
     try {
-      await staffApi.create(form)
-      toast.success('Staff member added')
+      await cmsApi.saveDraft({ contentType: 'staff', data: form })
+      toast.success('Draft saved', {
+        description: 'Publish this record to make it visible on the site.',
+      })
       setFormModal(false)
       load()
-    } catch (err) {
-      toast.error(err.response?.data?.error || 'Failed to add staff member.')
+    } catch {
+      toast.error('Failed to save staff member draft.')
     }
   }, [load])
 
-  const updateItem = useCallback(async (form) => {
+  /** Saves edits into the working copy; the live version is left untouched. */
+  const updateItem = useCallback(async (form: Record<string, unknown>) => {
+    if (!editData) return
     try {
-      await staffApi.update(editData.id, form)
-      toast.success('Staff member updated')
+      await cmsApi.saveDraft({
+        contentType: 'staff',
+        id: editData.id,
+        data: form,
+      })
+      toast.success('Draft updated', {
+        description: 'Publish to push these changes to the live site.',
+      })
       setEditData(null)
       load()
-    } catch (err) {
-      toast.error(err.response?.data?.error || 'Failed to update staff member.')
+    } catch {
+      toast.error('Failed to update staff member draft.')
     }
   }, [editData, load])
 
-  const confirmDelete = (id) => {
+  /** Toggles a single record's live state straight from the table. */
+  const togglePublish = useCallback(async (item: CmsEditorItem) => {
+    try {
+      if (item.status === 'published' && !item.hasUnpublishedChanges) {
+        await cmsApi.unpublish(item.id)
+        toast.success('Removed from the live site')
+      } else {
+        await cmsApi.publish(item.id)
+        toast.success('Published to the live site')
+      }
+      load()
+    } catch {
+      toast.error('Failed to change publish state.')
+    }
+  }, [load])
+
+  const confirmDelete = (id: string) => {
     const row = items.find(r => r.id === id)
-    setDeleteModal({ id, name: row?.name?.en || 'this staff member' })
+    setDeleteModal({ id, name: (row?.data?.name as any)?.en || 'this staff member' })
   }
 
   const executeDelete = async () => {
     if (!deleteModal) return
     try {
-      await staffApi.remove(deleteModal.id)
+      await cmsApi.remove(deleteModal.id)
       toast.success('Staff member deleted')
       setDeleteModal(null)
       load()
@@ -102,12 +143,18 @@ export default function CMSStaff({ search = '', setSearch = () => {} }) {
     }
   }
 
-  const q        = (search || '').toLowerCase()
-  const filtered = items.filter(it =>
-    !q ||
-    (it.name?.en || '').toLowerCase().includes(q) ||
-    (it.position?.en || '').toLowerCase().includes(q)
-  )
+  const q = (search || '').toLowerCase()
+  const filtered = items.filter(it => {
+    if (statusFilter === 'published' && it.status !== 'published') return false
+    if (statusFilter === 'draft' && it.status === 'published') return false
+    if (!q) return true
+    const name = ((it.data?.name as any)?.en || '').toLowerCase()
+    const position = ((it.data?.position as any)?.en || '').toLowerCase()
+    return name.includes(q) || position.includes(q)
+  })
+
+  const draftCount  = items.filter(i => i.hasUnpublishedChanges).length
+  const unpublished = items.filter(i => i.status !== 'published').length
 
   return (
     <div>
@@ -118,10 +165,42 @@ export default function CMSStaff({ search = '', setSearch = () => {} }) {
           </h1>
           <p style={{ fontSize: '0.78rem', color: 'rgba(74,9,24,0.45)', margin: 0 }}>
             {items.length} staff member{items.length !== 1 ? 's' : ''} · single source of truth for Navbar, Home, About & Contact
+            {draftCount > 0 && (
+              <span style={{ color: '#b45309', marginLeft: 6, fontWeight: 600 }}>
+                · {draftCount} with unpublished changes
+              </span>
+            )}
           </p>
         </div>
 
         <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+          {/* Status filter */}
+          <div style={{ display: 'flex', gap: 3, background: 'rgba(74,9,24,0.04)', borderRadius: 9, padding: 3 }}>
+            {([
+              ['all', `All (${items.length})`],
+              ['published', `Live (${items.length - unpublished})`],
+              ['draft', `Drafts (${unpublished})`],
+            ] as const).map(([key, label]) => (
+              <button
+                key={key}
+                onClick={() => setStatusFilter(key)}
+                style={{
+                  padding: '5px 11px',
+                  borderRadius: 7,
+                  border: 'none',
+                  cursor: 'pointer',
+                  fontSize: '0.7rem',
+                  fontWeight: 600,
+                  background: statusFilter === key ? '#fff' : 'transparent',
+                  color: statusFilter === key ? MAROON : 'rgba(74,9,24,0.5)',
+                  boxShadow: statusFilter === key ? '0 1px 3px rgba(74,9,24,0.1)' : 'none',
+                }}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#fff', border: '1px solid rgba(74,9,24,0.12)', borderRadius: 10, padding: '7px 12px' }}>
             <FiSearch size={13} color="rgba(74,9,24,0.36)" />
             <input
@@ -166,31 +245,48 @@ export default function CMSStaff({ search = '', setSearch = () => {} }) {
             <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 720 }}>
               <thead>
                 <tr style={{ background: 'rgba(74,9,24,0.025)', borderBottom: '1px solid rgba(74,9,24,0.08)' }}>
-                  {['', 'Name', 'Position', 'Tier', 'Featured', 'Directory', 'Actions'].map(h => (
+                  {['', 'Name', 'Position', 'Tier', 'Status', 'Featured', 'Directory', 'Actions'].map(h => (
                     <th key={h} style={{ padding: '11px 14px', textAlign: 'left', fontSize: '0.67rem', fontWeight: 700, color: 'rgba(74,9,24,0.42)', textTransform: 'uppercase', letterSpacing: '0.09em', whiteSpace: 'nowrap' }}>{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
-                {filtered.map((item, i) => (
+                {filtered.map((item, i) => {
+                  const data = item.data as any
+                  return (
                   <motion.tr key={item.id} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }}
                     style={{ borderBottom: i < filtered.length - 1 ? '1px solid rgba(74,9,24,0.05)' : 'none' }}>
                     <td style={{ padding: '9px 14px' }}>
-                      {item.photo ? (
-                        <img src={resolveUploadUrl(item.photo)} alt="" style={{ width: 34, height: 34, borderRadius: '50%', objectFit: 'cover' }} />
+                      {data.photo ? (
+                        <img src={resolveUploadUrl(data.photo)} alt="" style={{ width: 34, height: 34, borderRadius: '50%', objectFit: 'cover' }} />
                       ) : (
                         <div style={{ width: 34, height: 34, borderRadius: '50%', background: 'rgba(74,9,24,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                           <FiUser size={14} color="rgba(74,9,24,0.35)" />
                         </div>
                       )}
                     </td>
-                    <td style={{ padding: '11px 14px', fontSize: '0.83rem', fontWeight: 600, color: MAROON }}>{item.name?.en}</td>
-                    <td style={{ padding: '11px 14px', fontSize: '0.78rem', color: 'rgba(74,9,24,0.6)' }}>{item.position?.en}</td>
-                    <td style={{ padding: '11px 14px', fontSize: '0.72rem', color: 'rgba(74,9,24,0.5)' }}>{TIERS.find(t => t.value === item.tier)?.label || item.tier}</td>
-                    <td style={{ padding: '11px 14px' }}>{item.featured && <FiCheck size={13} color="#16a34a" />}</td>
-                    <td style={{ padding: '11px 14px' }}>{item.showInDirectory && <FiCheck size={13} color="#16a34a" />}</td>
+                    <td style={{ padding: '11px 14px', fontSize: '0.83rem', fontWeight: 600, color: MAROON }}>{data.name?.en}</td>
+                    <td style={{ padding: '11px 14px', fontSize: '0.78rem', color: 'rgba(74,9,24,0.6)' }}>{data.position?.en}</td>
+                    <td style={{ padding: '11px 14px', fontSize: '0.72rem', color: 'rgba(74,9,24,0.5)' }}>{TIERS.find(t => t.value === data.tier)?.label || data.tier}</td>
+                    <td style={{ padding: '11px 14px' }}>
+                      <CmsStatusBadge item={item} compact />
+                    </td>
+                    <td style={{ padding: '11px 14px' }}>{data.featured && <FiCheck size={13} color="#16a34a" />}</td>
+                    <td style={{ padding: '11px 14px' }}>{data.showInDirectory && <FiCheck size={13} color="#16a34a" />}</td>
                     <td style={{ padding: '11px 14px' }}>
                       <div style={{ display: 'flex', gap: 6 }}>
+                        <button
+                          onClick={() => togglePublish(item)}
+                          title={item.status === 'published' && !item.hasUnpublishedChanges ? 'Remove from live site' : 'Publish to live site'}
+                          style={{
+                            ...iconBtn,
+                            color: item.status === 'published' ? '#166534' : GOLD,
+                            border: `1px solid ${item.status === 'published' ? 'rgba(22,101,52,0.25)' : `${GOLD}38`}`,
+                            background: item.status === 'published' ? 'rgba(22,101,52,0.07)' : `${GOLD}0e`,
+                          }}
+                        >
+                          {item.status === 'published' ? <FiGlobe size={13} /> : <FiUpload size={13} />}
+                        </button>
                         <button onClick={() => setEditData(item)} title="Edit" style={{ ...iconBtn, color: GOLD, border: `1px solid ${GOLD}38`, background: `${GOLD}0e` }}>
                           <FiEdit2 size={13} />
                         </button>
@@ -200,7 +296,8 @@ export default function CMSStaff({ search = '', setSearch = () => {} }) {
                       </div>
                     </td>
                   </motion.tr>
-                ))}
+                  )
+                })}
               </tbody>
             </table>
           </div>
@@ -214,7 +311,7 @@ export default function CMSStaff({ search = '', setSearch = () => {} }) {
       )}
       {createPortal(
         <AnimatePresence>
-          {editData && <StaffFormModal departments={departments} initialData={editData} onClose={() => setEditData(null)} onSave={updateItem} />}
+          {editData && <StaffFormModal departments={departments} initialData={editData.data} onClose={() => setEditData(null)} onSave={updateItem} />}
         </AnimatePresence>, document.body
       )}
       {createPortal(
@@ -250,7 +347,18 @@ export default function CMSStaff({ search = '', setSearch = () => {} }) {
   )
 }
 
-function StaffFormModal({ departments, onClose, onSave, initialData = null }) {
+function StaffFormModal({
+  departments,
+  onClose,
+  onSave,
+  initialData = null,
+}: {
+  departments?: any[];
+  onClose: () => void;
+  onSave: (form: Record<string, unknown>) => void | Promise<void>;
+  initialData?: Record<string, any> | null;
+}) {
+  const deptList = departments ?? [];
   const isEdit = initialData !== null
   const [form,      setForm]      = useState(() => ({
     ...EMPTY_FORM,
@@ -283,8 +391,8 @@ function StaffFormModal({ departments, onClose, onSave, initialData = null }) {
     try {
       const res = await uploadImage(file)
       set('photo', res.data.url)
-    } catch (err) {
-      toast.error(err.response?.data?.error || 'Failed to upload photo.')
+    } catch (err: any) {
+      toast.error(err?.response?.data?.error || 'Failed to upload photo.')
     } finally {
       setUploading(false)
     }
@@ -376,7 +484,7 @@ function StaffFormModal({ departments, onClose, onSave, initialData = null }) {
               <LabelEl>Department</LabelEl>
               <select value={form.departmentId || ''} onChange={e => set('departmentId', e.target.value || null)} style={selectStyle}>
                 <option value="">— None —</option>
-                {departments.map(d => <option key={d.id} value={d.id}>{d.label?.en}</option>)}
+                {deptList.map(d => <option key={d.id} value={d.id}>{d.label?.en}</option>)}
               </select>
             </div>
           </div>

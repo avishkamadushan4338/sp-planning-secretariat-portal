@@ -5,6 +5,7 @@ import { usePageHold } from '@/shared/hooks/usePageHold'
 import ComingSoon from '@/shared/components/ComingSoon'
 import { SeoHead } from '@/shared/seo'
 import { resolveUploadUrl } from '@/shared/utils/resolveUploadUrl'
+import { cmsApi } from '@/features/cms/cmsContentApi'
 import {
   FiCalendar, FiArrowRight, FiDownload, FiExternalLink,
   FiSearch, FiX, FiChevronLeft, FiChevronRight, FiEye,
@@ -383,16 +384,16 @@ function NewsSection({ t, font, lang = 'en' }) {
   const [activeCat, setActiveCat] = useState('All Categories')
   const [cmsNews, setCmsNews]     = useState([])
 
+  // News is read from the CMS database, published copy only, so every visitor
+  // sees what editors last published rather than a per-browser local copy.
   useEffect(() => {
-    const load = () => {
+    const load = async () => {
       try {
-        const saved = JSON.parse((typeof window !== "undefined" ? localStorage.getItem('cms_news') : null) || '[]')
-        setCmsNews(saved.filter(n => n.status === 'Active' || n.status === 'Published'))
+        const saved = await cmsApi.published('news')
+        setCmsNews(saved as any[])
       } catch { /* ignore */ }
     }
     load()
-    window.addEventListener('storage', load)
-    return () => window.removeEventListener('storage', load)
   }, [])
 
   const newsItems = cmsNews.map(n => ({
@@ -680,10 +681,12 @@ function GallerySection({ t, font }) {
   const [cmsAlbums,    setCmsAlbums]    = useState([])
 
   useEffect(() => {
-    try {
-      const saved = JSON.parse((typeof window !== "undefined" ? localStorage.getItem('cms_gallery_albums') : null) || '[]')
-      setCmsAlbums(saved)
-    } catch { /* ignore */ }
+    const load = async () => {
+      try {
+        setCmsAlbums((await cmsApi.published('galleryAlbum')) as any[])
+      } catch { /* ignore */ }
+    }
+    load()
   }, [])
 
   const cmsItems = cmsAlbums.map((a, i) => ({
@@ -922,9 +925,9 @@ function NoticesSection({ t, font, lang = 'en' }) {
   const [cmsNotices,  setCmsNotices]  = useState([])
 
   useEffect(() => {
-    const load = () => {
+    const load = async () => {
       try {
-        const saved = JSON.parse((typeof window !== "undefined" ? localStorage.getItem('cms_notices') : null) || '[]')
+        const saved = await cmsApi.published('notice')
         const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000
         setCmsNotices(
           saved

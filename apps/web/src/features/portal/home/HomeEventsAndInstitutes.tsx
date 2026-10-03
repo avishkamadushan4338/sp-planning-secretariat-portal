@@ -5,6 +5,7 @@ import {
   X, Star, ArrowRight,
 } from 'lucide-react'
 import ProgressiveImage from '@/shared/components/ProgressiveImage'
+import { cmsApi } from '@/features/cms/cmsContentApi'
 import './HomeEventsAndInstitutes.css'
 
 /* ── Brand tokens ────────────────────────────────────────────────────────── */
@@ -109,7 +110,7 @@ const stagger = {
 export default function HomeEventsAndInstitutes({ lang: propLang }) {
   const [lang,    setLang]    = useState(() => propLang || (typeof window !== "undefined" ? localStorage.getItem('lang') : null) || 'en')
   const [reduced, setReduced] = useState(false)
-  const [events,  setEvents]  = useState([])
+  const [events,  setEvents]  = useState<any[]>([])
 
   /* Language sync */
   useEffect(() => {
@@ -129,13 +130,11 @@ export default function HomeEventsAndInstitutes({ lang: propLang }) {
   }, [])
 
   /* CMS data — localStorage + realtime sync */
-  const loadEvents = useCallback(() => {
+  const loadEvents = useCallback(async () => {
     try {
-      const raw = (typeof window !== "undefined" ? localStorage.getItem('cms_home_events') : null)
-      if (raw) {
-        const parsed = JSON.parse(raw)
-        const active = parsed.filter(ev => ev.status === 'Active')
-        setEvents(active.length ? active : DUMMY_EVENTS)
+      const parsed = await cmsApi.published('homeEvent')
+      if (Array.isArray(parsed) && parsed.length) {
+        setEvents(parsed as any[])
       } else {
         setEvents(DUMMY_EVENTS)
       }

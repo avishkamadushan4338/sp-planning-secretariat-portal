@@ -2,8 +2,9 @@ import React, { useState, useEffect, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { toast } from 'sonner'
-import { FiPlus, FiEdit2, FiTrash2, FiSearch, FiX, FiCheck, FiBriefcase, FiRefreshCw } from 'react-icons/fi'
-import { departmentsApi } from './cmsContentApi'
+import { FiPlus, FiEdit2, FiTrash2, FiSearch, FiX, FiCheck, FiBriefcase, FiRefreshCw, FiGlobe, FiUpload } from 'react-icons/fi'
+import { cmsApi, type CmsEditorItem } from './cmsContentApi'
+import { CmsStatusBadge } from './shared/CmsStatusBadge'
 
 const MAROON = '#4A0918'
 const GOLD   = '#C79A2B'
@@ -27,18 +28,23 @@ const EMPTY_FORM = {
 const listToText = (arr) => (arr || []).join('\n')
 const textToList = (text) => text.split('\n').map(s => s.trim()).filter(Boolean)
 
-export default function CMSDepartments({ search = '', setSearch = () => {} }) {
-  const [items,       setItems]       = useState([])
+export default function CMSDepartments({
+  search = '',
+  setSearch = () => {},
+}: {
+  search?: string;
+  setSearch?: (value: string) => void;
+}) {
+  const [items,       setItems]       = useState<CmsEditorItem[]>([])
   const [loading,     setLoading]     = useState(true)
   const [formModal,   setFormModal]   = useState(false)
-  const [editData,    setEditData]    = useState(null)
-  const [deleteModal, setDeleteModal] = useState(null)
+  const [editData,    setEditData]    = useState<CmsEditorItem | null>(null)
+  const [deleteModal, setDeleteModal] = useState<{ id: string; label: string } | null>(null)
 
   const load = useCallback(async () => {
     setLoading(true)
     try {
-      const res = await departmentsApi.list()
-      setItems(res.data)
+      setItems((await cmsApi.list('department')) as CmsEditorItem[])
     } catch {
       toast.error('Failed to load departments.')
     } finally {
@@ -50,35 +56,52 @@ export default function CMSDepartments({ search = '', setSearch = () => {} }) {
 
   const addItem = useCallback(async (form) => {
     try {
-      await departmentsApi.create(form)
-      toast.success('Department added')
+      await cmsApi.saveDraft({ contentType: 'department', data: form })
+      toast.success('Department saved as a draft', { description: 'Publish it to show it on the site.' })
       setFormModal(false)
       load()
-    } catch (err) {
-      toast.error(err.response?.data?.error || 'Failed to add department.')
+    } catch (err: any) {
+      toast.error(err?.response?.data?.error || 'Failed to add department.')
     }
   }, [load])
 
   const updateItem = useCallback(async (form) => {
+    if (!editData) return
     try {
-      await departmentsApi.update(editData.id, form)
-      toast.success('Department updated')
+      await cmsApi.saveDraft({ contentType: 'department', id: editData.id, data: form })
+      toast.success('Department draft updated', { description: 'Publish to push changes live.' })
       setEditData(null)
       load()
-    } catch (err) {
-      toast.error(err.response?.data?.error || 'Failed to update department.')
+    } catch (err: any) {
+      toast.error(err?.response?.data?.error || 'Failed to update department.')
     }
   }, [editData, load])
 
+  /** Publishes or takes down a single department. */
+  const togglePublish = useCallback(async (item: CmsEditorItem) => {
+    try {
+      if (item.status === 'published' && !item.hasUnpublishedChanges) {
+        await cmsApi.unpublish(item.id)
+        toast.success('Removed from the live site')
+      } else {
+        await cmsApi.publish(item.id)
+        toast.success('Published to the live site')
+      }
+      load()
+    } catch {
+      toast.error('Failed to change publish state.')
+    }
+  }, [load])
+
   const confirmDelete = (id) => {
     const row = items.find(r => r.id === id)
-    setDeleteModal({ id, label: row?.label?.en || 'this department' })
+    setDeleteModal({ id, label: (row?.data as any)?.label?.en || 'this department' })
   }
 
   const executeDelete = async () => {
     if (!deleteModal) return
     try {
-      await departmentsApi.remove(deleteModal.id)
+      await cmsApi.remove(deleteModal.id)
       toast.success('Department deleted')
       setDeleteModal(null)
       load()
@@ -88,7 +111,7 @@ export default function CMSDepartments({ search = '', setSearch = () => {} }) {
   }
 
   const q        = (search || '').toLowerCase()
-  const filtered = items.filter(it => !q || (it.label?.en || '').toLowerCase().includes(q))
+  const filtered = items.filter(it => !q || ((it.data as any)?.label?.en || '').toLowerCase().includes(q))
 
   return (
     <div>
@@ -126,26 +149,42 @@ export default function CMSDepartments({ search = '', setSearch = () => {} }) {
             <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 600 }}>
               <thead>
                 <tr style={{ background: 'rgba(74,9,24,0.025)', borderBottom: '1px solid rgba(74,9,24,0.08)' }}>
-                  {['Key', 'Label', 'Icon', 'Actions'].map(h => (
+                  {['Key', 'Label', 'Icon', 'Status', 'Actions'].map(h => (
                     <th key={h} style={{ padding: '11px 14px', textAlign: 'left', fontSize: '0.67rem', fontWeight: 700, color: 'rgba(74,9,24,0.42)', textTransform: 'uppercase', letterSpacing: '0.09em', whiteSpace: 'nowrap' }}>{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
-                {filtered.map((item, i) => (
+                {filtered.map((item, i) => {
+                  const data = item.data as any
+                  return (
                   <motion.tr key={item.id} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }}
                     style={{ borderBottom: i < filtered.length - 1 ? '1px solid rgba(74,9,24,0.05)' : 'none' }}>
-                    <td style={{ padding: '11px 14px', fontSize: '0.78rem', color: 'rgba(74,9,24,0.55)' }}>{item.key}</td>
-                    <td style={{ padding: '11px 14px', fontSize: '0.83rem', fontWeight: 600, color: MAROON }}>{item.label?.en}</td>
-                    <td style={{ padding: '11px 14px', fontSize: '0.75rem', color: 'rgba(74,9,24,0.5)' }}>{item.icon}</td>
+                    <td style={{ padding: '11px 14px', fontSize: '0.78rem', color: 'rgba(74,9,24,0.55)' }}>{data.key}</td>
+                    <td style={{ padding: '11px 14px', fontSize: '0.83rem', fontWeight: 600, color: MAROON }}>{data.label?.en}</td>
+                    <td style={{ padding: '11px 14px', fontSize: '0.75rem', color: 'rgba(74,9,24,0.5)' }}>{data.icon}</td>
+                    <td style={{ padding: '11px 14px' }}><CmsStatusBadge item={item} compact /></td>
                     <td style={{ padding: '11px 14px' }}>
                       <div style={{ display: 'flex', gap: 6 }}>
+                        <button
+                          onClick={() => togglePublish(item)}
+                          title={item.status === 'published' && !item.hasUnpublishedChanges ? 'Remove from live site' : 'Publish to live site'}
+                          style={{
+                            ...iconBtn,
+                            color: item.status === 'published' ? '#166534' : GOLD,
+                            border: `1px solid ${item.status === 'published' ? 'rgba(22,101,52,0.25)' : `${GOLD}38`}`,
+                            background: item.status === 'published' ? 'rgba(22,101,52,0.07)' : `${GOLD}0e`,
+                          }}
+                        >
+                          {item.status === 'published' ? <FiGlobe size={13} /> : <FiUpload size={13} />}
+                        </button>
                         <button onClick={() => setEditData(item)} title="Edit" style={{ ...iconBtn, color: GOLD, border: `1px solid ${GOLD}38`, background: `${GOLD}0e` }}><FiEdit2 size={13} /></button>
                         <button onClick={() => confirmDelete(item.id)} title="Delete" style={{ ...iconBtn, color: '#DC2626', border: '1px solid rgba(220,38,38,0.22)', background: 'rgba(220,38,38,0.07)' }}><FiTrash2 size={13} /></button>
                       </div>
                     </td>
                   </motion.tr>
-                ))}
+                  )
+                })}
               </tbody>
             </table>
           </div>
@@ -153,7 +192,7 @@ export default function CMSDepartments({ search = '', setSearch = () => {} }) {
       </div>
 
       {createPortal(<AnimatePresence>{formModal && <DeptFormModal onClose={() => setFormModal(false)} onSave={addItem} />}</AnimatePresence>, document.body)}
-      {createPortal(<AnimatePresence>{editData && <DeptFormModal initialData={editData} onClose={() => setEditData(null)} onSave={updateItem} />}</AnimatePresence>, document.body)}
+      {createPortal(<AnimatePresence>{editData && <DeptFormModal initialData={editData.data as any} onClose={() => setEditData(null)} onSave={updateItem} />}</AnimatePresence>, document.body)}
       {createPortal(
         <AnimatePresence>
           {deleteModal && (
