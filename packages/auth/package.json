@@ -1,0 +1,22 @@
+{
+  "name": "@sp-planning/auth",
+  "version": "1.0.0",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./client": "./src/client.ts"
+  },
+  "scripts": {
+    "build": "tsc -b",
+    "check-types": "tsc -b"
+  },
+  "dependencies": {
+    "@sp-planning/db": "workspace:*",
+    "better-auth": "1.7.5",
+    "drizzle-orm": "^0.38.3"
+  },
+  "devDependencies": {
+    "@sp-planning/config": "workspace:*",
+    "typescript": "^5.7.2"
+  }
+}

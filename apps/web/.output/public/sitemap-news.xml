@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ============================================================================
+  sitemap-news.xml — Google News Sitemap
+  Provincial Planning Secretariat – Southern Province
+  https://www.planningsec.sp.gov.lk/sitemap-news.xml
+  Standard: Google News Sitemap Schema
+  NOTE: Google News sitemaps include only articles published in the last 2 days.
+        This file must be regenerated dynamically by the backend.
+  ============================================================================
+-->
+<urlset
+  xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+  xmlns:news="http://www.google.com/schemas/sitemap-news/0.9"
+  xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"
+>
+
+  <!--
+    DYNAMIC TEMPLATE — Your Express.js backend should generate this file.
+    Each news article published within the last 48 hours should be included.
+    See backend integration notes below.
+
+    Example entry:
+  -->
+  <url>
+    <loc>https://www.planningsec.sp.gov.lk/news/example-news-article/</loc>
+    <news:news>
+      <news:publication>
+        <news:name>Provincial Planning Secretariat – Southern Province</news:name>
+        <news:language>en</news:language>
+      </news:publication>
+      <news:publication_date>2026-05-23T09:00:00+05:30</news:publication_date>
+      <news:title>Example News Article Title Here</news:title>
+      <news:keywords>Provincial Planning, Southern Province, Development, Galle, Sri Lanka</news:keywords>
+    </news:news>
+    <image:image>
+      <image:loc>https://www.planningsec.sp.gov.lk/assets/images/news/example-image.jpg</image:loc>
+      <image:caption>Caption for the news article image</image:caption>
+    </image:image>
+  </url>
+
+  <!--
+    ════════════════════════════════════════════════════════════════
+    EXPRESS.JS BACKEND INTEGRATION (generate this file dynamically)
+    ════════════════════════════════════════════════════════════════
+
+    // backend/routes/sitemap.js
+    import express from 'express';
+    import { Article } from '../models/Article.js';
+
+    const router = express.Router();
+
+    router.get('/sitemap-news.xml', async (req, res) => {
+      const twoDaysAgo = new Date(Date.now() - 48 * 60 * 60 * 1000);
+      const articles = await Article.find({
+        publishedAt: { $gte: twoDaysAgo },
+        status: 'published',
+        language: 'en'
+      }).sort({ publishedAt: -1 }).limit(1000);
+
+      res.set('Content-Type', 'application/xml');
+      res.set('Cache-Control', 'public, max-age=900'); // 15 minute cache
+
+      const entries = articles.map(article => `
+        <url>
+          <loc>https://www.planningsec.sp.gov.lk/news/${article.slug}/</loc>
+          <news:news>
+            <news:publication>
+              <news:name>Provincial Planning Secretariat – Southern Province</news:name>
+              <news:language>${article.language || 'en'}</news:language>
+            </news:publication>
+            <news:publication_date>${article.publishedAt.toISOString()}</news:publication_date>
+            <news:title>${escapeXml(article.title)}</news:title>
+            <news:keywords>${escapeXml(article.tags?.join(', ') || '')}</news:keywords>
+          </news:news>
+        </url>`).join('');
+
+      res.send(`<?xml version="1.0" encoding="UTF-8"?>
+    <urlset
+      xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+      xmlns:news="http://www.google.com/schemas/sitemap-news/0.9">
+      ${entries}
+    </urlset>`);
+    });
+
+    function escapeXml(str) {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&apos;');
+    }
+
+    export default router;
+  -->
+
+</urlset>

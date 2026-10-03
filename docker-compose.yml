@@ -1,0 +1,40 @@
+name: sp-planning-secretariat-portal
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    init: true
+    ports:
+      - "7001:7001"
+    environment:
+      BETTER_AUTH_URL: http://localhost:7001
+      CORS_ORIGIN: http://localhost:7001
+      DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD:-password}@postgres:5432/sp_planning_secretariat
+      TZ: UTC
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:17
+    container_name: sp-planning-postgres
+    environment:
+      POSTGRES_DB: sp_planning_secretariat
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
+    ports:
+      - "7000:5432"
+    volumes:
+      - sp_planning_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+volumes:
+  sp_planning_postgres_data:
