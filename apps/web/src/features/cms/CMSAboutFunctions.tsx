@@ -2,7 +2,8 @@ import React, { useState, useEffect, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import { toast } from 'sonner'
 import { FiCheck, FiRefreshCw } from 'react-icons/fi'
-import { aboutFunctionsApi } from './cmsContentApi'
+import { cmsApi, type CmsEditorItem } from './cmsContentApi'
+import { CmsPublishBar } from './shared/CmsPublishBar'
 
 const MAROON = '#4A0918'
 
@@ -13,16 +14,18 @@ const listToText = (arr) => (arr || []).join('\n')
 const textToList = (text) => text.split('\n').map(s => s.trim()).filter(Boolean)
 
 export default function CMSAboutFunctions() {
+  const [item,    setItem]    = useState<CmsEditorItem | null>(null)
   const [form,    setForm]    = useState(EMPTY_FORM)
   const [loading, setLoading] = useState(true)
-  const [saving,  setSaving]  = useState(false)
   const [langTab, setLangTab] = useState('en')
 
   const load = useCallback(async () => {
     setLoading(true)
     try {
-      const res = await aboutFunctionsApi.get()
-      const data = res.data
+      const res = await cmsApi.getSingleton('aboutFunctions')
+      const editorItem = res as CmsEditorItem
+      setItem(editorItem)
+      const data = (editorItem.data as any) || {}
       setForm({
         en: { sectionLabel: data.en?.sectionLabel || '', intro: data.en?.intro || '', duties: listToText(data.en?.duties) },
         si: { sectionLabel: data.si?.sectionLabel || '', intro: data.si?.intro || '', duties: listToText(data.si?.duties) },
@@ -39,20 +42,23 @@ export default function CMSAboutFunctions() {
 
   const setLang = (lang, key, v) => setForm(f => ({ ...f, [lang]: { ...f[lang], [key]: v } }))
 
-  const handleSave = async () => {
-    setSaving(true)
+  const handleSave = async (note?: string) => {
     try {
       const payload = {
         en: { sectionLabel: form.en.sectionLabel, intro: form.en.intro, duties: textToList(form.en.duties) },
         si: { sectionLabel: form.si.sectionLabel, intro: form.si.intro, duties: textToList(form.si.duties) },
         ta: { sectionLabel: form.ta.sectionLabel, intro: form.ta.intro, duties: textToList(form.ta.duties) },
       }
-      await aboutFunctionsApi.save(payload)
-      toast.success('Functions & Duties content saved')
+      await cmsApi.saveDraft({
+        contentType: 'aboutFunctions',
+        data: payload,
+        note,
+      })
+      toast.success('Functions & Duties draft saved')
+      await load()
     } catch {
-      toast.error('Failed to save Functions & Duties content.')
-    } finally {
-      setSaving(false)
+      toast.error('Failed to save Functions & Duties draft.')
+      throw new Error('Save failed')
     }
   }
 
@@ -81,13 +87,12 @@ export default function CMSAboutFunctions() {
         <FieldTextarea label={`Intro Paragraph (${langTab.toUpperCase()})`} value={form[langTab].intro} onChange={v => setLang(langTab, 'intro', v)} rows={3} />
         <FieldTextarea label={`Duties (${langTab.toUpperCase()}) — one per line`} value={form[langTab].duties} onChange={v => setLang(langTab, 'duties', v)} rows={10} />
 
-        <div style={{ display: 'flex', justifyContent: 'flex-end', paddingTop: '0.5rem' }}>
-          <motion.button whileHover={!saving ? { y: -1.5, boxShadow: '0 8px 22px rgba(74,9,24,0.34)' } : {}} whileTap={!saving ? { scale: 0.97 } : {}}
-            onClick={handleSave} disabled={saving}
-            style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '9px 22px', borderRadius: 10, border: 'none', background: `linear-gradient(135deg, ${MAROON} 0%, #6E1528 100%)`, color: '#fff', fontSize: '0.83rem', fontWeight: 700, cursor: saving ? 'not-allowed' : 'pointer', fontFamily: 'Inter, sans-serif', opacity: saving ? 0.7 : 1, boxShadow: '0 3px 12px rgba(74,9,24,0.28)' }}>
-            <FiCheck size={14} />
-            {saving ? 'Saving…' : 'Save'}
-          </motion.button>
+        <div style={{ paddingTop: '0.5rem' }}>
+          <CmsPublishBar
+            item={item}
+            onSave={handleSave}
+            onChanged={load}
+          />
         </div>
       </div>
     </div>

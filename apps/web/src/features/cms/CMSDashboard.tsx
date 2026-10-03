@@ -11,6 +11,8 @@ import {
   addToCollection,
   updateInCollection,
   removeFromCollection,
+  publishItem,
+  unpublishItem,
   savePublishMode,
   savePageVisibility,
   type CollectionKey,
@@ -230,7 +232,29 @@ export default function CMSDashboard() {
     setDeleteModal(null)
   }
 
-  const addDownload = (form) => {
+  const handleTogglePublish = async (sectionKey, item) => {
+    const isLive = item.cmsStatus === 'published' || item.status === 'Published' || item.status === 'Active' || !!item.publishedData
+    const actionLabel = isLive ? 'unpublish' : 'publish'
+    try {
+      if (isLive) {
+        await unpublishItem(sectionKey, String(item.id))
+        toast.success(`Item unpublished`, { description: 'Moved to draft status.' })
+      } else {
+        await publishItem(sectionKey, String(item.id))
+        toast.success(`Item published`, { description: 'Now live on the public portal.' })
+      }
+      setData(d => ({
+        ...d,
+        [sectionKey]: getCollection(sectionKey),
+      }))
+    } catch (err) {
+      console.error(`Failed to ${actionLabel} item:`, err)
+      toast.error(`Failed to ${actionLabel} item`)
+    }
+  }
+
+  const addDownload = async (form) => {
+    const isPublishedStatus = form.status === 'Active'
     const newItem = {
       id:             Date.now(),
       titleEn:        form.titleEn,
@@ -248,12 +272,24 @@ export default function CMSDashboard() {
       downloadAccess: form.downloadAccess || 'Everyone',
     }
     setData(d => ({ ...d, downloads: [newItem, ...d.downloads] }))
-    addToCollection('downloads', newItem)
-    toast.success('Download item added successfully')
+    try {
+      const saved = await addToCollection('downloads', newItem)
+      if (isPublishedStatus && saved?.id) {
+        await publishItem('downloads', saved.id)
+        toast.success('Download item added and published live!')
+      } else {
+        toast.success('Download item added successfully')
+      }
+      notifyDownloadsUpdated()
+    } catch (err) {
+      console.error('Error adding download:', err)
+      toast.error('Failed to save download')
+    }
     setDownloadModal(false)
   }
 
-  const updateDownload = (form) => {
+  const updateDownload = async (form) => {
+    const isPublishedStatus = form.status === 'Active'
     const updated = {
       ...editDownloadData,
       titleEn:        form.titleEn,
@@ -270,12 +306,23 @@ export default function CMSDashboard() {
       downloadAccess: form.downloadAccess || 'Everyone',
     }
     setData(d => ({ ...d, downloads: d.downloads.map(it => it.id === updated.id ? updated : it) }))
-    updateInCollection('downloads', updated)
-    toast.success('Download item updated')
+    try {
+      const saved = await updateInCollection('downloads', updated)
+      if (isPublishedStatus && (saved?.id || updated.id)) {
+        await publishItem('downloads', String(saved?.id || updated.id))
+        toast.success('Download item updated and published live!')
+      } else {
+        toast.success('Download item updated')
+      }
+      notifyDownloadsUpdated()
+    } catch (err) {
+      console.error('Error updating download:', err)
+      toast.error('Failed to update download')
+    }
     setEditDownloadData(null)
   }
 
-  const addAlbum = (form) => {
+  const addAlbum = async (form) => {
     const displayTitle = form.titleEn || form.titleSi || form.titleTa || 'Untitled Album'
     const newAlbum = {
       id: Date.now(),
@@ -290,12 +337,22 @@ export default function CMSDashboard() {
       images: form.images,
     }
     setData(d => ({ ...d, gallery: [newAlbum, ...d.gallery] }))
-    addToCollection('gallery', newAlbum)
-    toast.success('Album saved as a draft', { description: 'Publish it to show it on the site.' })
+    try {
+      const saved = await addToCollection('gallery', newAlbum)
+      if (saved?.id) {
+        await publishItem('gallery', saved.id)
+        toast.success('Album published live to gallery!')
+      } else {
+        toast.success('Album saved')
+      }
+    } catch (err) {
+      console.error('Error adding album:', err)
+      toast.error('Failed to save album')
+    }
     setAlbumModal(false)
   }
 
-  const updateAlbum = (form) => {
+  const updateAlbum = async (form) => {
     const displayTitle = form.titleEn || form.titleSi || form.titleTa || 'Untitled Album'
     const updated = {
       ...editAlbumData,
@@ -309,13 +366,21 @@ export default function CMSDashboard() {
       images:   form.images,
     }
     setData(d => ({ ...d, gallery: d.gallery.map(a => a.id === updated.id ? updated : a) }))
-    updateInCollection('gallery', updated)
-    toast.success('Album draft updated', { description: 'Publish to push changes live.' })
+    try {
+      const saved = await updateInCollection('gallery', updated)
+      const targetId = String(saved?.id || updated.id)
+      await publishItem('gallery', targetId)
+      toast.success('Album updated and published live!')
+    } catch (err) {
+      console.error('Error updating album:', err)
+      toast.error('Failed to update album')
+    }
     setEditAlbumData(null)
   }
 
-  const addNotice = (form) => {
+  const addNotice = async (form) => {
     console.debug('[CMS] addNotice called', form)
+    const isPublishedStatus = form.status === 'Published' || form.status === 'Active'
     const newNotice = {
       id:            Date.now(),
       title:         form.title,
@@ -337,14 +402,25 @@ export default function CMSDashboard() {
       downloadAccess: form.downloadAccess || 'Everyone',
     }
     setData(d => ({ ...d, notices: [newNotice, ...d.notices] }))
-    addToCollection('notices', newNotice)
-    notifyNoticesUpdated()
-    toast.success('Notice saved as a draft', { description: 'Publish it to show it on the site.' })
+    try {
+      const saved = await addToCollection('notices', newNotice)
+      if (isPublishedStatus && saved?.id) {
+        await publishItem('notices', saved.id)
+        toast.success('Notice published live to portal!')
+      } else {
+        toast.success('Notice saved as a draft', { description: 'Publish it to show it on the site.' })
+      }
+      notifyNoticesUpdated()
+    } catch (err) {
+      console.error('Error adding notice:', err)
+      toast.error('Failed to save notice')
+    }
     setNoticeModal(false)
   }
 
-  const updateNotice = (form) => {
+  const updateNotice = async (form) => {
     console.debug('[CMS] updateNotice called', form)
+    const isPublishedStatus = form.status === 'Published' || form.status === 'Active'
     const updated = {
       ...editNoticeData,
       title:         form.title,
@@ -364,13 +440,24 @@ export default function CMSDashboard() {
       downloadAccess: form.downloadAccess || editNoticeData?.downloadAccess || 'Everyone',
     }
     setData(d => ({ ...d, notices: d.notices.map(n => n.id === updated.id ? updated : n) }))
-    updateInCollection('notices', updated)
-    notifyNoticesUpdated()
-    toast.success('Notice updated successfully')
+    try {
+      const saved = await updateInCollection('notices', updated)
+      if (isPublishedStatus && (saved?.id || updated.id)) {
+        await publishItem('notices', String(saved?.id || updated.id))
+        toast.success('Notice updated and published live!')
+      } else {
+        toast.success('Notice updated successfully')
+      }
+      notifyNoticesUpdated()
+    } catch (err) {
+      console.error('Error updating notice:', err)
+      toast.error('Failed to update notice')
+    }
     setEditNoticeData(null)
   }
 
-  const addNews = (form) => {
+  const addNews = async (form) => {
+    const isPublishedStatus = form.status === 'Published' || form.status === 'Active'
     const newArticle = {
       id:        Date.now(),
       title:     form.title,
@@ -384,12 +471,23 @@ export default function CMSDashboard() {
       featured:  form.featured  || false,
     }
     setData(d => ({ ...d, news: [newArticle, ...d.news] }))
-    addToCollection('news', newArticle)
-    toast.success('Article saved as a draft', { description: 'Publish it to show it on the site.' })
+    try {
+      const saved = await addToCollection('news', newArticle)
+      if (isPublishedStatus && saved?.id) {
+        await publishItem('news', saved.id)
+        toast.success('News article published live to portal!')
+      } else {
+        toast.success('Article saved as a draft', { description: 'Publish it to show it on the site.' })
+      }
+    } catch (err) {
+      console.error('Error adding news article:', err)
+      toast.error('Failed to save article')
+    }
     setNewsModal(false)
   }
 
-  const updateNews = (form) => {
+  const updateNews = async (form) => {
+    const isPublishedStatus = form.status === 'Published' || form.status === 'Active'
     const updated = {
       ...editNewsData,
       title:    form.title,
@@ -402,8 +500,18 @@ export default function CMSDashboard() {
       featured: form.featured || false,
     }
     setData(d => ({ ...d, news: d.news.map(a => a.id === updated.id ? updated : a) }))
-    updateInCollection('news', updated)
-    toast.success('News article updated successfully')
+    try {
+      const saved = await updateInCollection('news', updated)
+      if (isPublishedStatus && (saved?.id || updated.id)) {
+        await publishItem('news', String(saved?.id || updated.id))
+        toast.success('News article updated and published live!')
+      } else {
+        toast.success('News article updated successfully')
+      }
+    } catch (err) {
+      console.error('Error updating news article:', err)
+      toast.error('Failed to update article')
+    }
     setEditNewsData(null)
   }
 
@@ -822,6 +930,7 @@ export default function CMSDashboard() {
                     onAdd={() => setNewsModal(true)}
                     onEdit={row => setEditNewsData(row)}
                     onView={row => setViewNewsData(row)}
+                    onTogglePublish={item => handleTogglePublish('news', item)}
                     search={search} setSearch={setSearch}
                     columns={['Title', 'Category', 'Date', 'Status']}
                     rowCells={r => [r.title, r.category, r.date, <StatusBadge key="s" s={r.status} />]}
@@ -867,6 +976,7 @@ export default function CMSDashboard() {
                     onAdd={() => setNoticeModal(true)}
                     onEdit={row => setEditNoticeData(row)}
                     onView={row => setViewNoticeData(row)}
+                    onTogglePublish={item => handleTogglePublish('notices', item)}
                     search={search} setSearch={setSearch}
                     columns={['Title', 'Type', 'Date', 'Status']}
                     rowCells={r => [r.title, r.type || r.category, r.date, <StatusBadge key="s" s={r.status} />]}
@@ -878,6 +988,7 @@ export default function CMSDashboard() {
                     onDelete={id => confirmDelete('downloads', id)}
                     onAdd={() => setDownloadModal(true)}
                     onEdit={item => setEditDownloadData(item)}
+                    onTogglePublish={item => handleTogglePublish('downloads', item)}
                     search={search} setSearch={setSearch}
                   />
                 )}
@@ -888,6 +999,7 @@ export default function CMSDashboard() {
                     onAdd={() => setAlbumModal(true)}
                     onEdit={album => setEditAlbumData(album)}
                     onView={album => setViewAlbumData(album)}
+                    onTogglePublish={album => handleTogglePublish('gallery', album)}
                   />
                 )}
                 {active === 'complaints' && (
@@ -1534,7 +1646,7 @@ function Overview({ data, setActive }) {
 }
 
 // ── Content section with table ────────────────────────────────────────────────
-function ContentSection({ section, rows, onDelete, onAdd, onEdit, onView, columns, rowCells, search, setSearch }) {
+function ContentSection({ section, rows, onDelete, onAdd, onEdit, onView, onTogglePublish, columns, rowCells, search, setSearch }) {
   const label    = section.charAt(0).toUpperCase() + section.slice(1)
   const [selected, setSelected] = useState([])
 
@@ -1678,6 +1790,7 @@ function ContentSection({ section, rows, onDelete, onAdd, onEdit, onView, column
               )}
               {filtered.map((row, i) => {
                 const isSel = selected.includes(row.id)
+                const isLive = row.cmsStatus === 'published' || row.status === 'Published' || row.status === 'Active' || !!row.publishedData
                 return (
                   <motion.tr key={row.id}
                     initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }}
@@ -1714,6 +1827,14 @@ function ContentSection({ section, rows, onDelete, onAdd, onEdit, onView, column
                     ))}
                     <td style={{ padding: '12px 16px' }}>
                       <div style={{ display: 'flex', gap: 5, justifyContent: 'flex-end' }}>
+                        {onTogglePublish && (
+                          <ActionBtn
+                            icon={isLive ? FiGlobe : FiCheck}
+                            title={isLive ? "Unpublish to draft" : "Publish to live portal"}
+                            color={isLive ? "#16a34a" : "#d97706"}
+                            onClick={() => onTogglePublish(row)}
+                          />
+                        )}
                         <ActionBtn icon={FiEye}    title="View"   color="rgba(74,9,24,0.45)" onClick={() => onView ? onView(row) : toast.info(`Viewing: ${row.title}`)} />
                         <ActionBtn icon={FiEdit2}  title="Edit"   color={GOLD}               onClick={() => onEdit ? onEdit(row) : toast.info(`Editing: ${row.title}`)} />
                         <ActionBtn icon={FiTrash2} title="Delete" color="#DC2626"             onClick={() => onDelete(row.id)} />
@@ -1760,7 +1881,7 @@ function ContentSection({ section, rows, onDelete, onAdd, onEdit, onView, column
 }
 
 // ── Gallery grid ──────────────────────────────────────────────────────────────
-function GallerySection({ rows, onDelete, onAdd, onEdit, onView }) {
+function GallerySection({ rows, onDelete, onAdd, onEdit, onView, onTogglePublish }) {
   const PALETTE = [
     `linear-gradient(135deg, rgba(74,9,24,0.14) 0%, rgba(199,154,43,0.1) 100%)`,
     `linear-gradient(135deg, rgba(30,64,175,0.12) 0%, rgba(124,58,237,0.08) 100%)`,
@@ -1796,102 +1917,122 @@ function GallerySection({ rows, onDelete, onAdd, onEdit, onView }) {
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(270px, 1fr))', gap: '1.1rem' }}>
-        {rows.map((album, i) => (
-          <motion.div key={album.id}
-            initial={{ opacity: 0, scale: 0.95, y: 8 }} animate={{ opacity: 1, scale: 1, y: 0 }}
-            transition={{ delay: i * 0.07 }}
-            whileHover={{ y: -5, boxShadow: '0 16px 48px rgba(74,9,24,0.16)' }}
-            style={{
-              background: '#fff', borderRadius: 18, overflow: 'hidden',
-              border: '1px solid rgba(74,9,24,0.07)',
-              boxShadow: '0 3px 16px rgba(74,9,24,0.07)',
-              transition: 'box-shadow 0.22s, transform 0.22s',
-            }}>
-            {/* Cover image area */}
-            <div style={{ height: 158, background: PALETTE[i % PALETTE.length], display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden' }}>
-              {album.imageUrl
-                ? <img src={resolveUploadUrl(album.imageUrl)} alt={album.title} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
-                : (
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, opacity: 0.5 }}>
-                    <FiImage size={36} color={MAROON} />
-                    <span style={{ fontSize: '0.68rem', color: MAROON, fontWeight: 600 }}>No cover image</span>
-                  </div>
-                )
-              }
-              {/* Gradient overlay */}
-              <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(42,5,16,0.55) 0%, transparent 55%)' }} />
-              <div style={{ position: 'absolute', top: 10, right: 10 }}>
-                <span style={{
-                  background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(8px)',
-                  color: '#fff', fontSize: '0.61rem', fontWeight: 700,
-                  padding: '3px 10px', borderRadius: 100,
-                  border: '1px solid rgba(255,255,255,0.15)',
-                }}>
-                  {album.photos} photos
-                </span>
+        {rows.map((album, i) => {
+          const isLive = album.cmsStatus === 'published' || album.status === 'Published' || album.status === 'Active' || !!album.publishedData
+          return (
+            <motion.div key={album.id}
+              initial={{ opacity: 0, scale: 0.95, y: 8 }} animate={{ opacity: 1, scale: 1, y: 0 }}
+              transition={{ delay: i * 0.07 }}
+              whileHover={{ y: -5, boxShadow: '0 16px 48px rgba(74,9,24,0.16)' }}
+              style={{
+                background: '#fff', borderRadius: 18, overflow: 'hidden',
+                border: '1px solid rgba(74,9,24,0.07)',
+                boxShadow: '0 3px 16px rgba(74,9,24,0.07)',
+                transition: 'box-shadow 0.22s, transform 0.22s',
+              }}>
+              {/* Cover image area */}
+              <div style={{ height: 158, background: PALETTE[i % PALETTE.length], display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden' }}>
+                {album.imageUrl
+                  ? <img src={resolveUploadUrl(album.imageUrl)} alt={album.title} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
+                  : (
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, opacity: 0.5 }}>
+                      <FiImage size={36} color={MAROON} />
+                      <span style={{ fontSize: '0.68rem', color: MAROON, fontWeight: 600 }}>No cover image</span>
+                    </div>
+                  )
+                }
+                {/* Gradient overlay */}
+                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(42,5,16,0.55) 0%, transparent 55%)' }} />
+                <div style={{ position: 'absolute', top: 10, right: 10 }}>
+                  <span style={{
+                    background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(8px)',
+                    color: '#fff', fontSize: '0.61rem', fontWeight: 700,
+                    padding: '3px 10px', borderRadius: 100,
+                    border: '1px solid rgba(255,255,255,0.15)',
+                  }}>
+                    {album.photos} photos
+                  </span>
+                </div>
+                <div style={{ position: 'absolute', bottom: 10, left: 10 }}>
+                  <span style={{
+                    background: `linear-gradient(135deg, ${GOLD} 0%, #9A7520 100%)`,
+                    color: '#fff', fontSize: '0.6rem', fontWeight: 700,
+                    padding: '3px 11px', borderRadius: 100,
+                    boxShadow: `0 2px 8px rgba(199,154,43,0.4)`,
+                  }}>
+                    {album.category}
+                  </span>
+                </div>
               </div>
-              <div style={{ position: 'absolute', bottom: 10, left: 10 }}>
-                <span style={{
-                  background: `linear-gradient(135deg, ${GOLD} 0%, #9A7520 100%)`,
-                  color: '#fff', fontSize: '0.6rem', fontWeight: 700,
-                  padding: '3px 11px', borderRadius: 100,
-                  boxShadow: `0 2px 8px rgba(199,154,43,0.4)`,
-                }}>
-                  {album.category}
-                </span>
-              </div>
-            </div>
 
-            <div style={{ padding: '1rem 1.1rem' }}>
-              <div style={{ fontSize: '0.87rem', fontWeight: 700, color: MAROON, marginBottom: 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                {album.title}
+              <div style={{ padding: '1rem 1.1rem' }}>
+                <div style={{ fontSize: '0.87rem', fontWeight: 700, color: MAROON, marginBottom: 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {album.title}
+                </div>
+                <div style={{ fontSize: '0.7rem', color: 'rgba(74,9,24,0.38)', display: 'flex', alignItems: 'center', gap: 5, marginBottom: '0.95rem', fontWeight: 500 }}>
+                  <FiCalendar size={10} /> {album.date}
+                </div>
+                <div style={{ display: 'flex', gap: 7 }}>
+                  <button
+                    onClick={() => onView(album)}
+                    style={{
+                      flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      gap: 5, padding: '7px 0', borderRadius: 9,
+                      border: '1px solid rgba(74,9,24,0.12)', background: 'rgba(74,9,24,0.02)',
+                      color: 'rgba(74,9,24,0.52)', fontSize: '0.75rem',
+                      cursor: 'pointer', fontFamily: 'Inter, sans-serif',
+                      fontWeight: 600, transition: 'all 0.15s',
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.background = MAROON; e.currentTarget.style.color = '#fff'; e.currentTarget.style.borderColor = MAROON }}
+                    onMouseLeave={e => { e.currentTarget.style.background = 'rgba(74,9,24,0.02)'; e.currentTarget.style.color = 'rgba(74,9,24,0.52)'; e.currentTarget.style.borderColor = 'rgba(74,9,24,0.12)' }}>
+                    <FiEye size={12} /> View
+                  </button>
+                  {onTogglePublish && (
+                    <button
+                      onClick={() => onTogglePublish(album)}
+                      title={isLive ? "Unpublish to draft" : "Publish to live gallery"}
+                      style={{
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        width: 35, borderRadius: 9,
+                        border: `1px solid ${isLive ? '#16a34a40' : '#d9770640'}`,
+                        background: isLive ? '#16a34a10' : '#d9770610',
+                        color: isLive ? '#16a34a' : '#d97706',
+                        cursor: 'pointer', transition: 'all 0.15s',
+                      }}
+                      onMouseEnter={e => { e.currentTarget.style.background = isLive ? '#16a34a' : '#d97706'; e.currentTarget.style.color = '#fff' }}
+                      onMouseLeave={e => { e.currentTarget.style.background = isLive ? '#16a34a10' : '#d9770610'; e.currentTarget.style.color = isLive ? '#16a34a' : '#d97706' }}>
+                      <FiGlobe size={12} />
+                    </button>
+                  )}
+                  <button
+                    onClick={() => onEdit(album)}
+                    style={{
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      width: 35, borderRadius: 9,
+                      border: `1px solid ${GOLD}40`, background: `${GOLD}0e`,
+                      color: GOLD, cursor: 'pointer', transition: 'all 0.15s',
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.background = GOLD; e.currentTarget.style.color = '#fff' }}
+                    onMouseLeave={e => { e.currentTarget.style.background = `${GOLD}0e`; e.currentTarget.style.color = GOLD }}>
+                    <FiEdit2 size={12} />
+                  </button>
+                  <button
+                    onClick={() => onDelete(album.id)}
+                    style={{
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      width: 35, borderRadius: 9,
+                      border: '1px solid rgba(220,38,38,0.2)', background: 'rgba(220,38,38,0.05)',
+                      color: '#DC2626', cursor: 'pointer', transition: 'all 0.15s',
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.background = '#DC2626'; e.currentTarget.style.color = '#fff' }}
+                    onMouseLeave={e => { e.currentTarget.style.background = 'rgba(220,38,38,0.05)'; e.currentTarget.style.color = '#DC2626' }}>
+                    <FiTrash2 size={12} />
+                  </button>
+                </div>
               </div>
-              <div style={{ fontSize: '0.7rem', color: 'rgba(74,9,24,0.38)', display: 'flex', alignItems: 'center', gap: 5, marginBottom: '0.95rem', fontWeight: 500 }}>
-                <FiCalendar size={10} /> {album.date}
-              </div>
-              <div style={{ display: 'flex', gap: 7 }}>
-                <button
-                  onClick={() => onView(album)}
-                  style={{
-                    flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    gap: 5, padding: '7px 0', borderRadius: 9,
-                    border: '1px solid rgba(74,9,24,0.12)', background: 'rgba(74,9,24,0.02)',
-                    color: 'rgba(74,9,24,0.52)', fontSize: '0.75rem',
-                    cursor: 'pointer', fontFamily: 'Inter, sans-serif',
-                    fontWeight: 600, transition: 'all 0.15s',
-                  }}
-                  onMouseEnter={e => { e.currentTarget.style.background = MAROON; e.currentTarget.style.color = '#fff'; e.currentTarget.style.borderColor = MAROON }}
-                  onMouseLeave={e => { e.currentTarget.style.background = 'rgba(74,9,24,0.02)'; e.currentTarget.style.color = 'rgba(74,9,24,0.52)'; e.currentTarget.style.borderColor = 'rgba(74,9,24,0.12)' }}>
-                  <FiEye size={12} /> View
-                </button>
-                <button
-                  onClick={() => onEdit(album)}
-                  style={{
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    width: 35, borderRadius: 9,
-                    border: `1px solid ${GOLD}40`, background: `${GOLD}0e`,
-                    color: GOLD, cursor: 'pointer', transition: 'all 0.15s',
-                  }}
-                  onMouseEnter={e => { e.currentTarget.style.background = GOLD; e.currentTarget.style.color = '#fff' }}
-                  onMouseLeave={e => { e.currentTarget.style.background = `${GOLD}0e`; e.currentTarget.style.color = GOLD }}>
-                  <FiEdit2 size={12} />
-                </button>
-                <button
-                  onClick={() => onDelete(album.id)}
-                  style={{
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    width: 35, borderRadius: 9,
-                    border: '1px solid rgba(220,38,38,0.2)', background: 'rgba(220,38,38,0.05)',
-                    color: '#DC2626', cursor: 'pointer', transition: 'all 0.15s',
-                  }}
-                  onMouseEnter={e => { e.currentTarget.style.background = '#DC2626'; e.currentTarget.style.color = '#fff' }}
-                  onMouseLeave={e => { e.currentTarget.style.background = 'rgba(220,38,38,0.05)'; e.currentTarget.style.color = '#DC2626' }}>
-                  <FiTrash2 size={12} />
-                </button>
-              </div>
-            </div>
-          </motion.div>
-        ))}
+            </motion.div>
+          )
+        })}
       </div>
     </div>
   )
@@ -4402,7 +4543,7 @@ const dlSelectStyle = {
   paddingRight: 30,
 }
 
-function DownloadsSection({ rows, onDelete, onAdd, onEdit, search, setSearch }) {
+function DownloadsSection({ rows, onDelete, onAdd, onEdit, onTogglePublish, search, setSearch }) {
   const filtered = (rows || []).filter(r => {
     if (!search.trim()) return true
     const q = search.toLowerCase()
@@ -4481,6 +4622,7 @@ function DownloadsSection({ rows, onDelete, onAdd, onEdit, search, setSearch }) 
             <tbody>
               {filtered.map((r, i) => {
                 const sc = statusColors[r.status] || statusColors.Draft
+                const isLive = r.cmsStatus === 'published' || r.status === 'Active' || !!r.publishedData
                 return (
                   <tr key={r.id} style={{ background: i % 2 === 0 ? '#fff' : 'rgba(74,9,24,0.016)', borderBottom: '1px solid rgba(74,9,24,0.06)', transition: 'background 0.15s' }}>
                     <td style={{ padding: '10px 12px', color: MAROON, fontWeight: 600, maxWidth: 220 }}>
@@ -4502,6 +4644,19 @@ function DownloadsSection({ rows, onDelete, onAdd, onEdit, search, setSearch }) 
                     </td>
                     <td style={{ padding: '10px 12px' }}>
                       <div style={{ display: 'flex', gap: 6 }}>
+                        {onTogglePublish && (
+                          <motion.button whileTap={{ scale: 0.93 }} onClick={() => onTogglePublish(r)}
+                            title={isLive ? "Unpublish to draft" : "Publish to live downloads"}
+                            style={{
+                              background: isLive ? '#16a34a10' : '#d9770610',
+                              border: `1px solid ${isLive ? '#16a34a40' : '#d9770640'}`,
+                              borderRadius: 7, padding: '5px 8px', cursor: 'pointer',
+                              color: isLive ? '#16a34a' : '#d97706',
+                              display: 'flex', alignItems: 'center',
+                            }}>
+                            <FiGlobe size={13} />
+                          </motion.button>
+                        )}
                         <motion.button whileTap={{ scale: 0.93 }} onClick={() => onEdit(r)}
                           style={{ background: 'none', border: `1px solid ${GOLD}40`, borderRadius: 7, padding: '5px 8px', cursor: 'pointer', color: GOLD, display: 'flex', alignItems: 'center' }}>
                           <FiEdit2 size={13} />

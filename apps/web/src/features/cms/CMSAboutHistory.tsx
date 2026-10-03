@@ -2,7 +2,8 @@ import React, { useState, useEffect, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import { toast } from 'sonner'
 import { FiCheck, FiRefreshCw, FiImage, FiChevronDown, FiChevronUp, FiPlus, FiTrash2, FiAlertTriangle } from 'react-icons/fi'
-import { aboutHistoryApi } from './cmsContentApi'
+import { cmsApi, type CmsEditorItem } from './cmsContentApi'
+import { CmsPublishBar } from './shared/CmsPublishBar'
 import { uploadImage } from './cmsApi'
 import { resolveUploadUrl } from '@/shared/utils/resolveUploadUrl'
 
@@ -24,16 +25,19 @@ const EMPTY_FORM = {
 }
 
 export default function CMSAboutHistory() {
+  const [item,    setItem]    = useState<CmsEditorItem | null>(null)
   const [form,    setForm]    = useState(EMPTY_FORM)
   const [loading, setLoading] = useState(true)
-  const [saving,  setSaving]  = useState(false)
   const [langTab, setLangTab] = useState('en')
   const [openProject, setOpenProject] = useState(0)
 
   const load = useCallback(async () => {
     setLoading(true)
     try {
-      const { data } = await aboutHistoryApi.get()
+      const res = await cmsApi.getSingleton('aboutHistory')
+      const editorItem = res as CmsEditorItem
+      setItem(editorItem)
+      const data = (editorItem.data as any) || {}
       setForm({
         en: { ...EMPTY_LANG_BLOCK, ...data.en, directors: data.en?.directors?.length ? data.en.directors : [], projects: data.en?.projects?.length ? data.en.projects : [{ ...EMPTY_PROJECT }, { ...EMPTY_PROJECT }, { ...EMPTY_PROJECT }] },
         si: { ...EMPTY_LANG_BLOCK, ...data.si, directors: data.si?.directors?.length ? data.si.directors : [], projects: data.si?.projects?.length ? data.si.projects : [{ ...EMPTY_PROJECT }, { ...EMPTY_PROJECT }, { ...EMPTY_PROJECT }] },
@@ -74,15 +78,18 @@ export default function CMSAboutHistory() {
     }
   }
 
-  const handleSave = async () => {
-    setSaving(true)
+  const handleSave = async (note?: string) => {
     try {
-      await aboutHistoryApi.save(form)
-      toast.success('History content saved')
+      await cmsApi.saveDraft({
+        contentType: 'aboutHistory',
+        data: form,
+        note,
+      })
+      toast.success('History draft saved')
+      await load()
     } catch {
-      toast.error('Failed to save History content.')
-    } finally {
-      setSaving(false)
+      toast.error('Failed to save History draft.')
+      throw new Error('Save failed')
     }
   }
 
@@ -173,13 +180,12 @@ export default function CMSAboutHistory() {
         <FieldInput label="Sub-label" value={t.officialGovtSub} onChange={v => setField(langTab, 'officialGovtSub', v)} />
       </SectionCard>
 
-      <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-        <motion.button whileHover={!saving ? { y: -1.5, boxShadow: '0 8px 22px rgba(74,9,24,0.34)' } : {}} whileTap={!saving ? { scale: 0.97 } : {}}
-          onClick={handleSave} disabled={saving}
-          style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '10px 26px', borderRadius: 10, border: 'none', background: `linear-gradient(135deg, ${MAROON} 0%, #6E1528 100%)`, color: '#fff', fontSize: '0.85rem', fontWeight: 700, cursor: saving ? 'not-allowed' : 'pointer', fontFamily: 'Inter, sans-serif', opacity: saving ? 0.7 : 1, boxShadow: '0 3px 12px rgba(74,9,24,0.28)' }}>
-          <FiCheck size={14} />
-          {saving ? 'Saving…' : 'Save History Content'}
-        </motion.button>
+      <div style={{ paddingTop: '0.5rem' }}>
+        <CmsPublishBar
+          item={item}
+          onSave={handleSave}
+          onChanged={load}
+        />
       </div>
     </div>
   )

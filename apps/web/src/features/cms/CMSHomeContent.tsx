@@ -2,7 +2,8 @@ import React, { useState, useEffect, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import { toast } from 'sonner'
 import { FiCheck, FiRefreshCw, FiImage, FiChevronDown, FiChevronUp } from 'react-icons/fi'
-import { homeContentApi, staffApi } from './cmsContentApi'
+import { cmsApi, staffApi, type CmsEditorItem } from './cmsContentApi'
+import { CmsPublishBar } from './shared/CmsPublishBar'
 import { uploadImage } from './cmsApi'
 import { resolveUploadUrl } from '@/shared/utils/resolveUploadUrl'
 
@@ -27,17 +28,19 @@ const EMPTY_FORM = {
 }
 
 export default function CMSHomeContent() {
-  const [form,       setForm]       = useState(EMPTY_FORM)
-  const [staff,      setStaff]      = useState([])
-  const [loading,     setLoading]   = useState(true)
-  const [saving,      setSaving]    = useState(false)
-  const [openSlide,   setOpenSlide] = useState(0)
+  const [item,        setItem]        = useState<CmsEditorItem | null>(null)
+  const [form,        setForm]        = useState(EMPTY_FORM)
+  const [staff,       setStaff]       = useState<any[]>([])
+  const [loading,     setLoading]     = useState(true)
+  const [openSlide,   setOpenSlide]   = useState(0)
 
   const load = useCallback(async () => {
     setLoading(true)
     try {
-      const [homeRes, staffRes] = await Promise.all([homeContentApi.get(), staffApi.list()])
-      const data = homeRes.data
+      const [homeRes, staffRes] = await Promise.all([cmsApi.getSingleton('homeContent'), staffApi.list()])
+      const editorItem = homeRes as CmsEditorItem
+      setItem(editorItem)
+      const data = (editorItem.data as any) || {}
       setForm({
         ...EMPTY_FORM,
         ...data,
@@ -45,7 +48,7 @@ export default function CMSHomeContent() {
         aboutSecretariat: { ...EMPTY_FORM.aboutSecretariat, ...data.aboutSecretariat },
         deputySecretaryMessage: { ...EMPTY_LANG, ...data.deputySecretaryMessage },
       })
-      setStaff(staffRes.data)
+      setStaff(staffRes.data as any[])
     } catch {
       toast.error('Failed to load home content.')
     } finally {
@@ -91,15 +94,18 @@ export default function CMSHomeContent() {
 
   const setMessage = (lang, v) => setForm(f => ({ ...f, deputySecretaryMessage: { ...f.deputySecretaryMessage, [lang]: v } }))
 
-  const handleSave = async () => {
-    setSaving(true)
+  const handleSave = async (note?: string) => {
     try {
-      await homeContentApi.save(form)
-      toast.success('Home content saved')
+      await cmsApi.saveDraft({
+        contentType: 'homeContent',
+        data: form,
+        note,
+      })
+      toast.success('Home content draft saved')
+      await load()
     } catch {
       toast.error('Failed to save home content.')
-    } finally {
-      setSaving(false)
+      throw new Error('Save failed')
     }
   }
 
@@ -156,13 +162,12 @@ export default function CMSHomeContent() {
         <LangTabbedField label="Message" value={form.deputySecretaryMessage} onChange={setMessage} textarea rows={5} />
       </SectionCard>
 
-      <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-        <motion.button whileHover={!saving ? { y: -1.5, boxShadow: '0 8px 22px rgba(74,9,24,0.34)' } : {}} whileTap={!saving ? { scale: 0.97 } : {}}
-          onClick={handleSave} disabled={saving}
-          style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '10px 26px', borderRadius: 10, border: 'none', background: `linear-gradient(135deg, ${MAROON} 0%, #6E1528 100%)`, color: '#fff', fontSize: '0.85rem', fontWeight: 700, cursor: saving ? 'not-allowed' : 'pointer', fontFamily: 'Inter, sans-serif', opacity: saving ? 0.7 : 1, boxShadow: '0 3px 12px rgba(74,9,24,0.28)' }}>
-          <FiCheck size={14} />
-          {saving ? 'Saving…' : 'Save Home Content'}
-        </motion.button>
+      <div style={{ paddingTop: '0.5rem' }}>
+        <CmsPublishBar
+          item={item}
+          onSave={handleSave}
+          onChanged={load}
+        />
       </div>
     </div>
   )

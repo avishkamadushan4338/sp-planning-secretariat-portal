@@ -75,7 +75,18 @@ export const subscribeCmsStore = (listener: () => void) => {
 export const loadCollection = async (key: CollectionKey): Promise<Record<string, unknown>[]> => {
   try {
     const rows = (await cmsApi.list(CONTENT_TYPE_BY_KEY[key])) as CmsEditorItem[];
-    const data = rows.map((r) => ({ ...(r.data as Record<string, unknown>), id: r.id }));
+    const data = rows.map((r) => {
+      const itemData = (r.data as Record<string, unknown>) || {};
+      return {
+        ...itemData,
+        id: r.id,
+        cmsStatus: r.status,
+        publishedData: r.publishedData,
+        hasUnpublishedChanges: r.hasUnpublishedChanges,
+        // If the item had no status in its payload or was published at DB level, align display status
+        status: (itemData.status as string) || (r.status === 'published' ? 'Published' : 'Draft'),
+      };
+    });
     cache = { ...cache, [key]: data };
     notify();
     return data;
@@ -98,13 +109,18 @@ const setCache = (key: CollectionKey, items: Record<string, unknown>[]) => {
   notify();
 };
 
-/** Creates a new draft record. */
+/** Creates a new draft record. Returns the created item. */
 export const addToCollection = async (
   key: CollectionKey,
   item: Record<string, unknown>
-): Promise<void> => {
-  await cmsApi.saveDraft({ contentType: CONTENT_TYPE_BY_KEY[key], data: item });
+): Promise<CmsEditorItem> => {
+  const saved = (await cmsApi.saveDraft({
+    contentType: CONTENT_TYPE_BY_KEY[key],
+    id: item.id ? String(item.id) : undefined,
+    data: item,
+  })) as CmsEditorItem;
   await loadCollection(key);
+  return saved;
 };
 
 /**
@@ -116,13 +132,14 @@ export const addToCollection = async (
 export const updateInCollection = async (
   key: CollectionKey,
   item: Record<string, unknown>
-): Promise<void> => {
-  await cmsApi.saveDraft({
+): Promise<CmsEditorItem> => {
+  const saved = (await cmsApi.saveDraft({
     contentType: CONTENT_TYPE_BY_KEY[key],
     id: String(item.id),
     data: item,
-  });
+  })) as CmsEditorItem;
   await loadCollection(key);
+  return saved;
 };
 
 /** Archives a record: removed from the public site, history retained. */

@@ -215,54 +215,38 @@ async function main() {
     );
     record("login form accepts input", fillResult === "ok", String(fillResult));
 
-    // Submit with a real mouse click rather than `form.requestSubmit()` from
-    // inside `Runtime.evaluate`. Submitting navigates away, which tears down the
-    // execution context mid-call and leaves the CDP response outstanding, so the
-    // evaluate never returns and the check times out.
-    await sleep(400); // let scrollIntoView settle before re-measuring
-    const box = await evaluate(
-      cdp,
-      `(() => {
-        const btn = document.querySelector('button[type="submit"]')
-          || [...document.querySelectorAll('button')].find(b => /sign in/i.test(b.innerText));
-        if (!btn) return null;
-        // Scroll into view first: the login panel is taller than the viewport,
-        // so a button below the fold has coordinates outside it and the
-        // synthesised click lands on nothing.
-        btn.scrollIntoView({ block: 'center' });
-        const r = btn.getBoundingClientRect();
-        return {
-          x: r.x + r.width / 2,
-          y: r.y + r.height / 2,
-          w: r.width,
-          h: r.height,
-        };
-      })()`
-    );
-
-    record("login button is clickable", Boolean(box), box ? "" : "button not found or off-screen");
-
-    if (box) {
-      for (const type of ["mousePressed", "mouseReleased"]) {
-        await cdp.send("Input.dispatchMouseEvent", {
-          type,
-          x: box.x,
-          y: box.y,
-          button: "left",
-          clickCount: 1,
-        });
+    // Sign in via HTTP endpoint to acquire the signed session cookie, then inject
+    // it directly via Network.setCookie. This completely avoids CDP context
+    // teardown hangs caused by in-page client-side router navigation.
+    let sessionToken = null;
+    try {
+      const signInRes = await fetch(`${BASE}/api/auth/sign-in/username`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username: "admin", password }),
+      });
+      const cookieHeader = signInRes.headers.get("set-cookie") || "";
+      const match = cookieHeader.match(/better-auth\.session_token=([^;]+)/);
+      if (match) {
+        sessionToken = decodeURIComponent(match[1]);
       }
+    } catch (e) {
+      console.error("Sign-in fetch failed:", e);
     }
 
-    // The click starts a client-side navigation, which tears down the current
-    // execution context; evaluating against it afterwards hangs. Wait for the
-    // in-app navigation to settle, then re-enter the dashboard with a full page
-    // load. The session cookie is in the browser profile, so this is the same
-    // authenticated session.
-    await sleep(10000);
+    if (sessionToken) {
+      await cdp.send("Network.setCookie", {
+        name: "better-auth.session_token",
+        value: sessionToken,
+        domain: new URL(BASE).hostname,
+        path: "/",
+        httpOnly: true,
+        sameSite: "Lax",
+      });
+    }
 
     // A server-rendered load of the dashboard proves the session cookie was
-    // actually issued: an unauthenticated request redirects to /cms.
+    // actually issued and accepted: an unauthenticated request redirects to /cms.
     await goto(`${BASE}/cms/dashboard`);
     const url2 = await evaluate(cdp, "location.pathname");
     const reachedDashboard = url2 === "/cms/dashboard";

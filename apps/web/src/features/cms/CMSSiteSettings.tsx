@@ -2,7 +2,8 @@ import React, { useState, useEffect, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import { toast } from 'sonner'
 import { FiCheck, FiRefreshCw } from 'react-icons/fi'
-import { siteSettingsApi } from './cmsContentApi'
+import { cmsApi, type CmsEditorItem } from './cmsContentApi'
+import { CmsPublishBar } from './shared/CmsPublishBar'
 
 const MAROON = '#4A0918'
 
@@ -13,16 +14,18 @@ const EMPTY = {
 }
 
 export default function CMSSiteSettings() {
+  const [item,    setItem]    = useState<CmsEditorItem | null>(null)
   const [form,    setForm]    = useState(EMPTY)
   const [loading, setLoading] = useState(true)
-  const [saving,  setSaving]  = useState(false)
   const [langTab, setLangTab] = useState('en')
 
   const load = useCallback(async () => {
     setLoading(true)
     try {
-      const res = await siteSettingsApi.get()
-      setForm({ ...EMPTY, ...res.data })
+      const res = await cmsApi.getSingleton('siteSettings')
+      const editorItem = res as CmsEditorItem
+      setItem(editorItem)
+      setForm({ ...EMPTY, ...((editorItem.data as any) || {}) })
     } catch {
       toast.error('Failed to load site settings.')
     } finally {
@@ -36,15 +39,18 @@ export default function CMSSiteSettings() {
   const setLang = (k, lang, v) => setForm(f => ({ ...f, [k]: { ...f[k], [lang]: v } }))
   const setSocial = (k, v) => setForm(f => ({ ...f, socialLinks: { ...f.socialLinks, [k]: v } }))
 
-  const handleSave = async () => {
-    setSaving(true)
+  const handleSave = async (note?: string) => {
     try {
-      await siteSettingsApi.save(form)
-      toast.success('Site settings saved')
+      await cmsApi.saveDraft({
+        contentType: 'siteSettings',
+        data: form,
+        note,
+      })
+      toast.success('Site settings draft saved')
+      await load()
     } catch {
       toast.error('Failed to save site settings.')
-    } finally {
-      setSaving(false)
+      throw new Error('Save failed')
     }
   }
 
@@ -93,13 +99,12 @@ export default function CMSSiteSettings() {
           </div>
         </div>
 
-        <div style={{ display: 'flex', justifyContent: 'flex-end', paddingTop: '0.5rem' }}>
-          <motion.button whileHover={!saving ? { y: -1.5, boxShadow: '0 8px 22px rgba(74,9,24,0.34)' } : {}} whileTap={!saving ? { scale: 0.97 } : {}}
-            onClick={handleSave} disabled={saving}
-            style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '9px 22px', borderRadius: 10, border: 'none', background: `linear-gradient(135deg, ${MAROON} 0%, #6E1528 100%)`, color: '#fff', fontSize: '0.83rem', fontWeight: 700, cursor: saving ? 'not-allowed' : 'pointer', fontFamily: 'Inter, sans-serif', opacity: saving ? 0.7 : 1, boxShadow: '0 3px 12px rgba(74,9,24,0.28)' }}>
-            <FiCheck size={14} />
-            {saving ? 'Saving…' : 'Save Settings'}
-          </motion.button>
+        <div style={{ paddingTop: '0.5rem' }}>
+          <CmsPublishBar
+            item={item}
+            onSave={handleSave}
+            onChanged={load}
+          />
         </div>
       </div>
     </div>

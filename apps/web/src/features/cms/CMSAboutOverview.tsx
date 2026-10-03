@@ -2,7 +2,8 @@ import React, { useState, useEffect, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import { toast } from 'sonner'
 import { FiCheck, FiRefreshCw, FiImage, FiChevronDown, FiChevronUp } from 'react-icons/fi'
-import { aboutOverviewApi } from './cmsContentApi'
+import { cmsApi, type CmsEditorItem } from './cmsContentApi'
+import { CmsPublishBar } from './shared/CmsPublishBar'
 import { uploadImage } from './cmsApi'
 import { resolveUploadUrl } from '@/shared/utils/resolveUploadUrl'
 
@@ -27,15 +28,18 @@ const listToText = (arr) => (arr || []).join('\n')
 const textToList = (text) => text.split('\n').map(s => s.trim()).filter(Boolean)
 
 export default function CMSAboutOverview() {
+  const [item,    setItem]    = useState<CmsEditorItem | null>(null)
   const [form,    setForm]    = useState(EMPTY_FORM)
   const [loading, setLoading] = useState(true)
-  const [saving,  setSaving]  = useState(false)
   const [openAward, setOpenAward] = useState(0)
 
   const load = useCallback(async () => {
     setLoading(true)
     try {
-      const { data } = await aboutOverviewApi.get()
+      const res = await cmsApi.getSingleton('aboutOverview')
+      const editorItem = res as CmsEditorItem
+      setItem(editorItem)
+      const data = (editorItem.data as any) || {}
       setForm({
         intro: {
           en: { ...EMPTY_INTRO_LANG, ...data.intro?.en, introParagraphs: listToText(data.intro?.en?.introParagraphs) },
@@ -97,8 +101,7 @@ export default function CMSAboutOverview() {
     }
   }
 
-  const handleSave = async () => {
-    setSaving(true)
+  const handleSave = async (note?: string) => {
     try {
       const payload = {
         intro: {
@@ -120,12 +123,16 @@ export default function CMSAboutOverview() {
         },
         awards: form.awards,
       }
-      await aboutOverviewApi.save(payload)
-      toast.success('Overview content saved')
+      await cmsApi.saveDraft({
+        contentType: 'aboutOverview',
+        data: payload,
+        note,
+      })
+      toast.success('Overview draft saved')
+      await load()
     } catch {
-      toast.error('Failed to save Overview content.')
-    } finally {
-      setSaving(false)
+      toast.error('Failed to save Overview draft.')
+      throw new Error('Save failed')
     }
   }
 
@@ -199,13 +206,12 @@ export default function CMSAboutOverview() {
         ))}
       </SectionCard>
 
-      <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-        <motion.button whileHover={!saving ? { y: -1.5, boxShadow: '0 8px 22px rgba(74,9,24,0.34)' } : {}} whileTap={!saving ? { scale: 0.97 } : {}}
-          onClick={handleSave} disabled={saving}
-          style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '10px 26px', borderRadius: 10, border: 'none', background: `linear-gradient(135deg, ${MAROON} 0%, #6E1528 100%)`, color: '#fff', fontSize: '0.85rem', fontWeight: 700, cursor: saving ? 'not-allowed' : 'pointer', fontFamily: 'Inter, sans-serif', opacity: saving ? 0.7 : 1, boxShadow: '0 3px 12px rgba(74,9,24,0.28)' }}>
-          <FiCheck size={14} />
-          {saving ? 'Saving…' : 'Save Overview Content'}
-        </motion.button>
+      <div style={{ paddingTop: '0.5rem' }}>
+        <CmsPublishBar
+          item={item}
+          onSave={handleSave}
+          onChanged={load}
+        />
       </div>
     </div>
   )

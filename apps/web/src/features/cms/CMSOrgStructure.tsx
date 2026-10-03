@@ -2,7 +2,8 @@ import React, { useState, useEffect, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import { toast } from 'sonner'
 import { FiCheck, FiRefreshCw, FiChevronDown, FiChevronUp, FiPlus, FiTrash2 } from 'react-icons/fi'
-import { orgStructureApi } from './cmsContentApi'
+import { cmsApi, type CmsEditorItem } from './cmsContentApi'
+import { CmsPublishBar } from './shared/CmsPublishBar'
 
 const MAROON = '#4A0918'
 
@@ -24,16 +25,19 @@ const listToText = (arr) => (arr || []).join('\n')
 const textToList = (text) => text.split('\n').map(s => s.trim()).filter(Boolean)
 
 export default function CMSOrgStructure() {
+  const [item,    setItem]    = useState<CmsEditorItem | null>(null)
   const [form,    setForm]    = useState(EMPTY_FORM)
   const [loading, setLoading] = useState(true)
-  const [saving,  setSaving]  = useState(false)
   const [openNode, setOpenNode] = useState(-1)
   const [legendText, setLegendText] = useState({ en: '', si: '', ta: '' })
 
   const load = useCallback(async () => {
     setLoading(true)
     try {
-      const { data } = await orgStructureApi.get()
+      const res = await cmsApi.getSingleton('orgStructure')
+      const editorItem = res as CmsEditorItem
+      setItem(editorItem)
+      const data = (editorItem.data as any) || {}
       setForm({
         nodes: data.nodes?.length ? data.nodes.map(n => ({ ...EMPTY_NODE, ...n, title: { ...EMPTY_LANG, ...n.title }, sub: { ...EMPTY_LANG, ...n.sub }, count: { ...EMPTY_LANG, ...n.count } })) : [],
         ui: {
@@ -67,8 +71,7 @@ export default function CMSOrgStructure() {
   const setUiField = (section, lang, key, v) => setForm(f => ({ ...f, ui: { ...f.ui, [section]: { ...f.ui[section], [lang]: { ...f.ui[section][lang], [key]: v } } } }))
   const setImgFallback = (lang, v) => setForm(f => ({ ...f, ui: { ...f.ui, imgFallbackLabel: { ...f.ui.imgFallbackLabel, [lang]: v } } }))
 
-  const handleSave = async () => {
-    setSaving(true)
+  const handleSave = async (note?: string) => {
     try {
       const payload = {
         nodes: form.nodes,
@@ -77,12 +80,16 @@ export default function CMSOrgStructure() {
           legend: { en: textToList(legendText.en), si: textToList(legendText.si), ta: textToList(legendText.ta) },
         },
       }
-      await orgStructureApi.save(payload)
-      toast.success('Organization Structure saved')
+      await cmsApi.saveDraft({
+        contentType: 'orgStructure',
+        data: payload,
+        note,
+      })
+      toast.success('Organization Structure draft saved')
+      await load()
     } catch {
       toast.error('Failed to save Organization Structure.')
-    } finally {
-      setSaving(false)
+      throw new Error('Save failed')
     }
   }
 
@@ -140,13 +147,12 @@ export default function CMSOrgStructure() {
         <LangTabbedField label="Image Fallback Label" value={form.ui.imgFallbackLabel} onChange={setImgFallback} />
       </SectionCard>
 
-      <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-        <motion.button whileHover={!saving ? { y: -1.5, boxShadow: '0 8px 22px rgba(74,9,24,0.34)' } : {}} whileTap={!saving ? { scale: 0.97 } : {}}
-          onClick={handleSave} disabled={saving}
-          style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '10px 26px', borderRadius: 10, border: 'none', background: `linear-gradient(135deg, ${MAROON} 0%, #6E1528 100%)`, color: '#fff', fontSize: '0.85rem', fontWeight: 700, cursor: saving ? 'not-allowed' : 'pointer', fontFamily: 'Inter, sans-serif', opacity: saving ? 0.7 : 1, boxShadow: '0 3px 12px rgba(74,9,24,0.28)' }}>
-          <FiCheck size={14} />
-          {saving ? 'Saving…' : 'Save Org Chart'}
-        </motion.button>
+      <div style={{ paddingTop: '0.5rem' }}>
+        <CmsPublishBar
+          item={item}
+          onSave={handleSave}
+          onChanged={load}
+        />
       </div>
     </div>
   )
